@@ -1,0 +1,64 @@
+========================================================================
+             AIRFLOW AI — THE SIMPLEST EXPLANATION OF THIS WEBSITE
+========================================================================
+
+What is this website?
+---------------------
+Think of this website like a weather app, but instead of telling you if it's 
+going to rain, it tells you how clean or dirty the air is that you are breathing 
+right now, and what it will look like tomorrow. 
+
+We call this the Air Quality Index (AQI). 
+- A low number (like 0 to 50) means the air is clean and safe (Green).
+- A high number (like 150 or more) means the air is dirty and bad for you (Red).
+
+------------------------------------------------------------------------
+How does the website work in 5 simple steps?
+------------------------------------------------------------------------
+
+1. IT GRABS REAL-TIME DATA (Checking the Air)
+   When you search for a city, the website immediately asks official weather 
+   stations and satellites: "Hey, what is the temperature, how fast is the 
+   wind blowing, and how many tiny dirt particles are in the air right now?"
+
+2. IT CHECKS THE NEIGHBORS (The Smoke-Blowing Analogy)
+   Imagine you are sitting in your yard, and your neighbor starts a campfire. 
+   If the wind is blowing from their yard to yours, you will smell smoke. 
+   Our website does the exact same thing:
+   - It looks at 5 cities nearby.
+   - It checks their air quality.
+   - It looks at the wind direction to see if the dirty air from those cities 
+     is being blown toward your city!
+
+3. IT KNOWS THE DAILY PATTERNS (Daily Habits)
+   Air pollution has a daily routine, just like us:
+   - In the morning (rush hour traffic), the air gets dirtier.
+   - In the afternoon (sunny and warm), the air gets cleaner because hot air 
+     rises and carries the dust away.
+   - In the evening, the air gets dirty again.
+   The website uses this pattern to guess how the air will change hour-by-hour.
+
+4. IT LOOKS FOR WEATHER TRAPS AND CLEANERS (Weather Helpers)
+   The website looks at the weather forecast to adjust its predictions:
+   - Rain: Acts like a giant shower that washes the dust out of the sky. (Cleaner)
+   - Heavy Fog: Acts like a heavy blanket that traps smog on the ground. (Trap)
+   - No Wind: Stagnant air means pollution just sits there and builds up. (Trap)
+
+5. IT EXPLAINS "WHY" (The Receipt)
+   Instead of just giving you a random air quality number, the website gives 
+   you a list (called the SHAP Graph) that explains *why* the air is bad. 
+   It's like a supermarket receipt:
+   - Cars and Traffic: +25 points (Bad)
+   - Factory Smoke: +15 points (Bad)
+   - Strong Winds: -20 points (Good, cleaned the air!)
+   - Final Air Score: 20 points (Nice and clean!)
+
+------------------------------------------------------------------------
+Why is this version (Version 1) special?
+------------------------------------------------------------------------
+It is 100% self-contained. There is no complicated software to install, no 
+servers to set up, and no programming knowledge needed. 
+
+You just double-click the "index.html" file, and it opens instantly in Chrome, 
+Safari, or Edge. It does all the math calculations inside a hidden background 
+helper (called a Web Worker) so your browser never freezes or lags.

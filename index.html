@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirFlow AI — Real-Time AQI Prediction & Air Quality Intelligence</title>
+    <meta name="description" content="AirFlow AI provides real-time Air Quality Index predictions with cross-city transfer learning. Monitor PM2.5, PM10, O3, NO2, SO2, CO with hourly forecasts.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css?v=17">
+    <script>
+        const savedTheme = localStorage.getItem('airflowTheme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+<body>
+    <div class="mouse-glow" id="mouseGlow"></div>
+    <!-- 3D Animated Background -->
+    <div class="bg-scene" id="bgScene">
+        <div class="bg-gradient-layer" id="bgGradientLayer"></div>
+        <div class="bg-orb orb-1"></div>
+        <div class="bg-orb orb-2"></div>
+        <div class="bg-orb orb-3"></div>
+        <div class="bg-grid"></div>
+        <div class="bg-particles" id="bgParticles"></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar glass-heavy" id="navbar">
+        <div class="nav-left">
+            <div class="nav-brand">
+                <a href="index.html" class="brand-link">
+                    <div class="brand-logo">
+                        <div class="logo-cube">
+                            <div class="cube-face front"><i class="fas fa-wind"></i></div>
+                            <div class="cube-face back"><i class="fas fa-leaf"></i></div>
+                            <div class="cube-face top"><i class="fas fa-cloud"></i></div>
+                            <div class="cube-face bottom"><i class="fas fa-smog"></i></div>
+                            <div class="cube-face left"><i class="fas fa-lungs"></i></div>
+                            <div class="cube-face right"><i class="fas fa-shield-heart"></i></div>
+                        </div>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">AirFlow<span class="ai-badge">AI</span></span>
+                        <span class="brand-sub">Predictive Intelligence</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="nav-center">
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" class="nav-link active"><i class="fas fa-gauge-high"></i> Dashboard</a>
+                <a href="know-how.html" class="nav-link"><i class="fas fa-book-open"></i> Know How It Works</a>
+                <a href="about.html" class="nav-link"><i class="fas fa-info-circle"></i> About</a>
+            </div>
+        </div>
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+        <div class="nav-right">
+            <div class="nav-search" id="searchContainer">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="citySearch" placeholder="Search any city worldwide..." autocomplete="off">
+                    <kbd class="search-kbd">⌘K</kbd>
+                </div>
+                <div class="search-dropdown glass-heavy" id="searchDropdown"></div>
+            </div>
+            <div class="nav-actions">
+                <button class="nav-btn pulse-btn" id="refreshBtn" title="Refresh Data">
+                    <i class="fas fa-rotate"></i>
+                </button>
+                <button class="nav-btn" id="locationBtn" title="Use My Location">
+                    <i class="fas fa-location-crosshairs"></i>
+                </button>
+                <div class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
+                    <div class="toggle-track">
+                        <i class="fas fa-sun toggle-sun"></i>
+                        <i class="fas fa-moon toggle-moon"></i>
+                        <div class="toggle-thumb">
+                            <div class="thumb-glow"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <!-- Geopolitical / Event Alert Banner -->
+    <!-- Corner Notification (AQI Alert) -->
+    <div class="aqi-corner-notification" id="eventAlertBanner" style="display:none;">
+        <div class="corner-notif-header">
+            <div class="corner-notif-icon"><i class="fas fa-triangle-exclamation"></i></div>
+            <div class="corner-notif-title" id="eventAlertTitle">AQI Anomaly Detected</div>
+            <button class="corner-notif-close" id="eventAlertClose"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="corner-notif-desc" id="eventAlertDesc">Unusual pollutant levels detected — potential external event influence.</div>
+        <div class="corner-notif-pulse"></div>
+    </div>
+
+    <main class="main-content">
+        <!-- Hero AQI Section -->
+        <section class="hero-section" id="heroSection">
+            <!-- Header Row Components -->
+            <div class="location-bar">
+                <div class="location-pin"><i class="fas fa-map-marker-alt"></i></div>
+                <div class="location-text">
+                    <h1 id="cityName">Loading...</h1>
+                    <span id="regionName" class="region-tag"></span>
+                </div>
+            </div>
+            
+            <div class="side-time-display" id="localTimeDisplay">
+                <i class="fas fa-clock"></i>
+                <span id="localTime">--:--</span>
+            </div>
+
+            <!-- Panel Components -->
+            <div class="hero-aqi-panel align-stretch">
+                <div class="aqi-display glass-card hover-3d" style="justify-content: center;">
+                    <div class="aqi-gauge-wrapper" style="transform: scale(1.15);">
+                        <div class="aqi-gauge-3d">
+                            <svg class="aqi-ring-svg" viewBox="0 0 220 220">
+                                <defs>
+                                    <filter id="glow">
+                                        <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                                    </filter>
+                                </defs>
+                                <circle class="ring-bg" cx="110" cy="110" r="95" />
+                                <circle class="ring-progress" cx="110" cy="110" r="95" id="aqiRing" filter="url(#glow)" />
+                                <circle class="ring-inner-glow" cx="110" cy="110" r="75" />
+                            </svg>
+                            <div class="aqi-center">
+                                <div class="aqi-number" id="aqiValue">--</div>
+                                <div class="aqi-unit">AQI</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="aqi-meta">
+                        <div class="aqi-status-badge" id="aqiStatusBadge">
+                            <span class="status-dot"></span>
+                            <span id="aqiStatus">Loading...</span>
+                        </div>
+                        <p class="aqi-desc" id="aqiDescription">Fetching real-time data...</p>
+                        <div class="aqi-last-update">
+                            <i class="fas fa-satellite-dish"></i>
+                            <span id="updateTime">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-side-panels align-stretch">
+                <!-- Weather Panel -->
+                <div class="weather-panel glass-card hover-3d">
+                    <div class="panel-header">
+                        <i class="fas fa-cloud-sun-rain"></i>
+                        <h3>Weather Conditions</h3>
+                        <span class="live-dot">● LIVE</span>
+                    </div>
+                    <div class="weather-grid">
+                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-temperature-half"></i></div><div class="wx-data"><span class="wx-val" id="temperature">--°C</span><span class="wx-lbl">Temperature</span></div></div>
+                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-droplet"></i></div><div class="wx-data"><span class="wx-val" id="humidity">--%</span><span class="wx-lbl">Humidity</span></div></div>
+                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-wind"></i></div><div class="wx-data"><span class="wx-val" id="windSpeed">-- km/h</span><span class="wx-lbl">Wind Speed</span></div></div>
+                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-compass"></i></div><div class="wx-data"><span class="wx-val" id="windDirection">--°</span><span class="wx-lbl">Wind Dir</span></div></div>
+                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-gauge-high"></i></div><div class="wx-data"><span class="wx-val" id="pressure">-- hPa</span><span class="wx-lbl">Pressure</span></div></div>
+                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-eye"></i></div><div class="wx-data"><span class="wx-val" id="visibility">-- km</span><span class="wx-lbl">Visibility</span></div></div>
+                    </div>
+                </div>
+
+                <!-- Health Alert -->
+                <div class="health-alert glass-card hover-3d">
+                    <div class="panel-header">
+                        <i class="fas fa-heart-pulse" style="color:#ff4757;"></i>
+                        <h3>Health Advisory</h3>
+                    </div>
+                    <p id="healthAdvisoryText">Loading recommendations based on AQI...</p>
+                    <div class="alert-tags" id="alertTags"></div>
+                </div>
+            </div>
+
+            <!-- Full Width Severity Scale -->
+            <div class="severity-scale glass-card hover-3d full-width-scale">
+                <div class="scale-header">
+                    <i class="fas fa-signal"></i>
+                    <span>AQI Severity Scale</span>
+                </div>
+                <div class="scale-track">
+                    <div class="scale-fill" id="scaleFill"></div>
+                    <div class="scale-pointer" id="scalePointer"><div class="pointer-label" id="pointerLabel">0</div></div>
+                </div>
+                <div class="scale-labels">
+                    <span style="color:#00e676;">Good<br><small>0-50</small></span>
+                    <span style="color:#ffeb3b;">Moderate<br><small>51-100</small></span>
+                    <span style="color:#ff9800;">USG<br><small>101-150</small></span>
+                    <span style="color:#f44336;">Unhealthy<br><small>151-200</small></span>
+                    <span style="color:#9c27b0;">Very Bad<br><small>201-300</small></span>
+                    <span style="color:#880e4f;">Hazardous<br><small>300+</small></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hourly Forecast Section -->
+        <section class="section-block" id="hourlySection">
+            <div class="section-head">
+                <div class="head-icon"><i class="fas fa-clock-rotate-left"></i></div>
+                <div>
+                    <h2>Hourly AI Forecast</h2>
+                    <p>Real-time predictive atmospheric breakdown based on current conditions.</p>
+                </div>
+            </div>
+            <div class="hourly-scroll-container glass-card hover-3d">
+                <div class="hourly-scroll" id="hourlyScroll"></div>
+            </div>
+            <div class="forecast-chart-wrap glass-card hover-3d">
+                <canvas id="forecastChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Pollutants Section -->
+        <section class="section-block" id="pollutantsSection">
+            <div class="section-head">
+                <div class="head-icon"><i class="fas fa-flask"></i></div>
+                <div>
+                    <h2>Pollutant Breakdown</h2>
+                    <p>Real-time concentration levels of major air pollutants</p>
+                </div>
+            </div>
+            <div class="pollutant-grid" id="pollutantGrid">
+                <div class="poll-card glass-card hover-3d" data-pollutant="pm25">
+                    <div class="poll-top"><div class="poll-icon" style="--pc:#e53935;"><i class="fas fa-smog"></i></div><h4>PM<sub>2.5</sub></h4><div class="poll-badge" id="pm25Badge">--</div></div>
+                    <div class="poll-bar-track"><div class="poll-bar-fill" id="pm25Bar"></div></div>
+                    <div class="poll-val"><span id="pm25Value">--</span> <small>μg/m³</small></div>
+                    <p class="poll-health"><i class="fas fa-lungs"></i> Penetrates deep into lungs and bloodstream. Major cause of respiratory/cardiovascular diseases.</p>
+                </div>
+                <div class="poll-card glass-card hover-3d" data-pollutant="pm10">
+                    <div class="poll-top"><div class="poll-icon" style="--pc:#ff8f00;"><i class="fas fa-cloud"></i></div><h4>PM<sub>10</sub></h4><div class="poll-badge" id="pm10Badge">--</div></div>
+                    <div class="poll-bar-track"><div class="poll-bar-fill" id="pm10Bar"></div></div>
+                    <div class="poll-val"><span id="pm10Value">--</span> <small>μg/m³</small></div>
+                    <p class="poll-health"><i class="fas fa-head-side-cough"></i> Irritates airways, worsens asthma/bronchitis. Dust, pollen, mold spores cause coughing.</p>
+                </div>
+                <div class="poll-card glass-card hover-3d" data-pollutant="o3">
+                    <div class="poll-top"><div class="poll-icon" style="--pc:#42a5f5;"><i class="fas fa-sun"></i></div><h4>O<sub>3</sub></h4><div class="poll-badge" id="o3Badge">--</div></div>
+                    <div class="poll-bar-track"><div class="poll-bar-fill" id="o3Bar"></div></div>
+                    <div class="poll-val"><span id="o3Value">--</span> <small>ppb</small></div>
+                    <p class="poll-health"><i class="fas fa-lungs-virus"></i> Triggers chest pain, coughing, throat irritation. Damages lung tissue even during outdoor activity.</p>
+                </div>
+                <div class="poll-card glass-card hover-3d" data-pollutant="no2">
+                    <div class="poll-top"><div class="poll-icon" style="--pc:#7e57c2;"><i class="fas fa-car-burst"></i></div><h4>NO<sub>2</sub></h4><div class="poll-badge" id="no2Badge">--</div></div>
+                    <div class="poll-bar-track"><div class="poll-bar-fill" id="no2Bar"></div></div>
+                    <div class="poll-val"><span id="no2Value">--</span> <small>ppb</small></div>
+                    <p class="poll-health"><i class="fas fa-truck"></i> From vehicle exhaust. Inflames airways, increases respiratory infection susceptibility.</p>
+                </div>
+                <div class="poll-card glass-card hover-3d" data-pollutant="so2">
+                    <div class="poll-top"><div class="poll-icon" style="--pc:#66bb6a;"><i class="fas fa-industry"></i></div><h4>SO<sub>2</sub></h4><div class="poll-badge" id="so2Badge">--</div></div>
+                    <div class="poll-bar-track"><div class="poll-bar-fill" id="so2Bar"></div></div>
+                    <div class="poll-val"><span id="so2Value">--</span> <small>ppb</small></div>
+                    <p class="poll-health"><i class="fas fa-hospital"></i> Constricts airways, triggers asthma attacks. Short-term causes wheezing.</p>
+                </div>
+                <div class="poll-card glass-card hover-3d" data-pollutant="co">
+                    <div class="poll-top"><div class="poll-icon" style="--pc:#ef5350;"><i class="fas fa-fire"></i></div><h4>CO</h4><div class="poll-badge" id="coBadge">--</div></div>
+                    <div class="poll-bar-track"><div class="poll-bar-fill" id="coBar"></div></div>
+                    <div class="poll-val"><span id="coValue">--</span> <small>ppm</small></div>
+                    <p class="poll-health"><i class="fas fa-heart-crack"></i> Reduces oxygen delivery to organs. Causes headaches, dizziness, nausea.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- AQI Impact Factors Section -->
+        <section class="section-block" id="factorsSection">
+            <div class="section-head">
+                <div class="head-icon"><i class="fas fa-layer-group"></i></div>
+                <div>
+                    <h2>Real-Time AQI Impact Factors</h2>
+                    <p>Detected environmental, geopolitical &amp; meteorological forces currently influencing air quality</p>
+                </div>
+            </div>
+            <!-- Factors Grid -->
+            <div class="factors-grid" id="factorsGrid">
+                <div class="factor-loading glass-card">
+                    <i class="fas fa-satellite-dish fa-spin"></i>
+                    <span>Analyzing atmospheric conditions &amp; global events...</span>
+                </div>
+            </div>
+            <!-- Geopolitical Events Panel -->
+            <div class="geopolitical-panel glass-card hover-3d" id="geopoliticalPanel" style="display:none;">
+                <div class="panel-header">
+                    <i class="fas fa-globe" style="color:#f44336;"></i>
+                    <h3>Global Event Impact Alert</h3>
+                    <span class="live-dot" style="color:#f44336;">● ALERT</span>
+                </div>
+                <div class="geo-events-list" id="geoEventsList"></div>
+            </div>
+        </section>
+
+        <!-- Cross-City Transfer Learning Section -->
+        <section class="section-block" id="crossCitySection">
+            <div class="section-head">
+                <div class="head-icon"><i class="fas fa-share-nodes"></i></div>
+                <div>
+                    <h2>Cross-City Transfer — Neighboring Cities AQI</h2>
+                    <p>Next-day AQI prediction using wind-based pollutant propagation from nearby cities</p>
+                </div>
+            </div>
+            <!-- Two-column layout: Cross-city left, News right -->
+            <div class="crosscity-news-wrapper">
+                <!-- Left: Cross-city visualization -->
+                <div class="crosscity-left-col">
+                    <div class="cross-city-container">
+                        <div class="city-hub glass-card hover-3d" id="cityHub">
+                            <div class="hub-center">
+                                <div class="hub-icon"><i class="fas fa-bullseye"></i></div>
+                                <h4 id="hubCityName">Selected City</h4>
+                                <span class="hub-aqi" id="hubAqi">--</span>
+                            </div>
+                        </div>
+                        <div class="neighbor-ring" id="neighborRing">
+                            <!-- Filled dynamically -->
+                        </div>
+                    </div>
+                    <div class="transfer-prediction glass-card hover-3d" id="transferPrediction">
+                        <div class="panel-header">
+                            <i class="fas fa-brain"></i>
+                            <h3>Transfer Learning Prediction — Tomorrow's AQI</h3>
+                        </div>
+                        <div class="transfer-result" id="transferResult">
+                            <p>Analyzing wind patterns and pollutant dispersal from neighboring cities...</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right: AQI News Panel -->
+                <div class="aqi-news-panel glass-card hover-3d" id="aqiNewsPanel">
+                    <div class="news-panel-header">
+                        <div class="news-header-left">
+                            <div class="news-icon-badge"><i class="fas fa-newspaper"></i></div>
+                            <div>
+                                <h3>AQI News & Alerts</h3>
+                                <p class="news-subtitle" id="newsSubtitle">Ongoing local news for searched area</p>
+                            </div>
+                        </div>
+                        <span class="live-dot news-live">● LIVE</span>
+                    </div>
+                    <!-- News Feed -->
+                    <div class="news-feed" id="newsFeed">
+                        <div class="news-loading">
+                            <i class="fas fa-satellite-dish fa-spin"></i>
+                            <span>Fetching latest AQI news...</span>
+                        </div>
+                    </div>
+                    <div class="news-footer">
+                        <button class="news-refresh-btn" id="newsRefreshBtn"><i class="fas fa-rotate"></i> Refresh</button>
+                        <span class="news-update-time" id="newsUpdateTime">--</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer glass-heavy">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <div class="brand-logo small" style="background:none; box-shadow:none; border:none; color:var(--aqi-accent); font-size:32px; animation: none;"><i class="fas fa-wind"></i></div>
+                    <div><span class="brand-name">AirFlow<span class="ai-badge">AI</span></span><p>Real-Time AQI Prediction with Cross-City Transfer Learning</p></div>
+                </div>
+                <div class="footer-cols">
+                    <div class="f-col"><h5>Data Sources</h5><a href="https://aqicn.org" target="_blank"><i class="fas fa-external-link-alt"></i> WAQI / AQICN</a><a href="https://open-meteo.com" target="_blank"><i class="fas fa-external-link-alt"></i> Open-Meteo</a><a href="https://cpcb.nic.in" target="_blank"><i class="fas fa-external-link-alt"></i> CPCB India</a></div>
+                    <div class="f-col"><h5>Navigation</h5><a href="index.html"><i class="fas fa-gauge-high"></i> Dashboard</a><a href="know-how.html"><i class="fas fa-book-open"></i> Know How It Works</a><a href="about.html"><i class="fas fa-info-circle"></i> About</a></div>
+                </div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 AirFlow AI — Predictive Air Quality Intelligence System</p></div>
+        </footer>
+    </main>
+
+    <div class="hourly-popout-modal" id="hourlyModal">
+        <div class="hourly-popout-card" id="hourlyPopoutCard">
+            <!-- Filled via JS -->
+        </div>
+    </div>
+
+    <!-- External Dependencies & Main Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js?v=17"></script>
+</body>
+</html>

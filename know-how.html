@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Know How It Works — AirFlow AI</title>
+    <meta name="description" content="Understand how AirFlow AI predicts air quality. Explore SHAP factor contributions, health impact guides for different populations, and detailed pollutant health encyclopedia.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        const savedTheme = localStorage.getItem('airflowTheme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+<body>
+    <div class="mouse-glow" id="mouseGlow"></div>
+    <!-- 3D Animated Background -->
+    <div class="bg-scene" id="bgScene">
+        <div class="bg-gradient-layer" id="bgGradientLayer"></div>
+        <div class="bg-orb orb-1"></div>
+        <div class="bg-orb orb-2"></div>
+        <div class="bg-orb orb-3"></div>
+        <div class="bg-grid"></div>
+        <div class="bg-particles" id="bgParticles"></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar glass-heavy" id="navbar">
+        <div class="nav-left">
+            <div class="nav-brand">
+                <a href="index.html" class="brand-link">
+                    <div class="brand-logo">
+                        <div class="logo-cube">
+                            <div class="cube-face front"><i class="fas fa-wind"></i></div>
+                            <div class="cube-face back"><i class="fas fa-leaf"></i></div>
+                            <div class="cube-face top"><i class="fas fa-cloud"></i></div>
+                            <div class="cube-face bottom"><i class="fas fa-smog"></i></div>
+                            <div class="cube-face left"><i class="fas fa-lungs"></i></div>
+                            <div class="cube-face right"><i class="fas fa-shield-heart"></i></div>
+                        </div>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">AirFlow<span class="ai-badge">AI</span></span>
+                        <span class="brand-sub">Predictive Intelligence</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="nav-center">
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" class="nav-link"><i class="fas fa-gauge-high"></i> Dashboard</a>
+                <a href="know-how.html" class="nav-link active"><i class="fas fa-book-open"></i> Know How It Works</a>
+                <a href="about.html" class="nav-link"><i class="fas fa-info-circle"></i> About</a>
+            </div>
+        </div>
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+        <div class="nav-right">
+            <div class="nav-actions">
+                <div class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
+                    <div class="toggle-track">
+                        <i class="fas fa-sun toggle-sun"></i>
+                        <i class="fas fa-moon toggle-moon"></i>
+                        <div class="toggle-thumb">
+                            <div class="thumb-glow"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Hero -->
+        <section class="page-hero">
+            <div class="page-hero-inner">
+                <div class="page-hero-icon"><i class="fas fa-book-open"></i></div>
+                <h1>Know How It Works</h1>
+                <p>Understand the science behind AQI predictions — factor contributions, health impacts, and pollutant details</p>
+            </div>
+        </section>
+
+        <!-- SHAP Explainability Section -->
+        <section class="section-block visible" id="shapSection">
+            <div class="section-head">
+                <div class="head-icon"><i class="fas fa-brain"></i></div>
+                <div>
+                    <h2>Explainable AI — Factor Contributions</h2>
+                    <p>Analysis showing which atmospheric factors drive the predicted AQI value</p>
+                </div>
+            </div>
+            <div class="shap-wrap glass-card hover-3d">
+                <canvas id="shapChart"></canvas>
+                <div class="shap-footer">
+                    <div class="shap-legend">
+                        <span><span class="dot-pos"></span> Increases AQI</span>
+                        <span><span class="dot-neg"></span> Decreases AQI</span>
+                    </div>
+                    <div class="shap-explain glass-card" id="shapExplain">
+                        <i class="fas fa-lightbulb"></i>
+                        <p id="shapExplanationText">This chart reveals which factors contribute most to the current AQI prediction.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="shap-info-grid">
+                <div class="shap-info-card glass-card hover-3d">
+                    <div class="sic-icon"><i class="fas fa-chart-bar"></i></div>
+                    <h4>What is SHAP?</h4>
+                    <p>SHAP (SHapley Additive exPlanations) is a method that explains individual predictions by quantifying each feature's contribution. Positive values increase the predicted AQI, while negative values decrease it.</p>
+                </div>
+                <div class="shap-info-card glass-card hover-3d">
+                    <div class="sic-icon"><i class="fas fa-magnifying-glass-chart"></i></div>
+                    <h4>How to Read</h4>
+                    <p>The longer the bar, the stronger the influence. Yellow bars push the AQI higher (worse air quality), while blue bars push the AQI lower (better air quality). The factors are sorted by absolute impact.</p>
+                </div>
+                <div class="shap-info-card glass-card hover-3d">
+                    <div class="sic-icon"><i class="fas fa-bullseye"></i></div>
+                    <h4>Why It Matters</h4>
+                    <p>Understanding which factors drive air quality helps policymakers target specific pollution sources. For example, if PM2.5 dominates, reducing vehicle emissions could be prioritized.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Health Impact Section -->
+        <section class="section-block visible" id="healthSection">
+            <div class="section-head">
+                <div class="head-icon"><i class="fas fa-hospital-user"></i></div>
+                <div>
+                    <h2>Health Impact Guide</h2>
+                    <p>How different AQI levels affect various population groups</p>
+                </div>
+            </div>
+            <div class="health-aqi-tabs">
+                <button class="aqi-tab active" data-level="good" style="--tab-c:#00e676;">Good (0-50)</button>
+                <button class="aqi-tab" data-level="moderate" style="--tab-c:#ffeb3b;">Moderate (51-100)</button>
+                <button class="aqi-tab" data-level="usg" style="--tab-c:#ff9800;">USG (101-150)</button>
+                <button class="aqi-tab" data-level="unhealthy" style="--tab-c:#f44336;">Unhealthy (151-200)</button>
+                <button class="aqi-tab" data-level="very-bad" style="--tab-c:#9c27b0;">Very Bad (201-300)</button>
+                <button class="aqi-tab" data-level="hazardous" style="--tab-c:#880e4f;">Hazardous (300+)</button>
+            </div>
+            <div class="health-grid" id="healthGrid">
+                <div class="h-card glass-card hover-3d"><div class="h-icon"><i class="fas fa-users"></i></div><h4>General Population</h4><p id="healthGeneral">Air quality is satisfactory. No health impact expected.</p></div>
+                <div class="h-card glass-card hover-3d"><div class="h-icon"><i class="fas fa-children"></i></div><h4>Children</h4><p id="healthChildren">Normal outdoor activities are fine.</p></div>
+                <div class="h-card glass-card hover-3d"><div class="h-icon"><i class="fas fa-person-cane"></i></div><h4>Elderly</h4><p id="healthElderly">No restrictions needed.</p></div>
+                <div class="h-card glass-card hover-3d"><div class="h-icon"><i class="fas fa-lungs"></i></div><h4>Respiratory Patients</h4><p id="healthRespiratory">Monitor for any unusual symptoms.</p></div>
+                <div class="h-card glass-card hover-3d"><div class="h-icon"><i class="fas fa-heartbeat"></i></div><h4>Cardiac Patients</h4><p id="healthCardiac">Normal activities can continue.</p></div>
+                <div class="h-card glass-card hover-3d"><div class="h-icon"><i class="fas fa-person-pregnant"></i></div><h4>Pregnant Women</h4><p id="healthPregnant">No special precautions needed.</p></div>
+            </div>
+        </section>
+
+        <!-- Pollutant Health Encyclopedia -->
+        <section class="section-block visible" id="encyclopediaSection">
+            <div class="section-head">
+                <div class="head-icon"><i class="fas fa-book-medical"></i></div>
+                <div>
+                    <h2>Pollutant Health Encyclopedia</h2>
+                    <p>In-depth medical information about each pollutant's impact</p>
+                </div>
+            </div>
+            <div class="ency-grid">
+                <div class="ency-card glass-card hover-3d">
+                    <div class="ency-top" style="--ec:#e53935;"><i class="fas fa-smog"></i><h4>PM<sub>2.5</sub> — Fine Particulate Matter</h4></div>
+                    <div class="ency-body">
+                        <div class="ency-row"><i class="fas fa-fire"></i><strong>Sources:</strong> Vehicle exhaust, industrial emissions, biomass burning, cooking fumes</div>
+                        <div class="ency-row"><i class="fas fa-microscope"></i><strong>Size:</strong> &lt;2.5μm — 30x thinner than human hair. Enters bloodstream.</div>
+                        <div class="ency-effects"><h5><i class="fas fa-exclamation-triangle"></i> Health Effects</h5>
+                            <ul><li><strong>Short-term:</strong> Eye irritation, cough, throat soreness, chest tightness</li><li><strong>Long-term:</strong> Decreased lung function, chronic bronchitis, heart attacks</li><li><strong>Severe:</strong> Lung cancer, premature death, cognitive decline, dementia</li></ul>
+                        </div>
+                        <div class="ency-row"><i class="fas fa-globe"></i><strong>WHO:</strong> Annual ≤5 μg/m³, 24hr ≤15 μg/m³</div>
+                    </div>
+                </div>
+                <div class="ency-card glass-card hover-3d">
+                    <div class="ency-top" style="--ec:#ff8f00;"><i class="fas fa-cloud"></i><h4>PM<sub>10</sub> — Coarse Particulate</h4></div>
+                    <div class="ency-body">
+                        <div class="ency-row"><i class="fas fa-road"></i><strong>Sources:</strong> Road dust, agricultural activity, mining, pollen, mold</div>
+                        <div class="ency-row"><i class="fas fa-microscope"></i><strong>Size:</strong> &lt;10μm — enters nose and throat</div>
+                        <div class="ency-effects"><h5><i class="fas fa-exclamation-triangle"></i> Health Effects</h5>
+                            <ul><li><strong>Upper Respiratory:</strong> Nasal congestion, sinusitis, aggravated rhinitis</li><li><strong>Lower Respiratory:</strong> Aggravates asthma, bronchitis, COPD</li><li><strong>Occupational:</strong> Silicosis in miners, pneumoconiosis in construction</li></ul>
+                        </div>
+                        <div class="ency-row"><i class="fas fa-globe"></i><strong>WHO:</strong> Annual ≤15 μg/m³, 24hr ≤45 μg/m³</div>
+                    </div>
+                </div>
+                <div class="ency-card glass-card hover-3d">
+                    <div class="ency-top" style="--ec:#42a5f5;"><i class="fas fa-sun"></i><h4>O<sub>3</sub> — Ground-Level Ozone</h4></div>
+                    <div class="ency-body">
+                        <div class="ency-row"><i class="fas fa-car"></i><strong>Sources:</strong> NOx + VOCs in sunlight (secondary pollutant)</div>
+                        <div class="ency-effects"><h5><i class="fas fa-exclamation-triangle"></i> Health Effects</h5>
+                            <ul><li><strong>Respiratory:</strong> Airway inflammation, reduced lung function</li><li><strong>Chronic:</strong> Permanent lung damage, asthma development in children</li><li><strong>Athletes:</strong> Higher exposure during exercise due to increased breathing</li></ul>
+                        </div>
+                        <div class="ency-row"><i class="fas fa-globe"></i><strong>WHO:</strong> 8hr mean ≤60 μg/m³</div>
+                    </div>
+                </div>
+                <div class="ency-card glass-card hover-3d">
+                    <div class="ency-top" style="--ec:#7e57c2;"><i class="fas fa-car-burst"></i><h4>NO<sub>2</sub> — Nitrogen Dioxide</h4></div>
+                    <div class="ency-body">
+                        <div class="ency-row"><i class="fas fa-gas-pump"></i><strong>Sources:</strong> Diesel engines, power plants, gas stoves</div>
+                        <div class="ency-effects"><h5><i class="fas fa-exclamation-triangle"></i> Health Effects</h5>
+                            <ul><li><strong>Airways:</strong> Inflames lung lining, reduces immunity to infections</li><li><strong>Children:</strong> Increased asthma risk, respiratory symptoms in healthy children</li><li><strong>Indoor:</strong> Gas stoves produce dangerous NO₂ levels in unventilated kitchens</li></ul>
+                        </div>
+                        <div class="ency-row"><i class="fas fa-globe"></i><strong>WHO:</strong> Annual ≤10 μg/m³, 24hr ≤25 μg/m³</div>
+                    </div>
+                </div>
+                <div class="ency-card glass-card hover-3d">
+                    <div class="ency-top" style="--ec:#66bb6a;"><i class="fas fa-industry"></i><h4>SO<sub>2</sub> — Sulfur Dioxide</h4></div>
+                    <div class="ency-body">
+                        <div class="ency-row"><i class="fas fa-bolt"></i><strong>Sources:</strong> Coal/oil power plants, metal smelting, volcanic eruptions</div>
+                        <div class="ency-effects"><h5><i class="fas fa-exclamation-triangle"></i> Health Effects</h5>
+                            <ul><li><strong>Immediate:</strong> Wheezing, chest tightness within minutes</li><li><strong>Asthma:</strong> Very potent trigger — severe bronchospasm at low levels</li><li><strong>Secondary:</strong> Converts to sulfate PM2.5, causes acid rain</li></ul>
+                        </div>
+                        <div class="ency-row"><i class="fas fa-globe"></i><strong>WHO:</strong> 24hr ≤40 μg/m³</div>
+                    </div>
+                </div>
+                <div class="ency-card glass-card hover-3d">
+                    <div class="ency-top" style="--ec:#ef5350;"><i class="fas fa-fire"></i><h4>CO — Carbon Monoxide</h4></div>
+                    <div class="ency-body">
+                        <div class="ency-row"><i class="fas fa-car"></i><strong>Sources:</strong> Incomplete combustion — vehicles, generators, gas heaters, fires</div>
+                        <div class="ency-effects"><h5><i class="fas fa-exclamation-triangle"></i> Health Effects</h5>
+                            <ul><li><strong>Mechanism:</strong> Binds hemoglobin 200x stronger than O₂ — starves organs</li><li><strong>Mild:</strong> Headaches, dizziness, confusion, fatigue</li><li><strong>Severe:</strong> Loss of consciousness, brain damage, death</li><li><strong>Heart:</strong> Triggers angina and arrhythmia in coronary patients</li></ul>
+                        </div>
+                        <div class="ency-row"><i class="fas fa-globe"></i><strong>WHO:</strong> 24hr ≤4 mg/m³</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer glass-heavy">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <div class="brand-logo small"><div class="logo-cube small"><div class="cube-face front"><i class="fas fa-wind"></i></div></div></div>
+                    <div><span class="brand-name">AirFlow<span class="ai-badge">AI</span></span><p>Real-Time AQI Prediction with Cross-City Transfer Learning</p></div>
+                </div>
+                <div class="footer-cols">
+                    <div class="f-col"><h5>Data Sources</h5><a href="https://aqicn.org" target="_blank"><i class="fas fa-external-link-alt"></i> WAQI / AQICN</a><a href="https://open-meteo.com" target="_blank"><i class="fas fa-external-link-alt"></i> Open-Meteo</a><a href="https://cpcb.nic.in" target="_blank"><i class="fas fa-external-link-alt"></i> CPCB India</a></div>
+                    <div class="f-col"><h5>Navigation</h5><a href="index.html"><i class="fas fa-gauge-high"></i> Dashboard</a><a href="know-how.html"><i class="fas fa-book-open"></i> Know How It Works</a><a href="about.html"><i class="fas fa-info-circle"></i> About</a></div>
+                </div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 AirFlow AI — Predictive Air Quality Intelligence System</p></div>
+        </footer>
+    </main>
+
+    <script src="know-how.js"></script>
+</body>
+</html>

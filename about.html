@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — AirFlow AI</title>
+    <meta name="description" content="Learn about AirFlow AI's system architecture, the 8 core modules powering real-time AQI prediction, and the technology stack behind cross-city transfer learning.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        const savedTheme = localStorage.getItem('airflowTheme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+<body>
+    <div class="mouse-glow" id="mouseGlow"></div>
+    <!-- 3D Animated Background -->
+    <div class="bg-scene" id="bgScene">
+        <div class="bg-gradient-layer" id="bgGradientLayer"></div>
+        <div class="bg-orb orb-1"></div>
+        <div class="bg-orb orb-2"></div>
+        <div class="bg-orb orb-3"></div>
+        <div class="bg-grid"></div>
+        <div class="bg-particles" id="bgParticles"></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar glass-heavy" id="navbar">
+        <div class="nav-left">
+            <div class="nav-brand">
+                <a href="index.html" class="brand-link">
+                    <div class="brand-logo">
+                        <div class="logo-cube">
+                            <div class="cube-face front"><i class="fas fa-wind"></i></div>
+                            <div class="cube-face back"><i class="fas fa-leaf"></i></div>
+                            <div class="cube-face top"><i class="fas fa-cloud"></i></div>
+                            <div class="cube-face bottom"><i class="fas fa-smog"></i></div>
+                            <div class="cube-face left"><i class="fas fa-lungs"></i></div>
+                            <div class="cube-face right"><i class="fas fa-shield-heart"></i></div>
+                        </div>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">AirFlow<span class="ai-badge">AI</span></span>
+                        <span class="brand-sub">Predictive Intelligence</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="nav-center">
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" class="nav-link"><i class="fas fa-gauge-high"></i> Dashboard</a>
+                <a href="know-how.html" class="nav-link"><i class="fas fa-book-open"></i> Know How It Works</a>
+                <a href="about.html" class="nav-link active"><i class="fas fa-info-circle"></i> About</a>
+            </div>
+        </div>
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+        <div class="nav-right">
+            <div class="nav-actions">
+                <div class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
+                    <div class="toggle-track">
+                        <i class="fas fa-sun toggle-sun"></i>
+                        <i class="fas fa-moon toggle-moon"></i>
+                        <div class="toggle-thumb">
+                            <div class="thumb-glow"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Hero -->
+        <section class="page-hero">
+            <div class="page-hero-inner">
+                <div class="page-hero-icon"><i class="fas fa-info-circle"></i></div>
+                <h1>About AirFlow AI</h1>
+                <p>System architecture and the technology powering real-time air quality intelligence</p>
+            </div>
+        </section>
+
+        <!-- Overview Section -->
+        <section class="section-block visible" id="overviewSection">
+            <div class="section-head">
+                <div class="head-icon"><i class="fas fa-rocket"></i></div>
+                <div>
+                    <h2>Platform Overview</h2>
+                    <p>What AirFlow AI does and how it works</p>
+                </div>
+            </div>
+            <div class="overview-grid">
+                <div class="overview-card glass-card hover-3d">
+                    <div class="ov-icon" style="--ov-c:#00e676;"><i class="fas fa-satellite-dish"></i></div>
+                    <h4>Real-Time Monitoring</h4>
+                    <p>Live AQI data from monitoring stations worldwide, updated every hour with timezone-aware displays for any city globally.</p>
+                </div>
+                <div class="overview-card glass-card hover-3d">
+                    <div class="ov-icon" style="--ov-c:#ffeb3b;"><i class="fas fa-chart-line"></i></div>
+                    <h4>Hourly Forecasting</h4>
+                    <p>24-hour ahead AQI predictions using advanced ensemble methods that combine pattern recognition with temporal analysis.</p>
+                </div>
+                <div class="overview-card glass-card hover-3d">
+                    <div class="ov-icon" style="--ov-c:#42a5f5;"><i class="fas fa-share-nodes"></i></div>
+                    <h4>Cross-City Intelligence</h4>
+                    <p>Transfer learning models pollutant propagation between neighboring cities using wind speed, direction, and geographic proximity.</p>
+                </div>
+                <div class="overview-card glass-card hover-3d">
+                    <div class="ov-icon" style="--ov-c:#ab47bc;"><i class="fas fa-brain"></i></div>
+                    <h4>Explainable Predictions</h4>
+                    <p>SHAP-based feature analysis reveals exactly which atmospheric factors contribute to each AQI prediction in plain language.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Architecture Section -->
+        <section class="section-block visible" id="modulesSection">
+            <div class="section-head">
+                <div class="head-icon"><i class="fas fa-cubes"></i></div>
+                <div>
+                    <h2>System Architecture — 8 Core Modules</h2>
+                    <p>Modular architecture powering AirFlow AI's prediction engine</p>
+                </div>
+            </div>
+            <div class="modules-grid">
+                <div class="mod-card glass-card hover-3d"><div class="mod-num">01</div><div class="mod-icon"><i class="fas fa-map-location-dot"></i></div><h4>Real-Time Geo-Spatial Module</h4><p>Captures geo-spatial data from monitoring stations. Maps pollutant distributions using IDW interpolation.</p><div class="mod-tags"><span>GPS</span><span>IDW</span><span>Heatmaps</span></div></div>
+                <div class="mod-card glass-card hover-3d"><div class="mod-num">02</div><div class="mod-icon"><i class="fas fa-code-merge"></i></div><h4>Combined Results Generator</h4><p>Merges multiple model outputs using weighted ensemble averaging with confidence intervals.</p><div class="mod-tags"><span>Ensemble</span><span>Weighted Avg</span><span>CI</span></div></div>
+                <div class="mod-card glass-card hover-3d"><div class="mod-num">03</div><div class="mod-icon"><i class="fas fa-chart-area"></i></div><h4>Location View Dashboard</h4><p>Interactive dashboard with city-specific AQI metrics, pollutant trends, and station-level drill-down.</p><div class="mod-tags"><span>Charts</span><span>Drill-down</span><span>Trends</span></div></div>
+                <div class="mod-card glass-card hover-3d"><div class="mod-num">04</div><div class="mod-icon"><i class="fas fa-tags"></i></div><h4>AQI Classifier</h4><p>Categorizes AQI into six EPA-standard levels with color-coded alerts and health recommendations.</p><div class="mod-tags"><span>EPA</span><span>6 Levels</span><span>Color</span></div></div>
+                <div class="mod-card glass-card hover-3d"><div class="mod-num">05</div><div class="mod-icon"><i class="fas fa-database"></i></div><h4>Data Ingestion & Fusion</h4><p>Ingests CPCB, OpenWeatherMap, satellite data. Data cleaning, normalization, temporal alignment.</p><div class="mod-tags"><span>CPCB</span><span>OWM</span><span>Fusion</span></div></div>
+                <div class="mod-card glass-card hover-3d"><div class="mod-num">06</div><div class="mod-icon"><i class="fas fa-dna"></i></div><h4>Evolutionary Hyperparameter Tuning</h4><p>Genetic algorithms + Bayesian optimization for model hyperparameters.</p><div class="mod-tags"><span>GA</span><span>Bayesian</span><span>Auto-Tune</span></div></div>
+                <div class="mod-card glass-card hover-3d"><div class="mod-num">07</div><div class="mod-icon"><i class="fas fa-brain"></i></div><h4>Explainable AI & Causal Inference</h4><p>SHAP values reveal feature contributions. Causal inference identifies root causes vs correlations.</p><div class="mod-tags"><span>SHAP</span><span>XAI</span><span>Causal</span></div></div>
+                <div class="mod-card glass-card hover-3d"><div class="mod-num">08</div><div class="mod-icon"><i class="fas fa-network-wired"></i></div><h4>Hybrid Prediction Model</h4><p>Combines pattern recognition with temporal dependency modeling. Transfer learning enables cross-city generalization.</p><div class="mod-tags"><span>Ensemble</span><span>Temporal</span><span>Transfer</span></div></div>
+            </div>
+        </section>
+
+        <!-- Data Flow Section -->
+        <section class="section-block visible" id="dataflowSection">
+            <div class="section-head">
+                <div class="head-icon"><i class="fas fa-diagram-project"></i></div>
+                <div>
+                    <h2>Data Pipeline</h2>
+                    <p>How data flows through the system from collection to prediction</p>
+                </div>
+            </div>
+            <div class="dataflow-pipeline">
+                <div class="pipeline-step glass-card hover-3d">
+                    <div class="ps-num">1</div>
+                    <div class="ps-icon"><i class="fas fa-satellite-dish"></i></div>
+                    <h4>Data Collection</h4>
+                    <p>Real-time AQI readings from WAQI monitoring stations + weather data from Open-Meteo API</p>
+                </div>
+                <div class="pipeline-arrow"><i class="fas fa-arrow-right"></i></div>
+                <div class="pipeline-step glass-card hover-3d">
+                    <div class="ps-num">2</div>
+                    <div class="ps-icon"><i class="fas fa-filter"></i></div>
+                    <h4>Preprocessing</h4>
+                    <p>Data cleaning, normalization, temporal alignment, and missing value interpolation</p>
+                </div>
+                <div class="pipeline-arrow"><i class="fas fa-arrow-right"></i></div>
+                <div class="pipeline-step glass-card hover-3d">
+                    <div class="ps-num">3</div>
+                    <div class="ps-icon"><i class="fas fa-cogs"></i></div>
+                    <h4>Feature Engineering</h4>
+                    <p>Extract temporal features, wind patterns, cross-city correlations, and lag variables</p>
+                </div>
+                <div class="pipeline-arrow"><i class="fas fa-arrow-right"></i></div>
+                <div class="pipeline-step glass-card hover-3d">
+                    <div class="ps-num">4</div>
+                    <div class="ps-icon"><i class="fas fa-brain"></i></div>
+                    <h4>Prediction</h4>
+                    <p>Ensemble model generates hourly and next-day AQI predictions with confidence intervals</p>
+                </div>
+                <div class="pipeline-arrow"><i class="fas fa-arrow-right"></i></div>
+                <div class="pipeline-step glass-card hover-3d">
+                    <div class="ps-num">5</div>
+                    <div class="ps-icon"><i class="fas fa-display"></i></div>
+                    <h4>Visualization</h4>
+                    <p>Real-time dashboard with severity mapping, health advisories, and explainable insights</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer glass-heavy">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <div class="brand-logo small"><div class="logo-cube small"><div class="cube-face front"><i class="fas fa-wind"></i></div></div></div>
+                    <div><span class="brand-name">AirFlow<span class="ai-badge">AI</span></span><p>Real-Time AQI Prediction with Cross-City Transfer Learning</p></div>
+                </div>
+                <div class="footer-cols">
+                    <div class="f-col"><h5>Data Sources</h5><a href="https://aqicn.org" target="_blank"><i class="fas fa-external-link-alt"></i> WAQI / AQICN</a><a href="https://open-meteo.com" target="_blank"><i class="fas fa-external-link-alt"></i> Open-Meteo</a><a href="https://cpcb.nic.in" target="_blank"><i class="fas fa-external-link-alt"></i> CPCB India</a></div>
+                    <div class="f-col"><h5>Navigation</h5><a href="index.html"><i class="fas fa-gauge-high"></i> Dashboard</a><a href="know-how.html"><i class="fas fa-book-open"></i> Know How It Works</a><a href="about.html"><i class="fas fa-info-circle"></i> About</a></div>
+                </div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 AirFlow AI — Predictive Air Quality Intelligence System</p></div>
+        </footer>
+    </main>
+
+    <script src="about.js"></script>
+</body>
+</html>
