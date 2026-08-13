@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AirFlow AI — Real-Time Air Quality & Health Advisory</title>
+  <meta name="description" content="Monitor real-time air quality and receive personalized health risk advisories based on your unique health profile. Powered by AI and Open-Meteo data.">
+  <meta name="theme-color" content="#050810">
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/main.css">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+
+<!-- ── Navigation ────────────────────────────────────────────────────────── -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <a class="navbar-brand" href="/">
+    <div class="logo-icon" aria-hidden="true">🌬️</div>
+    AirFlow AI
+  </a>
+
+  <ul class="navbar-links" role="list">
+    <li><a href="/" class="active" aria-current="page">Live AQI</a></li>
+    <li><a href="/dashboard">My Advisory</a></li>
+    <li><a href="/profile">Health Profile</a></li>
+  </ul>
+
+  <div class="navbar-right">
+    <!-- Live AQI Chip (populated by JS) -->
+    <div class="nav-aqi-chip" id="nav-aqi-chip" aria-live="polite">
+      <div class="dot"></div>
+      <span id="nav-aqi-value">Loading…</span>
+    </div>
+
+    <!-- Auth -->
+    <button class="btn btn-primary btn-sm" id="nav-auth-btn" aria-label="Sign in">
+      <i class="fas fa-user" aria-hidden="true"></i> Sign In
+    </button>
+    <div class="avatar hidden" id="nav-avatar" role="button" tabindex="0" aria-label="Go to dashboard">U</div>
+    <button class="btn btn-ghost btn-sm hidden" id="nav-signout-btn" aria-label="Sign out">
+      <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+    </button>
+  </div>
+</nav>
+
+<!-- ── Hero Section ───────────────────────────────────────────────────────── -->
+<div class="page-wrapper gradient-hero">
+  <section class="container" style="padding-top:60px; padding-bottom:40px;">
+    <div style="text-align:center; max-width:680px; margin:0 auto;" class="fade-in">
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:999px;font-size:0.82rem;font-weight:600;color:#93c5fd;margin-bottom:24px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:#3b82f6;animation:pulse-dot 2s ease-in-out infinite;"></div>
+        Live Air Quality Intelligence
+      </div>
+      <h1 style="margin-bottom:16px;">Know Your Air.<br><span style="background:linear-gradient(135deg,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Protect Your Health.</span></h1>
+      <p style="font-size:1.05rem;color:var(--clr-text-300);margin-bottom:36px;max-width:520px;margin-left:auto;margin-right:auto;">Real-time AQI data combined with your personal health profile to give you a risk score that's actually meaningful to <em>you</em>.</p>
+
+      <!-- Search Bar -->
+      <div class="search-container" style="margin:0 auto;">
+        <i class="fas fa-magnifying-glass search-icon" aria-hidden="true"></i>
+        <input
+          type="search"
+          class="search-input"
+          id="city-search"
+          placeholder="Search any city — Mumbai, Delhi, Pune…"
+          autocomplete="off"
+          aria-label="Search for a city"
+          aria-controls="search-results"
+          aria-autocomplete="list"
+        >
+        <div class="search-results" id="search-results" role="listbox" aria-label="City suggestions"></div>
+      </div>
+
+      <!-- Personalized CTA -->
+      <div style="margin-top:24px;padding:16px 24px;background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.25);border-radius:16px;display:inline-flex;align-items:center;gap:16px;max-width:520px;">
+        <span style="font-size:1.5rem;">🎯</span>
+        <div style="text-align:left;flex:1;">
+          <div style="font-size:0.9rem;font-weight:700;color:var(--clr-text-100);margin-bottom:2px;">Get your personalized risk score</div>
+          <div style="font-size:0.8rem;color:var(--clr-text-400);">Tell us about your health conditions and get tailored AQI advice</div>
+        </div>
+        <a href="/profile" class="btn btn-primary btn-sm" id="cta-profile-btn">Get Started</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Main AQI Display ────────────────────────────────────────────────── -->
+  <section class="container" style="padding-bottom:var(--spacing-2xl);">
+    <!-- Loading State -->
+    <div id="aqi-loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Search for a city to see live air quality data…</p>
+    </div>
+
+    <!-- Content (hidden until a city is searched) -->
+    <div id="aqi-content" class="hidden">
+      <!-- Top row: AQI Meter + Weather + Pollutants -->
+      <div class="grid-2" style="margin-bottom:var(--spacing-lg);">
+
+        <!-- AQI Meter Card -->
+        <div class="card" id="aqi-meter-card" style="text-align:center;">
+          <div class="card-header">
+            <span class="card-title"><i class="fas fa-gauge-high" aria-hidden="true"></i> Air Quality Index</span>
+            <span id="aqi-source-badge" class="badge badge-moderate">Open-Meteo</span>
+          </div>
+          <div style="position:relative;width:200px;height:200px;margin:0 auto 16px;">
+            <svg class="risk-gauge-svg" viewBox="0 0 160 160" aria-hidden="true">
+              <circle class="risk-gauge-bg"   cx="80" cy="80" r="70" stroke-dasharray="440" stroke-dashoffset="0" />
+              <circle class="risk-gauge-fill" id="aqi-gauge-fill" cx="80" cy="80" r="70" />
+            </svg>
+            <div class="risk-gauge-center">
+              <div class="risk-score-number" id="aqi-display-value" style="font-size:3.2rem;">—</div>
+              <div id="aqi-level-text" style="font-size:0.78rem;color:var(--clr-text-400);font-weight:600;">—</div>
+            </div>
+          </div>
+          <div id="aqi-city-name" style="font-size:1.1rem;font-weight:700;margin-bottom:4px;">—</div>
+          <div id="aqi-updated-time" style="font-size:0.78rem;color:var(--clr-text-400);">Updated: —</div>
+        </div>
+
+        <!-- Pollutants Grid -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title"><i class="fas fa-flask" aria-hidden="true"></i> Pollutant Levels</span>
+          </div>
+          <div class="grid-2 gap-md" id="pollutants-grid" style="gap:10px;">
+            <!-- Populated by JS -->
+            <div class="stat-card"><div class="stat-label">PM2.5</div><div class="stat-value" id="pol-pm25">—</div><div class="stat-sub">µg/m³</div></div>
+            <div class="stat-card"><div class="stat-label">PM10</div><div class="stat-value" id="pol-pm10">—</div><div class="stat-sub">µg/m³</div></div>
+            <div class="stat-card"><div class="stat-label">NO₂</div><div class="stat-value" id="pol-no2">—</div><div class="stat-sub">µg/m³</div></div>
+            <div class="stat-card"><div class="stat-label">Ozone</div><div class="stat-value" id="pol-o3">—</div><div class="stat-sub">ppb</div></div>
+            <div class="stat-card"><div class="stat-label">SO₂</div><div class="stat-value" id="pol-so2">—</div><div class="stat-sub">µg/m³</div></div>
+            <div class="stat-card"><div class="stat-label">CO</div><div class="stat-value" id="pol-co">—</div><div class="stat-sub">ppm</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weather + Impact Factors row -->
+      <div class="grid-2" style="margin-bottom:var(--spacing-lg);">
+        <!-- Weather -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title"><i class="fas fa-cloud-sun" aria-hidden="true"></i> Weather Conditions</span>
+          </div>
+          <div class="grid-2" style="gap:12px;" id="weather-grid">
+            <div class="stat-card"><div class="stat-label">Temperature</div><div class="stat-value" id="wx-temp">—</div><div class="stat-sub">°C</div></div>
+            <div class="stat-card"><div class="stat-label">Humidity</div><div class="stat-value" id="wx-hum">—</div><div class="stat-sub">%</div></div>
+            <div class="stat-card"><div class="stat-label">Wind Speed</div><div class="stat-value" id="wx-wind">—</div><div class="stat-sub">km/h</div></div>
+            <div class="stat-card"><div class="stat-label">Pressure</div><div class="stat-value" id="wx-pres">—</div><div class="stat-sub">hPa</div></div>
+          </div>
+        </div>
+
+        <!-- Impact Factors -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> Active Impact Factors</span>
+          </div>
+          <div id="impact-factors-list" style="display:flex;flex-direction:column;gap:8px;">
+            <p class="text-muted text-sm">Loading impact factors…</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 24-Hour Forecast -->
+      <div class="card" style="margin-bottom:var(--spacing-lg);">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-chart-line" aria-hidden="true"></i> 24-Hour AQI Forecast</span>
+          <span id="transfer-prediction" class="badge badge-moderate" style="font-size:0.75rem;"></span>
+        </div>
+        <div id="forecast-chart" style="display:flex;gap:3px;height:80px;align-items:flex-end;overflow-x:auto;padding-bottom:4px;"></div>
+        <div id="forecast-labels" style="display:flex;gap:3px;margin-top:4px;overflow:hidden;"></div>
+      </div>
+
+      <!-- Neighbor Cities -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-globe" aria-hidden="true"></i> Nearby Cities & Wind Transfer</span>
+        </div>
+        <div id="neighbor-grid" class="grid-4" style="gap:10px;"></div>
+      </div>
+
+    </div><!-- /aqi-content -->
+  </section>
+</div>
+
+<!-- ── Auth Modal ──────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="auth-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+  <div class="modal">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-size:2rem;margin-bottom:8px;">🌬️</div>
+      <h2 id="auth-modal-title" style="font-size:1.4rem;">Welcome to AirFlow AI</h2>
+      <p class="text-sm text-muted">Sign in to access your personalized health advisory</p>
+    </div>
+
+    <!-- Google Sign In -->
+    <button class="btn btn-outline w-full btn-google" style="margin-bottom:16px;justify-content:center;">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google" style="margin-right:8px;">
+      Continue with Google
+    </button>
+
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;color:var(--clr-text-400);font-size:0.82rem;">
+      <div style="flex:1;height:1px;background:var(--clr-border);"></div>or<div style="flex:1;height:1px;background:var(--clr-border);"></div>
+    </div>
+
+    <!-- Email Sign In -->
+    <div id="auth-signin-panel">
+      <form id="signin-form" novalidate>
+        <div class="form-group mb-md">
+          <label class="form-label" for="signin-email">Email</label>
+          <input class="form-input" type="email" id="signin-email" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="form-group mb-md">
+          <label class="form-label" for="signin-password">Password</label>
+          <input class="form-input" type="password" id="signin-password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="justify-content:center;">Sign In</button>
+      </form>
+      <p class="text-sm text-center mt-md" style="color:var(--clr-text-400);">
+        No account? <a href="#" id="switch-to-signup" style="color:var(--clr-primary);">Create one</a>
+      </p>
+    </div>
+
+    <!-- Email Sign Up -->
+    <div id="auth-signup-panel" class="hidden">
+      <form id="signup-form" novalidate>
+        <div class="form-group mb-md">
+          <label class="form-label" for="signup-name">Full Name</label>
+          <input class="form-input" type="text" id="signup-name" placeholder="Your name" required autocomplete="name">
+        </div>
+        <div class="form-group mb-md">
+          <label class="form-label" for="signup-email">Email</label>
+          <input class="form-input" type="email" id="signup-email" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="form-group mb-md">
+          <label class="form-label" for="signup-password">Password</label>
+          <input class="form-input" type="password" id="signup-password" placeholder="At least 8 characters" required autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="justify-content:center;">Create Account & Set Up Profile →</button>
+      </form>
+      <p class="text-sm text-center mt-md" style="color:var(--clr-text-400);">
+        Already have an account? <a href="#" id="switch-to-signin" style="color:var(--clr-primary);">Sign in</a>
+      </p>
+    </div>
+
+    <button onclick="closeAuthModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--clr-text-400);font-size:1.2rem;cursor:pointer;" aria-label="Close modal">✕</button>
+  </div>
+</div>
+
+<!-- ── Toast Container ────────────────────────────────────────────────────── -->
+<div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ── Scripts ────────────────────────────────────────────────────────────── -->
+<script type="module">
+  import { onAuthChange, showToast, openAuthModal, closeAuthModal } from './js/auth.js';
+  window.closeAuthModal = closeAuthModal;
+
+  const API = '/api';
+
+  // Search
+  let searchDebounce;
+  const searchInput   = document.getElementById('city-search');
+  const searchResults = document.getElementById('search-results');
+
+  searchInput?.addEventListener('input', () => {
+    clearTimeout(searchDebounce);
+    const q = searchInput.value.trim();
+    if (q.length < 2) { searchResults.classList.remove('visible'); return; }
+    searchDebounce = setTimeout(() => doSearch(q), 350);
+  });
+
+  async function doSearch(q) {
+    try {
+      const resp  = await fetch(`${API}/aqi/search?q=${encodeURIComponent(q)}`);
+      const data  = await resp.json();
+      searchResults.innerHTML = '';
+      (data.results || []).slice(0,8).forEach(r => {
+        const item = document.createElement('div');
+        item.className = 'search-result-item';
+        item.setAttribute('role', 'option');
+        item.innerHTML = `
+          <i class="fas fa-location-dot" style="color:var(--clr-primary)"></i>
+          <div>
+            <div style="font-weight:600">${r.name}</div>
+            <div class="region">${r.region}</div>
+          </div>
+        `;
+        item.addEventListener('click', () => {
+          searchInput.value = `${r.name}, ${r.region}`;
+          searchResults.classList.remove('visible');
+          loadCityAQI(r.lat, r.lon, r.name);
+        });
+        searchResults.appendChild(item);
+      });
+      if (data.results?.length) searchResults.classList.add('visible');
+    } catch (e) { console.error(e); }
+  }
+
+  // Close results on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-container')) searchResults.classList.remove('visible');
+  });
+
+  async function loadCityAQI(lat, lon, city) {
+    document.getElementById('aqi-loading').innerHTML = `<div class="spinner"></div><p>Fetching live data for ${city}…</p>`;
+    document.getElementById('aqi-loading').classList.remove('hidden');
+    document.getElementById('aqi-content').classList.add('hidden');
+
+    try {
+      const resp = await fetch(`${API}/aqi/current?lat=${lat}&lon=${lon}&city=${encodeURIComponent(city)}`);
+      const d    = await resp.json();
+
+      document.getElementById('aqi-loading').classList.add('hidden');
+      document.getElementById('aqi-content').classList.remove('hidden');
+
+      // AQI Gauge
+      const aqi       = d.aqi || 0;
+      const color     = aqiColor(aqi);
+      const gaugeEl   = document.getElementById('aqi-gauge-fill');
+      const circumference = 440;
+      gaugeEl.style.stroke = color;
+      gaugeEl.style.strokeDashoffset = circumference - (Math.min(aqi, 500) / 500) * circumference;
+      gaugeEl.style.filter = `drop-shadow(0 0 10px ${color})`;
+      document.getElementById('aqi-display-value').style.color = color;
+      document.getElementById('aqi-display-value').textContent = aqi;
+      document.getElementById('aqi-level-text').textContent    = d.level || '';
+      document.getElementById('aqi-city-name').textContent     = city;
+      document.getElementById('aqi-updated-time').textContent  = `Updated: ${d.time || 'Just now'}`;
+
+      // Update nav chip
+      document.getElementById('nav-aqi-value').textContent = `${city} AQI ${aqi}`;
+      document.querySelector('.nav-aqi-chip .dot').style.background = color;
+
+      // Pollutants
+      const p = d.pollutants || {};
+      const pol = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val != null ? Math.round(val) : '—'; };
+      pol('pol-pm25', p.pm25); pol('pol-pm10', p.pm10); pol('pol-no2', p.no2);
+      pol('pol-o3', p.o3); pol('pol-so2', p.so2); pol('pol-co', p.co);
+
+      // Weather
+      const w = d.weather || {};
+      const wx = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; };
+      wx('wx-temp', w.temperature); wx('wx-hum', w.humidity); wx('wx-wind', w.windSpeed); wx('wx-pres', w.pressure);
+
+      // Impact Factors
+      renderImpactFactors(d.factors || []);
+
+      // Forecast bars
+      renderForecastBars(d.hourlyForecast || []);
+
+      // Transfer prediction
+      if (d.transfer) {
+        document.getElementById('transfer-prediction').textContent =
+          `Tomorrow: AQI ~${d.transfer.predictedAqi} (${d.transfer.confidence}% confidence)`;
+      }
+
+      // Neighbor cities
+      renderNeighbors(d.neighbors || []);
+
+    } catch (e) {
+      document.getElementById('aqi-loading').innerHTML = `<p style="color:var(--clr-severe)"><i class="fas fa-circle-exclamation"></i> Failed to load data. Please try again.</p>`;
+    }
+  }
+
+  function renderImpactFactors(factors) {
+    const list = document.getElementById('impact-factors-list');
+    if (!factors.length) { list.innerHTML = '<p class="text-sm text-muted">No significant factors active.</p>'; return; }
+    list.innerHTML = factors.map(f => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--clr-border)">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,152,0,0.15);display:grid;place-items:center;color:#ff9800;flex-shrink:0;">
+          <i class="fas ${f.icon || 'fa-circle-exclamation'}" style="font-size:0.85rem"></i>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:0.88rem;font-weight:600">${f.label}</div>
+          <div style="font-size:0.76rem;color:var(--clr-text-400)">${f.description}</div>
+        </div>
+        <div style="font-size:0.8rem;font-weight:700;color:var(--clr-high)">×${f.aqiMultiplier?.toFixed(1)}</div>
+      </div>
+    `).join('');
+  }
+
+  function renderForecastBars(forecast) {
+    const chart  = document.getElementById('forecast-chart');
+    const labels = document.getElementById('forecast-labels');
+    if (!forecast.length) return;
+    const maxAqi = Math.max(...forecast.map(f => f.hourAqi), 1);
+    chart.innerHTML  = forecast.map((f, i) => `
+      <div style="flex:1;background:${aqiColor(f.hourAqi)};border-radius:3px 3px 0 0;min-height:4px;height:${Math.max(4,(f.hourAqi/maxAqi)*80)}px;opacity:0.8;transition:height 0.5s ease;cursor:default;"
+           title="${f.i}:00 — AQI ${f.hourAqi}"></div>
+    `).join('');
+    labels.innerHTML = forecast.filter((_,i) => i % 4 === 0).map(f =>
+      `<div style="flex:1;font-size:0.62rem;color:var(--clr-text-400);text-align:center;">${f.i === 0 ? 'Now' : `+${f.i}h`}</div>`
+    ).join('');
+  }
+
+  function renderNeighbors(neighbors) {
+    const grid = document.getElementById('neighbor-grid');
+    if (!neighbors.length) { grid.innerHTML = '<p class="text-sm text-muted">No neighbor data available.</p>'; return; }
+    grid.innerHTML = neighbors.map(n => `
+      <div class="card" style="text-align:center;padding:14px">
+        <div style="font-size:0.8rem;font-weight:600;color:var(--clr-text-300);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.name}</div>
+        <div style="font-size:1.6rem;font-weight:800;color:${aqiColor(n.aqi)};font-family:var(--font-display)">${n.aqi}</div>
+        <div style="font-size:0.68rem;color:var(--clr-text-400);margin-top:2px">${Math.round(n.dist)} km away</div>
+      </div>
+    `).join('');
+  }
+
+  function aqiColor(aqi) {
+    if (aqi <= 50)  return '#00e676';
+    if (aqi <= 100) return '#ffd600';
+    if (aqi <= 150) return '#ff9100';
+    if (aqi <= 200) return '#f44336';
+    if (aqi <= 300) return '#9c27b0';
+    return '#880e4f';
+  }
+
+  // Load a default city (user's geolocation if available)
+  navigator.geolocation?.getCurrentPosition(
+    (pos) => loadCityAQI(pos.coords.latitude, pos.coords.longitude, 'Your Location'),
+    () => {}  // silent fallback — user can search
+  );
+</script>
+</body>
+</html>

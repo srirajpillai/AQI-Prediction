@@ -1,0 +1,354 @@
+/* ============================================================
+   AirFlow AI v3 — Profile Page Styles (profile.css)
+   Multi-step health profile setup form.
+   ============================================================ */
+
+/* ── Profile Page Layout ───────────────────────────────────── */
+.profile-page {
+  min-height: calc(100vh - var(--nav-height));
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--spacing-xl) var(--spacing-md) var(--spacing-2xl);
+}
+
+.profile-card {
+  width: 100%;
+  max-width: 680px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ── Step Progress Bar ─────────────────────────────────────── */
+.profile-header {
+  background: var(--clr-bg-700);
+  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-md);
+  border-bottom: 1px solid var(--clr-border);
+}
+
+.profile-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: var(--spacing-lg);
+}
+
+.step-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.step-item::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: calc(50% + 18px);
+  right: calc(-50% + 18px);
+  height: 2px;
+  background: var(--clr-border);
+  z-index: 0;
+}
+
+.step-item:last-child::before { display: none; }
+
+.step-dot {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--clr-bg-600);
+  border: 2px solid var(--clr-border-2);
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--clr-text-400);
+  transition: all var(--transition-mid);
+  position: relative;
+  z-index: 1;
+}
+
+.step-item.active .step-dot {
+  background: var(--clr-primary-g);
+  border-color: var(--clr-primary);
+  color: white;
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.2);
+}
+
+.step-item.done .step-dot {
+  background: var(--clr-primary-g);
+  border-color: var(--clr-primary);
+  color: white;
+}
+
+.step-item.done::before {
+  background: var(--clr-primary);
+}
+
+.step-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--clr-text-400);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.step-item.active .step-label { color: var(--clr-primary); }
+.step-item.done .step-label   { color: var(--clr-text-300); }
+
+/* ── Step Content ──────────────────────────────────────────── */
+.profile-body {
+  padding: var(--spacing-xl);
+}
+
+.step-panel {
+  display: none;
+  animation: fade-in 0.3s ease;
+}
+
+.step-panel.active { display: block; }
+
+.step-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+.step-subtitle { font-size: 0.88rem; color: var(--clr-text-400); margin-bottom: var(--spacing-xl); }
+
+/* ── Form Grid ─────────────────────────────────────────────── */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+@media (max-width: 540px) { .form-grid-2 { grid-template-columns: 1fr; } }
+
+/* ── Option Cards (for selecting values) ──────────────────── */
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.option-card {
+  padding: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 2px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-mid);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.option-card:hover {
+  border-color: rgba(59,130,246,0.4);
+  background: rgba(59,130,246,0.05);
+}
+
+.option-card.selected {
+  border-color: var(--clr-primary);
+  background: rgba(59,130,246,0.12);
+}
+
+.option-card .option-icon { font-size: 1.5rem; }
+.option-card .option-label { font-size: 0.82rem; font-weight: 600; color: var(--clr-text-200); }
+.option-card.selected .option-label { color: var(--clr-primary); }
+
+/* ── Condition Checkboxes (Medical) ───────────────────────── */
+.conditions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 540px) { .conditions-grid { grid-template-columns: 1fr; } }
+
+.condition-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.condition-checkbox:hover { background: rgba(255,255,255,0.06); border-color: var(--clr-border-2); }
+.condition-checkbox.checked { background: rgba(244,67,54,0.08); border-color: rgba(244,67,54,0.3); }
+
+.condition-checkbox input[type="checkbox"] { display: none; }
+
+.condition-check-box {
+  width: 20px; height: 20px;
+  border: 2px solid var(--clr-border-2);
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+  font-size: 0.7rem;
+  color: transparent;
+}
+
+.condition-checkbox.checked .condition-check-box {
+  background: rgba(244,67,54,0.8);
+  border-color: #ef5350;
+  color: white;
+}
+
+.condition-info { flex: 1; }
+.condition-name   { font-size: 0.88rem; font-weight: 600; color: var(--clr-text-100); }
+.condition-weight { font-size: 0.72rem; color: var(--clr-text-400); }
+
+/* ── Slider Input ──────────────────────────────────────────── */
+.slider-container { display: flex; flex-direction: column; gap: 8px; }
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--clr-text-400);
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--clr-bg-600);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--clr-primary);
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.2);
+  transition: box-shadow var(--transition-fast);
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 0 6px rgba(59,130,246,0.3);
+}
+
+.slider-value {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--clr-primary);
+  font-family: var(--font-display);
+}
+
+/* ── Threshold Selector ────────────────────────────────────── */
+.threshold-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 480px) { .threshold-options { grid-template-columns: repeat(2, 1fr); } }
+
+.threshold-btn {
+  padding: 10px;
+  border: 2px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: rgba(255,255,255,0.02);
+}
+
+.threshold-btn .t-icon  { font-size: 1.2rem; margin-bottom: 4px; }
+.threshold-btn .t-label { font-size: 0.8rem; font-weight: 700; }
+.threshold-btn .t-desc  { font-size: 0.68rem; color: var(--clr-text-400); margin-top: 2px; }
+
+.threshold-btn[data-value="low"].selected    { border-color: var(--clr-good);     background: rgba(0,230,118,0.08); }
+.threshold-btn[data-value="moderate"].selected{ border-color: var(--clr-moderate); background: rgba(255,214,0,0.08); }
+.threshold-btn[data-value="high"].selected   { border-color: var(--clr-high);     background: rgba(255,145,0,0.08); }
+.threshold-btn[data-value="severe"].selected { border-color: var(--clr-severe);   background: rgba(255,23,68,0.08); }
+
+/* ── Navigation Footer ─────────────────────────────────────── */
+.profile-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-top: 1px solid var(--clr-border);
+  background: var(--clr-bg-700);
+}
+
+.step-counter {
+  font-size: 0.82rem;
+  color: var(--clr-text-400);
+}
+
+/* ── Location Picker ───────────────────────────────────────── */
+.location-map-preview {
+  height: 180px;
+  background: var(--clr-bg-700);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--clr-text-400);
+  font-size: 0.88rem;
+  margin-top: var(--spacing-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.location-map-preview.has-location {
+  background: var(--clr-surface);
+}
+
+.location-coords {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+}
+
+.coord-chip {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  color: var(--clr-text-300);
+  font-family: monospace;
+}
+
+/* ── Success Screen ────────────────────────────────────────── */
+.success-screen {
+  text-align: center;
+  padding: var(--spacing-2xl) var(--spacing-xl);
+}
+
+.success-icon {
+  width: 80px; height: 80px;
+  margin: 0 auto var(--spacing-lg);
+  background: rgba(0,230,118,0.15);
+  border: 2px solid var(--clr-good);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  animation: pop-in 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes pop-in {
+  0%   { transform: scale(0); opacity: 0; }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}

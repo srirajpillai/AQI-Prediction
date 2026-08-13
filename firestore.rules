@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users collection: only the authenticated user can read/write their own document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Health profile subcollection
+      match /health_profile/{doc} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Notifications subcollection: user can read and update (mark read), but not create
+      // (creation happens server-side via Admin SDK)
+      match /notifications/{notifId} {
+        allow read:   if request.auth != null && request.auth.uid == userId;
+        allow update: if request.auth != null && request.auth.uid == userId
+                      && request.resource.data.keys().hasOnly(['read']);
+        allow create, delete: if false; // Server-only
+      }
+    }
+
+    // AQI cache: readable by all authenticated users, writable only server-side
+    match /aqi_cache/{document} {
+      allow read:  if request.auth != null;
+      allow write: if false;
+    }
+  }
+}

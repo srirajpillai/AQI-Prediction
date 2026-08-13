@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Health Advisory — AirFlow AI</title>
+  <meta name="description" content="Your personalized air quality health risk score, safe activity windows, and smart recommendations based on your unique health profile.">
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/dashboard.css">
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────────────────── -->
+<nav class="navbar" role="navigation">
+  <a class="navbar-brand" href="/"><div class="logo-icon">🌬️</div> AirFlow AI</a>
+  <ul class="navbar-links" role="list">
+    <li><a href="/">Live AQI</a></li>
+    <li><a href="/dashboard" class="active" aria-current="page">My Advisory</a></li>
+    <li><a href="/profile">Health Profile</a></li>
+  </ul>
+  <div class="navbar-right">
+    <button class="btn btn-primary btn-sm hidden" id="nav-auth-btn"><i class="fas fa-user"></i> Sign In</button>
+    <div class="avatar hidden" id="nav-avatar">U</div>
+    <a href="/profile" class="btn btn-ghost btn-sm hidden" id="nav-signout-btn" title="Edit profile"><i class="fas fa-user-pen"></i></a>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="container">
+
+    <!-- ── Skeleton Loader ─────────────────────────────────────────────────── -->
+    <div id="dashboard-skeleton" style="padding-top:32px;">
+      <div style="height:24px;background:var(--clr-surface);border-radius:12px;margin-bottom:12px;width:40%;animation:pulse 1.5s ease infinite alternate;"></div>
+      <div style="display:grid;grid-template-columns:300px 1fr;gap:24px;margin-top:24px;">
+        <div style="height:380px;background:var(--clr-surface);border-radius:20px;animation:pulse 1.5s ease infinite alternate;"></div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="height:80px;background:var(--clr-surface);border-radius:16px;animation:pulse 1.5s ease infinite alternate;"></div>
+          <div style="height:200px;background:var(--clr-surface);border-radius:16px;animation:pulse 1.5s ease infinite alternate 0.2s;"></div>
+          <div style="height:160px;background:var(--clr-surface);border-radius:16px;animation:pulse 1.5s ease infinite alternate 0.4s;"></div>
+        </div>
+      </div>
+      <style>@keyframes pulse{from{opacity:1}to{opacity:0.4}}</style>
+    </div>
+
+    <!-- ── Profile Prompt (no profile set) ────────────────────────────────── -->
+    <div id="profile-prompt" class="hidden" style="text-align:center;padding:var(--spacing-2xl) 0;">
+      <div style="font-size:4rem;margin-bottom:16px;">🩺</div>
+      <h2>Set Up Your Health Profile</h2>
+      <p style="color:var(--clr-text-400);margin:12px 0 32px;max-width:440px;margin-left:auto;margin-right:auto;">
+        To get a personalized risk score and smart recommendations, tell us about your health conditions and home location.
+      </p>
+      <a href="/profile" class="btn btn-primary btn-lg">
+        <i class="fas fa-user-plus"></i> Create Health Profile
+      </a>
+    </div>
+
+    <!-- ── Dashboard Content ───────────────────────────────────────────────── -->
+    <div id="dashboard-content" class="hidden" style="padding-top:24px;">
+
+      <!-- Page Header -->
+      <div class="flex-between mb-lg">
+        <div>
+          <h1 style="font-size:1.8rem;margin-bottom:4px;">Your Health Advisory</h1>
+          <div id="location-bar" class="location-bar" style="max-width:fit-content;margin-top:8px;">
+            <i class="fas fa-location-dot"></i>
+            <span class="location-city">Loading location…</span>
+          </div>
+        </div>
+        <div class="flex gap-sm">
+          <button class="btn btn-ghost btn-sm" id="btn-refresh">
+            <i class="fas fa-rotate-right"></i> Refresh
+          </button>
+          <a href="/profile" class="btn btn-outline btn-sm">
+            <i class="fas fa-user-pen"></i> Edit Profile
+          </a>
+        </div>
+      </div>
+
+      <div class="dashboard-layout">
+
+        <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+        <aside class="dashboard-sidebar">
+
+          <!-- Risk Score Card -->
+          <div class="card risk-score-card" id="risk-score-card">
+            <div class="risk-score-label">Personal Risk Score</div>
+            <div class="risk-gauge-wrapper">
+              <svg class="risk-gauge-svg" viewBox="0 0 160 160" aria-label="Risk score gauge">
+                <circle class="risk-gauge-bg"   cx="80" cy="80" r="70" />
+                <circle class="risk-gauge-fill" id="risk-gauge-fill" cx="80" cy="80" r="70"
+                        stroke-dasharray="440" stroke-dashoffset="440" />
+              </svg>
+              <div class="risk-gauge-center">
+                <div class="risk-score-number" id="risk-score-number">—</div>
+                <div class="risk-score-max">/ 100</div>
+              </div>
+            </div>
+            <div class="risk-level-badge" id="risk-level-badge">—</div>
+            <p class="risk-headline" id="risk-headline">Calculating your personal air quality risk…</p>
+          </div>
+
+          <!-- Pollutant Stats -->
+          <div class="card" style="padding:var(--spacing-md);">
+            <div class="section-title">Current Pollutants</div>
+            <div class="stats-row" style="grid-template-columns:repeat(2,1fr);">
+              <div class="stat-card" id="stat-pm25"><div class="stat-label">PM2.5</div><div class="stat-value">—</div><div class="stat-sub">µg/m³</div></div>
+              <div class="stat-card" id="stat-pm10"><div class="stat-label">PM10</div><div class="stat-value">—</div><div class="stat-sub">µg/m³</div></div>
+              <div class="stat-card" id="stat-no2"><div class="stat-label">NO₂</div><div class="stat-value">—</div><div class="stat-sub">µg/m³</div></div>
+              <div class="stat-card" id="stat-o3"><div class="stat-label">O₃</div><div class="stat-value">—</div><div class="stat-sub">ppb</div></div>
+            </div>
+          </div>
+
+          <!-- Notification Controls -->
+          <div class="card" style="padding:var(--spacing-md);">
+            <div class="section-title">Notifications</div>
+            <button class="btn btn-primary w-full mb-md" id="btn-enable-notifs" style="justify-content:center;">
+              <i class="fas fa-bell"></i> Enable Push Alerts
+            </button>
+            <button class="btn btn-ghost btn-sm w-full" id="btn-test-notif" style="justify-content:center;">
+              <i class="fas fa-flask"></i> Send Test Notification
+            </button>
+          </div>
+
+        </aside><!-- /sidebar -->
+
+        <!-- ── Main Content ────────────────────────────────────────────────── -->
+        <main class="dashboard-main">
+
+          <!-- Why This Score? (Explainability) -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">
+                <i class="fas fa-magnifying-glass-chart"></i>
+                Why This Score?
+              </span>
+              <span class="text-xs text-muted">Factors driving your personal risk</span>
+            </div>
+            <div class="factors-list" id="factors-list">
+              <div class="loading-overlay" style="padding:24px;">
+                <div class="spinner"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Safe Activity Windows -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title"><i class="fas fa-person-running"></i> Safe Activity Windows — Today</span>
+            </div>
+            <p id="activity-summary-msg" style="font-size:0.88rem;color:var(--clr-text-300);margin-bottom:12px;">Calculating safe outdoor windows…</p>
+            <div class="activity-heatmap" id="activity-heatmap" aria-label="Hourly risk heatmap"></div>
+            <div class="activity-hour-labels" id="activity-hour-labels"></div>
+            <!-- Legend -->
+            <div class="flex gap-md mt-md" style="flex-wrap:wrap;font-size:0.78rem;color:var(--clr-text-400);">
+              <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(0,230,118,0.7);margin-right:4px;"></span>Safe</span>
+              <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(255,214,0,0.7);margin-right:4px;"></span>Moderate</span>
+              <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(255,145,0,0.7);margin-right:4px;"></span>High Risk</span>
+              <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(255,23,68,0.7);margin-right:4px;"></span>Severe Risk</span>
+            </div>
+          </div>
+
+          <!-- Smart Recommendations -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title"><i class="fas fa-lightbulb"></i> Smart Recommendations</span>
+              <span class="text-xs text-muted">Personalised for your health profile</span>
+            </div>
+            <div class="recommendations-grid" id="recommendations-grid">
+              <div class="loading-overlay" style="padding:24px;"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+          <!-- Notification History -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title"><i class="fas fa-bell"></i> Recent Alerts</span>
+              <span class="text-xs text-muted">Last 10 notifications</span>
+            </div>
+            <div class="notif-list" id="notif-list">
+              <div class="loading-overlay" style="padding:24px;"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

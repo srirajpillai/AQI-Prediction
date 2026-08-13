@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Profile Setup — AirFlow AI</title>
+  <meta name="description" content="Create your health profile to receive personalized air quality health risk scores and push notifications tailored to your conditions.">
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/profile.css">
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────────────────── -->
+<nav class="navbar" role="navigation">
+  <a class="navbar-brand" href="/"><div class="logo-icon">🌬️</div> AirFlow AI</a>
+  <ul class="navbar-links" role="list">
+    <li><a href="/">Live AQI</a></li>
+    <li><a href="/dashboard">My Advisory</a></li>
+    <li><a href="/profile" class="active" aria-current="page">Health Profile</a></li>
+  </ul>
+  <div class="navbar-right">
+    <button class="btn btn-primary btn-sm hidden" id="nav-auth-btn"><i class="fas fa-user"></i> Sign In</button>
+    <div class="avatar hidden" id="nav-avatar">U</div>
+    <button class="btn btn-ghost btn-sm hidden" id="nav-signout-btn"><i class="fas fa-sign-out-alt"></i></button>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+
+  <!-- Auth Required Banner -->
+  <div id="auth-required-banner" class="hidden" style="text-align:center;padding:var(--spacing-2xl) var(--spacing-md);">
+    <div style="font-size:3rem;margin-bottom:16px;">🔒</div>
+    <h2>Sign In Required</h2>
+    <p style="color:var(--clr-text-400);margin:12px 0 28px;">Please sign in to set up your health profile.</p>
+    <button class="btn btn-primary btn-lg" onclick="openAuthModal('signin')">
+      <i class="fas fa-user"></i> Sign In
+    </button>
+  </div>
+
+  <!-- Success Screen (shown after save) -->
+  <div id="success-screen" class="hidden profile-page">
+    <div class="success-screen">
+      <div class="success-icon">✅</div>
+      <h2 style="margin-bottom:8px;">Profile Saved!</h2>
+      <p style="color:var(--clr-text-400);margin-bottom:32px;">Your health profile has been saved. Redirecting you to your personalized advisory dashboard…</p>
+      <a href="/dashboard" class="btn btn-primary btn-lg">
+        <i class="fas fa-chart-simple"></i> View My Advisory
+      </a>
+    </div>
+  </div>
+
+  <!-- Profile Setup Card -->
+  <div class="profile-page">
+    <div class="profile-card" id="profile-card">
+
+      <!-- Header + Steps -->
+      <div class="profile-header">
+        <div class="flex-between">
+          <div>
+            <h1 style="font-size:1.4rem;margin-bottom:4px;">Your Health Profile</h1>
+            <p style="font-size:0.85rem;color:var(--clr-text-400);">Help us personalize your air quality risk assessment</p>
+          </div>
+          <div style="font-size:2rem;">🩺</div>
+        </div>
+
+        <!-- Step Indicators -->
+        <div class="profile-steps" role="list" aria-label="Setup steps">
+          <div class="step-item active" role="listitem">
+            <div class="step-dot">1</div>
+            <div class="step-label">Demographics</div>
+          </div>
+          <div class="step-item" role="listitem">
+            <div class="step-dot">2</div>
+            <div class="step-label">Medical</div>
+          </div>
+          <div class="step-item" role="listitem">
+            <div class="step-dot">3</div>
+            <div class="step-label">Lifestyle</div>
+          </div>
+          <div class="step-item" role="listitem">
+            <div class="step-dot">4</div>
+            <div class="step-label">Location & Alerts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step Content -->
+      <div class="profile-body">
+
+        <!-- ── Step 1: Demographics ─────────────────────────────────────── -->
+        <div class="step-panel active" id="step-1">
+          <h2 class="step-title">About You</h2>
+          <p class="step-subtitle">Basic information to calculate your baseline vulnerability to air pollution.</p>
+
+          <!-- Age Slider -->
+          <div class="form-group mb-lg">
+            <label class="form-label" for="age-input">Age</label>
+            <div class="slider-container">
+              <input type="range" id="age-input" min="1" max="100" value="25"
+                     aria-label="Your age" aria-valuemin="1" aria-valuemax="100" aria-valuenow="25">
+              <div class="slider-value" id="age-display" aria-live="polite">25 years</div>
+              <div class="slider-labels"><span>1</span><span>50</span><span>100+</span></div>
+            </div>
+          </div>
+
+          <!-- Biological Sex -->
+          <div class="form-group mb-lg">
+            <label class="form-label">Biological Sex</label>
+            <div class="option-grid">
+              <div class="option-card" data-sex="male" role="button" tabindex="0" aria-pressed="false">
+                <div class="option-icon">♂️</div>
+                <div class="option-label">Male</div>
+              </div>
+              <div class="option-card" data-sex="female" role="button" tabindex="0" aria-pressed="false">
+                <div class="option-icon">♀️</div>
+                <div class="option-label">Female</div>
+              </div>
+              <div class="option-card" data-sex="other" role="button" tabindex="0" aria-pressed="false">
+                <div class="option-icon">⚧️</div>
+                <div class="option-label">Other</div>
+              </div>
+              <div class="option-card" data-sex="prefer_not_to_say" role="button" tabindex="0" aria-pressed="false">
+                <div class="option-icon">🤐</div>
+                <div class="option-label">Prefer not to say</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BMI Category -->
+          <div class="form-group">
+            <label class="form-label">Body Weight Category <span style="color:var(--clr-text-400);font-weight:400;">(approximate)</span></label>
+            <div class="option-grid" style="grid-template-columns:repeat(4,1fr);">
+              <div class="option-card" data-bmi="underweight" role="button" tabindex="0"><div class="option-icon">🍃</div><div class="option-label">Underweight</div></div>
+              <div class="option-card selected" data-bmi="normal" role="button" tabindex="0" aria-pressed="true"><div class="option-icon">✅</div><div class="option-label">Normal</div></div>
+              <div class="option-card" data-bmi="overweight" role="button" tabindex="0"><div class="option-icon">⚖️</div><div class="option-label">Overweight</div></div>
+              <div class="option-card" data-bmi="obese" role="button" tabindex="0"><div class="option-icon">🔴</div><div class="option-label">Obese</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Step 2: Medical Conditions ─────────────────────────────────── -->
+        <div class="step-panel" id="step-2">
+          <h2 class="step-title">Medical Conditions</h2>
+          <p class="step-subtitle">Select any conditions you have. Each one adjusts your personal risk multiplier. Your data is private and encrypted.</p>
+
+          <div class="conditions-grid" role="group" aria-label="Medical conditions">
+            <!-- Each condition block: data-condition must match backend snake_case key -->
+            <div class="condition-checkbox" data-condition="asthma" role="checkbox" aria-checked="false" tabindex="0">
+              <div class="condition-check-box" aria-hidden="true"><i class="fas fa-check"></i></div>
+              <div class="condition-info">
+                <div class="condition-name">🌬️ Asthma</div>
+                <div class="condition-weight">Risk ×2.5 — Highly sensitive to PM2.5, O₃</div>
+              </div>
+            </div>
+
+            <div class="condition-checkbox" data-condition="copd" role="checkbox" aria-checked="false" tabindex="0">
+              <div class="condition-check-box" aria-hidden="true"><i class="fas fa-check"></i></div>
+              <div class="condition-info">
+                <div class="condition-name">🫁 COPD / Emphysema</div>
+                <div class="condition-weight">Risk ×3.0 — Critical sensitivity</div>
+              </div>
+            </div>
+
+            <div class="condition-checkbox" data-condition="cardiovascular" role="checkbox" aria-checked="false" tabindex="0">
+              <div class="condition-check-box" aria-hidden="true"><i class="fas fa-check"></i></div>
+              <div class="condition-info">
+                <div class="condition-name">❤️ Cardiovascular Disease</div>
+                <div class="condition-weight">Risk ×2.0 — PM2.5 triggers cardiac events</div>
+              </div>
+            </div>
+
+            <div class="condition-checkbox" data-condition="hypertension" role="checkbox" aria-checked="false" tabindex="0">
+              <div class="condition-check-box" aria-hidden="true"><i class="fas fa-check"></i></div>
+              <div class="condition-info">
+                <div class="condition-name">🩺 Hypertension</div>
+                <div class="condition-weight">Risk ×1.5 — NO₂ & O₃ spike blood pressure</div>
+              </div>
+            </div>
+
+            <div class="condition-checkbox" data-condition="diabetes" role="checkbox" aria-checked="false" tabindex="0">
+              <div class="condition-check-box" aria-hidden="true"><i class="fas fa-check"></i></div>
+              <div class="condition-info">
+                <div class="condition-name">💉 Diabetes (Type 2)</div>
+                <div class="condition-weight">Risk ×1.4 — Impaired immune response</div>
+              </div>
+            </div>
+
+            <div class="condition-checkbox" data-condition="pregnancy" role="checkbox" aria-checked="false" tabindex="0">
+              <div class="condition-check-box" aria-hidden="true"><i class="fas fa-check"></i></div>
+              <div class="condition-info">
+                <div class="condition-name">🤰 Pregnancy</div>
+                <div class="condition-weight">Risk ×2.2 — Fetal development risk</div>
+              </div>
+            </div>
+
+            <div class="condition-checkbox" data-condition="immunocompromised" role="checkbox" aria-checked="false" tabindex="0">
+              <div class="condition-check-box" aria-hidden="true"><i class="fas fa-check"></i></div>
+              <div class="condition-info">
+                <div class="condition-name">🛡️ Immunocompromised</div>
+                <div class="condition-weight">Risk ×2.0 — Cannot fight pollution infections</div>
+              </div>
+            </div>
+
+            <div class="condition-checkbox" data-condition="allergies" role="checkbox" aria-checked="false" tabindex="0">
+              <div class="condition-check-box" aria-hidden="true"><i class="fas fa-check"></i></div>
+              <div class="condition-info">
+                <div class="condition-name">🌸 Seasonal Allergies</div>
+                <div class="condition-weight">Risk ×1.3 — Pollen + PM10 exacerbation</div>
+              </div>
+            </div>
+
+            <div class="condition-checkbox" data-condition="kidney_disease" role="checkbox" aria-checked="false" tabindex="0">
+              <div class="condition-check-box" aria-hidden="true"><i class="fas fa-check"></i></div>
+              <div class="condition-info">
+                <div class="condition-name">🫘 Kidney Disease</div>
+                <div class="condition-weight">Risk ×1.5 — Heavy metal accumulation risk</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Medications -->
+          <div class="mt-lg">
+            <div class="section-title">Current Medications</div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-label">Rescue Inhaler / Bronchodilator</div>
+                <div class="toggle-desc">Salbutamol, Albuterol, or similar</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="toggle-inhaler"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-label">Beta-Blockers</div>
+                <div class="toggle-desc">For heart conditions or hypertension</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="toggle-beta-blockers"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-label">Blood Thinners / Anticoagulants</div>
+                <div class="toggle-desc">Warfarin, aspirin therapy, etc.</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="toggle-blood-thinners"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Step 3: Lifestyle ────────────────────────────────────────────── -->
+        <div class="step-panel" id="step-3">
+          <h2 class="step-title">Lifestyle & Habits</h2>
+          <p class="step-subtitle">These factors affect how much pollution you actually inhale each day.</p>
+
+          <!-- Activity Level -->
+          <div class="form-group mb-lg">
+            <label class="form-label">Typical Activity Level</label>
+            <p style="font-size:0.82rem;color:var(--clr-text-400);margin-bottom:12px;">Higher activity = more air inhaled per minute = greater exposure risk</p>
+            <div class="option-grid">
+              <div class="option-card" data-activity="sedentary" role="button" tabindex="0">
+                <div class="option-icon">🛋️</div>
+                <div class="option-label">Sedentary</div>
+              </div>
+              <div class="option-card" data-activity="light" role="button" tabindex="0">
+                <div class="option-icon">🚶</div>
+                <div class="option-label">Light Active</div>
+              </div>
+              <div class="option-card selected" data-activity="moderate" role="button" tabindex="0" aria-pressed="true">
+                <div class="option-icon">🏃</div>
+                <div class="option-label">Moderate</div>
+              </div>
+              <div class="option-card" data-activity="vigorous" role="button" tabindex="0">
+                <div class="option-icon">🏋️</div>
+                <div class="option-label">Vigorous</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Smoking Status -->
+          <div class="form-group mb-lg">
+            <label class="form-label">Smoking Status</label>
+            <div class="option-grid" style="grid-template-columns:repeat(3,1fr);">
+              <div class="option-card selected" data-smoking="never" role="button" tabindex="0" aria-pressed="true">
+                <div class="option-icon">🚭</div>
+                <div class="option-label">Never Smoked</div>
+              </div>
+              <div class="option-card" data-smoking="former" role="button" tabindex="0">
+                <div class="option-icon">⏸️</div>
+                <div class="option-label">Former Smoker</div>
+              </div>
+              <div class="option-card" data-smoking="current" role="button" tabindex="0">
+                <div class="option-icon">🚬</div>
+                <div class="option-label">Current Smoker</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Outdoor Worker -->
+          <div class="form-group">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-label">🏗️ Outdoor Worker</div>
+                <div class="toggle-desc">Construction, agriculture, delivery, outdoor service — prolonged outdoor exposure daily</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="toggle-outdoor">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Step 4: Location & Alerts ──────────────────────────────────── -->
+        <div class="step-panel" id="step-4">
+          <h2 class="step-title">Location & Alert Settings</h2>
+          <p class="step-subtitle">Set your home location and choose when you want to be notified about air quality risks.</p>
+
+          <!-- Home Location -->
+          <div class="form-group mb-lg">
+            <label class="form-label" for="location-search">Home Location</label>
+            <p style="font-size:0.82rem;color:var(--clr-text-400);margin-bottom:10px;">The scheduler uses this to proactively send you alerts — even when the app is closed.</p>
+            <div class="search-container" style="max-width:100%;">
+              <i class="fas fa-magnifying-glass search-icon"></i>
+              <input type="search" class="search-input" id="location-search"
+                     placeholder="Search your city — Pune, Mumbai, Bengaluru…"
+                     autocomplete="off" style="border-radius:var(--radius-md);">
+              <div class="search-results" id="location-results"></div>
+            </div>
+            <button class="btn btn-ghost btn-sm mt-sm" id="btn-use-location" type="button">
+              <i class="fas fa-crosshairs"></i> Use My Current Location
+            </button>
+            <div class="location-coords hidden mt-sm" id="location-coords">
+              <div class="coord-chip" id="loc-lat">—</div>
+              <div class="coord-chip" id="loc-lon">—</div>
+            </div>
+          </div>
+
+          <!-- Alert Threshold -->
+          <div class="form-group mb-lg">
+            <label class="form-label">Alert Threshold</label>
+            <p style="font-size:0.82rem;color:var(--clr-text-400);margin-bottom:12px;">Send me a push notification when my personal risk level reaches:</p>
+            <div class="threshold-options" role="group" aria-label="Alert threshold selection">
+              <div class="threshold-btn" data-value="low" role="button" tabindex="0">
+                <div class="t-icon">🟢</div>
+                <div class="t-label" style="color:var(--clr-good)">Low</div>
+                <div class="t-desc">Always alert</div>
+              </div>
+              <div class="threshold-btn selected" data-value="moderate" role="button" tabindex="0" aria-pressed="true">
+                <div class="t-icon">🟡</div>
+                <div class="t-label" style="color:var(--clr-moderate)">Moderate</div>
+                <div class="t-desc">Recommended</div>
+              </div>
+              <div class="threshold-btn" data-value="high" role="button" tabindex="0">
+                <div class="t-icon">🟠</div>
+                <div class="t-label" style="color:var(--clr-high)">High</div>
+                <div class="t-desc">Only when high</div>
+              </div>
+              <div class="threshold-btn" data-value="severe" role="button" tabindex="0">
+                <div class="t-icon">🔴</div>
+                <div class="t-label" style="color:var(--clr-severe)">Severe</div>
+                <div class="t-desc">Emergency only</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications Toggle -->
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">🔔 Enable Push Notifications</div>
+              <div class="toggle-desc">Browser will ask for permission when you save your profile</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-notifications" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Privacy Note -->
+          <div style="margin-top:20px;padding:14px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:12px;font-size:0.82rem;color:var(--clr-text-400);">
+            <i class="fas fa-shield-halved" style="color:var(--clr-primary);margin-right:6px;"></i>
+            Your health data is stored securely in Firebase Firestore and is never shared with third parties. Only you and our notification system can access it.
+          </div>
+        </div>
+
+      </div><!-- /profile-body -->
+
+      <!-- ── Footer Navigation ──────────────────────────────────────────── -->
+      <div class="profile-footer">
+        <button class="btn btn-ghost hidden" id="btn-prev" type="button">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <span class="step-counter" id="step-counter">Step 1 of 4</span>
+        <button class="btn btn-primary" id="btn-next" type="button">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+        <button class="btn btn-primary hidden" id="btn-save" type="button">
+          <i class="fas fa-check"></i> Save Profile
+        </button>
+      </div>
+
+    </div><!-- /profile-card -->
+  </div>
+
+</div><!-- /page-wrapper -->
+
+<div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/profile.js"></script>
+<script>
+  // Make auth modal accessible from inline handlers
+  function openAuthModal(mode) {
+    import('./js/auth.js').then(m => m.openAuthModal(mode));
+  }
+</script>
+</body>
+</html>
