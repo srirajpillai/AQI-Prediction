@@ -1668,5 +1668,96 @@ body {
 .news-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 30px 20px; color: var(--text3); font-size: 12px; text-align: center; }
 .news-empty i { font-size: 24px; color: var(--aqi-accent); opacity: 0.5; }
 @media(max-width: 1100px) { .crosscity-news-wrapper { grid-template-columns: 1fr 340px; } }
-@media(max-width: 900px) { .crosscity-news-wrapper { grid-template-columns: 1fr; } .aqi-news-panel { position: static; min-height: 480px; max-height: 560px; } }
 @media(max-width: 480px) { .aqi-news-panel { min-height: 420px; max-height: 500px; } }
+
+/* ===== HEALTH PROFILE MODAL & AUTH ===== */
+.hidden { display: none !important; }
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.3s var(--ease), visibility 0.3s;
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+
+/* Modal Container */
+.profile-modal {
+    width: 90%; max-width: 500px;
+    background: var(--nav-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass), var(--inset), 0 20px 60px rgba(0,0,0,0.5);
+    border-radius: var(--r-lg);
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.4s var(--spring);
+    display: flex; flex-direction: column;
+}
+.modal-overlay.active .profile-modal { transform: translateY(0) scale(1); }
+
+/* Modal Header */
+.modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--glass-border);
+}
+.modal-header h2 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--text); margin: 0; }
+.modal-header h2 i { color: var(--aqi-accent); }
+.modal-close {
+    background: none; border: none; color: var(--text3); font-size: 20px;
+    cursor: pointer; transition: color 0.2s;
+}
+.modal-close:hover { color: var(--aqi-accent); }
+
+/* Modal Body */
+.modal-body { padding: 24px; overflow-y: auto; max-height: 75vh; }
+.modal-desc { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.5; }
+
+/* Form Elements */
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.form-group input[type="number"], .form-group select {
+    width: 100%; padding: 12px 16px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+    border-radius: var(--r-sm); color: var(--text); font-family: var(--font);
+    font-size: 14px; outline: none; transition: border-color 0.2s, background 0.2s;
+}
+[data-theme="light"] .form-group input, [data-theme="light"] .form-group select { background: rgba(255,255,255,0.5); }
+.form-group input:focus, .form-group select:focus { border-color: var(--aqi-accent); background: rgba(var(--aqi-accent-rgb),0.05); }
+
+/* Grid for Checkboxes */
+.conditions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.condition-check {
+    display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2);
+    cursor: pointer; padding: 10px 14px; background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border); border-radius: var(--r-sm);
+    transition: all 0.2s;
+}
+.condition-check:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+.condition-check input[type="checkbox"] { accent-color: var(--aqi-accent); width: 16px; height: 16px; cursor: pointer; }
+
+/* Modal Actions */
+.modal-actions {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--glass-border);
+}
+.btn-primary, .btn-secondary {
+    padding: 10px 20px; border-radius: var(--r-sm); font-size: 14px; font-weight: 600; font-family: var(--font);
+    cursor: pointer; transition: all 0.2s var(--ease); display: flex; align-items: center; gap: 8px; border: none;
+}
+.btn-primary { background: var(--aqi-accent); color: #000; box-shadow: 0 4px 15px rgba(var(--aqi-accent-rgb), 0.3); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(var(--aqi-accent-rgb), 0.4); filter: brightness(1.1); }
+.btn-secondary { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--glass-border); }
+.btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+/* Auth Tabs & Messages */
+.auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); }
+.auth-tab { flex: 1; padding: 10px; background: none; border: none; color: var(--text2); font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; border-radius: var(--r-sm); }
+.auth-tab:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+.auth-tab.active { background: rgba(var(--aqi-accent-rgb), 0.1); color: var(--aqi-accent); border: 1px solid rgba(var(--aqi-accent-rgb), 0.2); }
+.auth-error-msg { background: rgba(244, 67, 54, 0.1); border: 1px solid rgba(244, 67, 54, 0.3); color: #f44336; padding: 12px; border-radius: var(--r-sm); font-size: 13px; margin-bottom: 16px; line-height: 1.4; display: flex; align-items: flex-start; gap: 8px; }
+.auth-error-msg i { margin-top: 2px; }

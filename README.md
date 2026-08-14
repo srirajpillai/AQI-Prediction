@@ -8,6 +8,8 @@ No Python or backend server is required — it connects directly to open environ
 
 ## 🌟 Key Features
 - **Real-Time AQI Tracking:** Dynamic 3D animated circular gauge with real-time severity styling.
+- **Personalized Risk Engine:** Integrates a user Health Profile to adjust AQI severity based on age, medical conditions (asthma, heart disease, etc.), and activity levels.
+- **Firebase Authentication:** Includes Email/Password and Google Sign-In with a seamless, responsive Glassmorphic UI to persist Health Profiles.
 - **24-Hour AI Forecast:** Hourly AQI prediction trajectory with environmental factor justifications calculated in the browser Web Worker.
 - **Cross-City Transfer Learning:** Analyzes wind vectors and upwind neighboring cities (40km radius) to assess atmospheric dispersion using Haversine formulas.
 - **Pollutant Breakdown Grid:** Dedicated progress bars and health descriptors for **PM2.5, PM10, O3, NO2, SO2, and CO**.

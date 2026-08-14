@@ -14,6 +14,11 @@
         const savedTheme = localStorage.getItem('airflowTheme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div class="mouse-glow" id="mouseGlow"></div>
@@ -72,6 +77,14 @@
                 </button>
                 <button class="nav-btn" id="locationBtn" title="Use My Location">
                     <i class="fas fa-location-crosshairs"></i>
+                </button>
+                
+                <!-- Authentication & Profile Buttons -->
+                <button class="nav-btn" id="signInBtn" title="Sign In with Google">
+                    <i class="fab fa-google"></i> Sign In
+                </button>
+                <button class="nav-btn hidden" id="profileBtn" title="My Health Profile">
+                    <i class="fas fa-user-shield"></i> Profile
                 </button>
                 <div class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
                     <div class="toggle-track">
@@ -369,9 +382,95 @@
                     <div class="f-col"><h5>Navigation</h5><a href="index.html"><i class="fas fa-gauge-high"></i> Dashboard</a><a href="know-how.html"><i class="fas fa-book-open"></i> Know How It Works</a><a href="about.html"><i class="fas fa-info-circle"></i> About</a></div>
                 </div>
             </div>
-            <div class="footer-bottom"><p>© 2026 AirFlow AI — Predictive Air Quality Intelligence System</p></div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 AirFlow AI. All rights reserved. Real-time predictive intelligence for healthier breathing.</p>
+            </div>
         </footer>
     </main>
+
+    <!-- Health Profile Modal -->
+    <div class="modal-overlay" id="profileModalOverlay">
+        <div class="profile-modal glass-card">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-shield"></i> My Health Profile</h2>
+                <button class="modal-close" id="profileModalClose"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Tell us a bit about your health so we can personalize your Air Quality recommendations and risk score.</p>
+                
+                <form id="healthProfileForm">
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="profileAge" min="1" max="120" placeholder="e.g. 25" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Pre-existing Conditions</label>
+                        <div class="conditions-grid">
+                            <label class="condition-check"><input type="checkbox" id="condAsthma"> Asthma</label>
+                            <label class="condition-check"><input type="checkbox" id="condCopd"> COPD</label>
+                            <label class="condition-check"><input type="checkbox" id="condHeart"> Heart Disease</label>
+                            <label class="condition-check"><input type="checkbox" id="condElderly"> Elderly / Frail</label>
+                            <label class="condition-check"><input type="checkbox" id="condPregnant"> Pregnant</label>
+                            <label class="condition-check"><input type="checkbox" id="condImmuno"> Immunocompromised</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Physical Activity Level Outdoors</label>
+                        <select id="profileActivity">
+                            <option value="low">Low (Walking, Sitting)</option>
+                            <option value="moderate" selected>Moderate (Jogging, Cycling)</option>
+                            <option value="high">High (Intense Exercise, Sports)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" id="signOutBtn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+                        <button type="submit" class="btn-primary" id="saveProfileBtn"><i class="fas fa-check"></i> Save Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Modal (Login/Register) -->
+    <div class="modal-overlay" id="authModalOverlay">
+        <div class="profile-modal glass-card" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-right-to-bracket"></i> Sign In / Register</h2>
+                <button class="modal-close" id="authModalClose"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" id="tabLogin">Login</button>
+                    <button class="auth-tab" id="tabRegister">Register</button>
+                </div>
+
+                <div id="authErrorMsg" class="auth-error-msg hidden"></div>
+
+                <form id="authForm">
+                    <div class="form-group">
+                        <label>Email / Username</label>
+                        <input type="email" id="authEmail" placeholder="you@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="authPassword" placeholder="Enter password" required>
+                    </div>
+                    <div class="modal-actions" style="margin-top: 24px; flex-direction: column; gap: 12px; border: none; padding-top: 0;">
+                        <button type="submit" class="btn-primary" id="authSubmitBtn" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-envelope"></i> Continue with Email
+                        </button>
+                        <div style="font-size: 12px; color: var(--text3); text-align: center; width: 100%;">— OR —</div>
+                        <button type="button" class="btn-secondary" id="googleSignInBtn" style="width: 100%; justify-content: center;">
+                            <i class="fab fa-google"></i> Continue with Google
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <div class="hourly-popout-modal" id="hourlyModal">
         <div class="hourly-popout-card" id="hourlyPopoutCard">
