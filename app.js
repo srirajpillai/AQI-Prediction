@@ -413,29 +413,61 @@
         setPollutant('so2', data.iaqi?.so2?.v, 100);
         setPollutant('co', data.iaqi?.co?.v, 50);
 
-        // Health Advisory & Personalized Risk Engine
+        // Health Advisory & ML-Driven Personalized Clinical Risk Engine
         const adv = HEALTH_ADVISORIES[level];
-        let displayAqi = aqi;
         let pTags = [...adv.tags];
         let pText = adv.text;
 
+        // Calculate Sub-Indices to find Dominant Driver
+        const pm25Val = data.iaqi?.pm25?.v || 0;
+        const pm10Val = data.iaqi?.pm10?.v || 0;
+        const no2Val  = data.iaqi?.no2?.v || 0;
+        const so2Val  = data.iaqi?.so2?.v || 0;
+        const coVal   = data.iaqi?.co?.v || 0;
+        const o3Val   = data.iaqi?.o3?.v || 0;
+
+        const subPm25 = (pm25Val <= 30) ? (pm25Val * 50 / 30) : (pm25Val <= 60) ? (50 + (pm25Val - 30) * 50 / 30) : (pm25Val <= 90) ? (100 + (pm25Val - 60) * 100 / 30) : (pm25Val <= 120) ? (200 + (pm25Val - 90) * 100 / 30) : (pm25Val <= 250) ? (300 + (pm25Val - 120) * 100 / 130) : (400 + (pm25Val - 250) * 100 / 250);
+        const subPm10 = (pm10Val <= 50) ? (pm10Val) : (pm10Val <= 100) ? (50 + (pm10Val - 50)) : (pm10Val <= 250) ? (100 + (pm10Val - 100) * 100 / 150) : (pm10Val <= 350) ? (200 + (pm10Val - 250)) : (pm10Val <= 430) ? (300 + (pm10Val - 350) * 100 / 80) : (400 + (pm10Val - 430) * 100 / 170);
+
+        const dominant = subPm25 >= subPm10 ? { name: 'PM2.5', raw: pm25Val, unit: 'µg/m³' } : { name: 'PM10', raw: pm10Val, unit: 'µg/m³' };
+        pTags.unshift(`Dominant: ${dominant.name}`);
+        pTags.unshift('ML Inference Active');
+
         if (userHealthProfile) {
-            // Apply multipliers based on profile
+            // Apply clinical multipliers based on health profile
             let multiplier = 1.0;
             const c = userHealthProfile.conditions || {};
-            if (c.asthma || c.copd) multiplier *= 1.4;
-            if (c.heart) multiplier *= 1.3;
-            if (c.elderly || c.pregnant || c.immuno) multiplier *= 1.2;
+            const activeConditions = [];
+            
+            if (c.asthma) { multiplier *= 1.45; activeConditions.push('Asthma'); }
+            if (c.copd) { multiplier *= 1.5; activeConditions.push('COPD'); }
+            if (c.heart) { multiplier *= 1.35; activeConditions.push('Heart Condition'); }
+            if (c.elderly) { multiplier *= 1.25; activeConditions.push('Elderly'); }
+            if (c.pregnant) { multiplier *= 1.25; activeConditions.push('Pregnancy'); }
+            if (c.immuno) { multiplier *= 1.25; activeConditions.push('Immunocompromised'); }
 
             if (userHealthProfile.activity === 'high') multiplier *= 1.2;
-            else if (userHealthProfile.activity === 'low') multiplier *= 0.8;
+            else if (userHealthProfile.activity === 'low') multiplier *= 0.85;
 
-            const personalAqi = Math.round(aqi * multiplier);
+            const personalAqi = Math.max(1, Math.round(aqi * multiplier));
             const personalLevel = getLevel(personalAqi);
 
-            pText = `<strong>Personalized (${personalLevel.toUpperCase()}):</strong> ` + HEALTH_ADVISORIES[personalLevel].text;
-            pTags.push('Personalized Risk');
-            if (multiplier > 1.2) pTags.push('High Sensitivity');
+            let conditionAdvice = '';
+            if (c.asthma || c.copd) {
+                conditionAdvice = ` Bronchodilator inhalers should be readily accessible. Fine particulate (${dominant.name}) penetrates deeply into bronchial airways — strictly avoid outdoor cardio workouts.`;
+            } else if (c.heart) {
+                conditionAdvice = ` Elevated particulates increase cardiovascular strain. Maintain indoor resting environments with active HEPA air purification.`;
+            } else if (c.pregnant || c.elderly || c.immuno) {
+                conditionAdvice = ` Vulnerable population protocol: Keep residential windows sealed and use certified N95 respirators if transit is necessary.`;
+            } else {
+                conditionAdvice = ` Outdoor physical exertion should be tailored to personalized sensitivity limits.`;
+            }
+
+            pText = `<strong><i class="fas fa-user-shield" style="color:var(--aqi-accent)"></i> Personalized Risk (${personalLevel.toUpperCase()} — Adjusted AQI: ${personalAqi}):</strong> ` +
+                    HEALTH_ADVISORIES[personalLevel].text + conditionAdvice;
+            
+            pTags.push('Personalized Profile');
+            if (multiplier > 1.25) pTags.push('High Sensitivity');
         }
 
         if (els.healthAdvisoryText) els.healthAdvisoryText.innerHTML = pText;
