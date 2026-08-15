@@ -1,7 +1,8 @@
 {
-  "dataset_title": "AirFlow AI \u2014 Latest Long-Term Multi-City Air Quality & Meteorological Dataset (2020\u20132026)",
+  "dataset_title": "AirFlow AI \u2014 Expanded Multi-Region Air Quality Master Dataset (2020\u20132026)",
   "time_range": "2020-01-01 to 2026-01-01",
-  "cities_covered": [
+  "cities_count": 21,
+  "cities_list": [
     "Delhi",
     "Mumbai",
     "Bengaluru",
@@ -10,48 +11,41 @@
     "Hyderabad",
     "Ahmedabad",
     "Pune",
+    "Kanpur",
+    "Jaipur",
+    "Patna",
+    "Varanasi",
+    "Surat",
+    "Chandigarh",
     "Beijing",
+    "Tokyo",
     "London",
-    "New York"
+    "Paris",
+    "Los Angeles",
+    "Dubai",
+    "Bangkok"
   ],
-  "total_hourly_records": 149640,
-  "total_daily_records": 6235,
-  "columns": [
-    "City",
-    "Country",
-    "Latitude",
-    "Longitude",
-    "Datetime",
+  "total_hourly_records": 1105272,
+  "pollutants_tracked": [
     "PM2.5",
     "PM10",
     "NO2",
     "SO2",
     "CO",
     "O3",
-    "Dust",
-    "UV_Index",
-    "US_AQI",
+    "Dust"
+  ],
+  "weather_parameters": [
     "Temperature_C",
     "Humidity_Pct",
     "Pressure_hPa",
     "Wind_Speed_kmh",
     "Wind_Dir_Deg",
-    "Precipitation_mm",
-    "sub_pm25",
-    "sub_pm10",
-    "sub_no2",
-    "sub_so2",
-    "sub_co",
-    "sub_o3",
-    "AQI",
-    "AQI_Bucket",
-    "Date"
+    "Precipitation_mm"
   ],
-  "sources": [
-    "Copernicus Atmosphere Monitoring Service (CAMS)",
-    "ECMWF Atmospheric Reanalysis",
-    "Open-Meteo Air Quality & Weather Archive",
-    "Central Pollution Control Board (CPCB) Standard Guidelines"
-  ],
-  "generated_timestamp": "2026-08-15 14:27:14"
+  "data_sources": [
+    "Copernicus Atmospheric Monitoring Service (CAMS)",
+    "ECMWF ERA5 Atmospheric Reanalysis Archive",
+    "Central Pollution Control Board (CPCB) Standard Breakpoint Directives"
+  ]
 }

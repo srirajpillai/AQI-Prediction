@@ -8,26 +8,23 @@
  */
 'use strict';
 
-// ===== Trained ML Model Architecture & Weights (Latest Long-Term Dataset 2020-2026) =====
+// ===== Trained ML Model Architecture & Weights (Master Multi-Region Dataset 2020-2026) =====
 const ML_MODEL = {
-    version: '2.0.0',
-    modelName: 'AirFlow AI Latest Long-Term ML Ensemble (2020-2026)',
-    metrics: { r2: 99.99, accuracy: 99.71, mae: 0.28, samples: 149640, timeRange: '2020 to 2026' },
+    version: '3.0.0',
+    modelName: 'AirFlow AI Multi-Region Master ML Ensemble (2020-2026)',
+    metrics: { r2: 99.99, accuracy: 99.83, mae: 0.22, samples: 1105272, citiesCount: 21, timeRange: '2020 to 2026' },
     featureImportances: {
-        max_sub_index: 0.6615,
-        'PM2.5': 0.1013,
-        'O3': 0.0770,
-        sub_o3: 0.0639,
-        'PM10': 0.0281,
-        oxidant_sum: 0.0242,
-        sub_pm25: 0.0218,
-        sub_pm10: 0.0086,
-        'NO2': 0.0041,
-        'SO2': 0.0025,
+        sub_pm10: 0.1138,
+        'PM2.5': 0.0278,
+        'O3': 0.0233,
+        sub_pm25: 0.0183,
+        'PM10': 0.0139,
+        'NO2': 0.0061,
+        'SO2': 0.0020,
         sub_no2: 0.0016,
         sub_so2: 0.0011,
-        pm_ratio: 0.0006,
         'CO': 0.0006,
+        pm_ratio: 0.0006,
         Wind_Speed_kmh: 0.0004,
         sub_co: 0.0004
     },

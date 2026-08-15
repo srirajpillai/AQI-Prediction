@@ -1,0 +1,7 @@
+# AirFlow AI Git Ignore
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+*.pkl
+latest_dataset/master_air_quality_hourly_2020_2026.csv
