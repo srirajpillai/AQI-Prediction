@@ -8,29 +8,28 @@
  */
 'use strict';
 
-// ===== Trained ML Model Architecture & Weights (from train_version1_ml.py) =====
+// ===== Trained ML Model Architecture & Weights (Latest Long-Term Dataset 2020-2026) =====
 const ML_MODEL = {
-    version: '1.0.0',
-    modelName: 'XGBoost & Multi-Pollutant Hybrid ML Ensemble',
-    metrics: { r2: 90.5, accuracy: 80.64, mae: 21.65, samples: 24850 },
+    version: '2.0.0',
+    modelName: 'AirFlow AI Latest Long-Term ML Ensemble (2020-2026)',
+    metrics: { r2: 99.99, accuracy: 99.71, mae: 0.28, samples: 149640, timeRange: '2020 to 2026' },
     featureImportances: {
-        max_sub_index: 0.3945,
-        sub_pm25: 0.1016,
-        'PM2.5': 0.0977,
-        sub_co: 0.0553,
-        CO: 0.0511,
-        sub_pm10: 0.0388,
-        'PM10': 0.0382,
-        sub_o3: 0.0265,
-        O3: 0.0265,
-        oxidant_sum: 0.0236,
-        pm_ratio: 0.0229,
-        month: 0.0226,
-        SO2: 0.0221,
-        NO2: 0.0217,
-        sub_so2: 0.0213,
-        sub_no2: 0.0200,
-        day_of_week: 0.0156
+        max_sub_index: 0.6615,
+        'PM2.5': 0.1013,
+        'O3': 0.0770,
+        sub_o3: 0.0639,
+        'PM10': 0.0281,
+        oxidant_sum: 0.0242,
+        sub_pm25: 0.0218,
+        sub_pm10: 0.0086,
+        'NO2': 0.0041,
+        'SO2': 0.0025,
+        sub_no2: 0.0016,
+        sub_so2: 0.0011,
+        pm_ratio: 0.0006,
+        'CO': 0.0006,
+        Wind_Speed_kmh: 0.0004,
+        sub_co: 0.0004
     },
     cpcbBreakpoints: {
         'PM2.5': [[0,30,0,50],[30,60,51,100],[60,90,101,200],[90,120,201,300],[120,250,301,400],[250,500,401,500]],
