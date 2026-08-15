@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=17">
+    <link rel="stylesheet" href="styles.css?v=18">
     <script>
         const savedTheme = localStorage.getItem('airflowTheme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
@@ -80,11 +80,12 @@
                 </button>
                 
                 <!-- Authentication & Profile Buttons -->
-                <button class="nav-btn" id="signInBtn" title="Sign In with Google">
-                    <i class="fab fa-google"></i> Sign In
+                <button class="nav-sign-in-btn" id="signInBtn" title="Sign In">
+                    <i class="fab fa-google"></i>
+                    <span class="sign-in-label">Sign In</span>
                 </button>
-                <button class="nav-btn hidden" id="profileBtn" title="My Health Profile">
-                    <i class="fas fa-user-shield"></i> Profile
+                <button class="nav-btn nav-profile-btn hidden" id="profileBtn" title="My Health Profile">
+                    <i class="fas fa-user-shield"></i>
                 </button>
                 <div class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
                     <div class="toggle-track">
@@ -405,14 +406,26 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>Pre-existing Conditions</label>
+                        <label>Pre-existing Conditions <span class="label-hint">(select all that apply)</span></label>
                         <div class="conditions-grid">
-                            <label class="condition-check"><input type="checkbox" id="condAsthma"> Asthma</label>
-                            <label class="condition-check"><input type="checkbox" id="condCopd"> COPD</label>
-                            <label class="condition-check"><input type="checkbox" id="condHeart"> Heart Disease</label>
-                            <label class="condition-check"><input type="checkbox" id="condElderly"> Elderly / Frail</label>
-                            <label class="condition-check"><input type="checkbox" id="condPregnant"> Pregnant</label>
-                            <label class="condition-check"><input type="checkbox" id="condImmuno"> Immunocompromised</label>
+                            <button type="button" class="pill-toggle" id="condAsthma" data-cond="asthma">
+                                <i class="fas fa-lungs"></i> Asthma
+                            </button>
+                            <button type="button" class="pill-toggle" id="condCopd" data-cond="copd">
+                                <i class="fas fa-head-side-cough"></i> COPD
+                            </button>
+                            <button type="button" class="pill-toggle" id="condHeart" data-cond="heart">
+                                <i class="fas fa-heart-pulse"></i> Heart Disease
+                            </button>
+                            <button type="button" class="pill-toggle" id="condElderly" data-cond="elderly">
+                                <i class="fas fa-person-cane"></i> Elderly / Frail
+                            </button>
+                            <button type="button" class="pill-toggle" id="condPregnant" data-cond="pregnant">
+                                <i class="fas fa-baby"></i> Pregnant
+                            </button>
+                            <button type="button" class="pill-toggle" id="condImmuno" data-cond="immuno">
+                                <i class="fas fa-shield-virus"></i> Immunocompromised
+                            </button>
                         </div>
                     </div>
                     
@@ -480,6 +493,6 @@
 
     <!-- External Dependencies & Main Logic -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="app.js?v=17"></script>
+    <script src="app.js?v=18"></script>
 </body>
 </html>

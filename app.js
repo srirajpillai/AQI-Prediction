@@ -547,9 +547,11 @@
         const geoFactors = factors.filter(f => f.category === 'geopolitical' || f.category === 'natural_event');
         const hasHighSeverity = factors.some(f => f.severity > 40) || aqiData.aqi > 150;
 
-        // Show event alert banner if high AQI or geopolitical factor
-        if (hasHighSeverity && els.eventAlertBanner) {
-            const primaryFactor = factors[0];
+        // Show event alert banner ONLY for genuinely serious conditions
+        // AQI must be Unhealthy (≥200) AND a severe factor present (severity > 60)
+        const isGenuinelySerious = aqiData.aqi >= 200 && factors.some(f => f.severity > 60);
+        if (isGenuinelySerious && els.eventAlertBanner) {
+            const primaryFactor = factors.find(f => f.severity > 60) || factors[0];
             if (els.eventAlertTitle) {
                 els.eventAlertTitle.textContent = primaryFactor
                     ? `⚠ ${primaryFactor.label} Detected`
@@ -558,7 +560,7 @@
             if (els.eventAlertDesc) {
                 els.eventAlertDesc.textContent = primaryFactor
                     ? primaryFactor.description
-                    : `Current AQI of ${aqiData.aqi} exceeds normal levels. Multiple factors contributing.`;
+                    : `Current AQI of ${aqiData.aqi} exceeds safe levels. Multiple environmental factors are contributing.`;
             }
             els.eventAlertBanner.style.display = 'block';
         }
@@ -1421,8 +1423,11 @@
         if (!els.locationBtn) return;
         els.locationBtn.addEventListener('click', () => {
             if ('geolocation' in navigator) {
+                const icon = els.locationBtn.querySelector('i');
+                if (icon) icon.className = 'fas fa-spinner fa-spin';
                 navigator.geolocation.getCurrentPosition(
                     pos => {
+                        if (icon) icon.className = 'fas fa-location-crosshairs';
                         currentCity = {
                             name: 'My Location',
                             lat: pos.coords.latitude, lon: pos.coords.longitude,
@@ -1432,7 +1437,11 @@
                         localStorage.setItem('airflowLastCity', JSON.stringify(currentCity));
                         loadCity();
                     },
-                    () => alert('Could not get location. Search for a city instead.')
+                    () => {
+                        if (icon) icon.className = 'fas fa-location-crosshairs';
+                        if (window._showToast) window._showToast('Location access denied. Search for a city instead.', 'warn');
+                    },
+                    { timeout: 10000 }
                 );
             }
         });
@@ -1508,8 +1517,56 @@
         // Init news panel controls
         initNewsPanel();
 
+        // ===== Toast Notification Helper =====
+        function showToast(msg, type = 'info') {
+            const t = document.createElement('div');
+            t.className = `app-toast app-toast-${type}`;
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'warn' ? 'fa-triangle-exclamation' : 'fa-info-circle';
+            t.innerHTML = `<i class="fas ${icon}"></i><span>${msg}</span>`;
+            t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:99999;display:flex;align-items:center;gap:10px;padding:12px 20px;border-radius:30px;font-size:13px;font-weight:600;font-family:var(--font);pointer-events:none;opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;backdrop-filter:blur(16px);`;
+            const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--aqi-accent-rgb').trim() || '0,230,118';
+            const rgb = type === 'success' ? '0,230,118' : type === 'warn' ? '255,152,0' : accentRgb;
+            t.style.background = `rgba(${rgb},0.12)`;
+            t.style.border = `1px solid rgba(${rgb},0.4)`;
+            t.style.color = `rgb(${rgb})`;
+            t.style.boxShadow = `0 8px 32px rgba(${rgb},0.2)`;
+            document.body.appendChild(t);
+            requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)'; });
+            setTimeout(() => {
+                t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(10px)';
+                setTimeout(() => t.remove(), 400);
+            }, 3200);
+        }
+        window._showToast = showToast;
+
         // ===== Firebase Auth & Profile Setup =====
         if (auth && db) {
+
+            // ===== Pill Toggle Init =====
+            function initPillToggles() {
+                document.querySelectorAll('.pill-toggle').forEach(btn => {
+                    btn.addEventListener('click', () => btn.classList.toggle('active'));
+                });
+            }
+            initPillToggles();
+
+            // Helper to read pill states as condition object
+            function readPillConditions() {
+                const result = {};
+                document.querySelectorAll('.pill-toggle[data-cond]').forEach(btn => {
+                    result[btn.dataset.cond] = btn.classList.contains('active');
+                });
+                return result;
+            }
+
+            // Helper to apply conditions to pills
+            function applyPillConditions(conditions) {
+                if (!conditions) return;
+                document.querySelectorAll('.pill-toggle[data-cond]').forEach(btn => {
+                    btn.classList.toggle('active', !!conditions[btn.dataset.cond]);
+                });
+            }
+
             auth.onAuthStateChanged(async (user) => {
                 currentUser = user;
                 const signInBtn = $('signInBtn');
@@ -1526,12 +1583,8 @@
                             // Populate form
                             if ($('profileAge')) $('profileAge').value = userHealthProfile.age || '';
                             if ($('profileActivity')) $('profileActivity').value = userHealthProfile.activity || 'moderate';
-                            ['Asthma', 'Copd', 'Heart', 'Elderly', 'Pregnant', 'Immuno'].forEach(c => {
-                                const id = 'cond' + c;
-                                if ($(id) && userHealthProfile.conditions) {
-                                    $(id).checked = !!userHealthProfile.conditions[c.toLowerCase()];
-                                }
-                            });
+                            // Apply to pill toggles
+                            applyPillConditions(userHealthProfile.conditions);
                             // Re-run display to update personalized risk
                             if (lastAQIData) updateDisplay(lastAQIData);
                         }
@@ -1635,17 +1688,16 @@
                     e.preventDefault();
                     if (!currentUser) return;
 
+                    const saveBtn = $('saveProfileBtn');
+                    if (saveBtn) {
+                        saveBtn.disabled = true;
+                        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                    }
+
                     const profileData = {
                         age: parseInt($('profileAge').value) || 25,
                         activity: $('profileActivity').value,
-                        conditions: {
-                            asthma: $('condAsthma').checked,
-                            copd: $('condCopd').checked,
-                            heart: $('condHeart').checked,
-                            elderly: $('condElderly').checked,
-                            pregnant: $('condPregnant').checked,
-                            immuno: $('condImmuno').checked
-                        },
+                        conditions: readPillConditions(),
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
 
@@ -1654,8 +1706,17 @@
                         userHealthProfile = profileData;
                         overlay.classList.remove('active');
                         if (lastAQIData) updateDisplay(lastAQIData);
+                        if (window._showToast) window._showToast('Health profile saved successfully!', 'success');
                     } catch (err) {
-                        alert('Failed to save profile: ' + err.message);
+                        if (window._showToast) {
+                            window._showToast('Failed to save profile. Try again.', 'warn');
+                        }
+                        console.error('Profile save error:', err);
+                    } finally {
+                        if (saveBtn) {
+                            saveBtn.disabled = false;
+                            saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Profile';
+                        }
                     }
                 });
             }
