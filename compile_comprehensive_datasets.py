@@ -31,9 +31,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATASETS_DIR = os.path.join(SCRIPT_DIR, 'datasets')
-LATEST_DIR = os.path.join(SCRIPT_DIR, 'latest_dataset')
 os.makedirs(DATASETS_DIR, exist_ok=True)
-os.makedirs(LATEST_DIR, exist_ok=True)
 
 # ─── CPCB AIR QUALITY INDEX BREAKPOINT DEFINITIONS ────────────────────────────
 CPCB_BREAKPOINTS = {
@@ -416,11 +414,7 @@ def compile_master_corpus():
     print(f"    - File: {master_csv_path}")
     print(f"    - Total Records: {len(master_df):,}")
     print(f"    - Total Features: {master_df.shape[1]}")
-    
-    # Also update latest_dataset/master_air_quality_hourly_2020_2026.csv
-    latest_hourly_path = os.path.join(LATEST_DIR, 'master_air_quality_hourly_2020_2026.csv')
-    master_df.to_csv(latest_hourly_path, index=False)
-    print(f"    - Updated: {latest_hourly_path}")
+
     
     # Export Detailed Catalog Metadata JSON
     catalog_metadata = {
@@ -506,10 +500,8 @@ def compile_master_corpus():
     
     with open(os.path.join(DATASETS_DIR, 'dataset_metadata.json'), 'w') as f:
         json.dump(catalog_metadata, f, indent=2)
-    with open(os.path.join(LATEST_DIR, 'dataset_metadata.json'), 'w') as f:
-        json.dump(catalog_metadata, f, indent=2)
         
-    print(f"[✔] Exported Dataset Metadata JSON to datasets/ and latest_dataset/")
+    print(f"[✔] Exported Dataset Metadata JSON to datasets/")
     return master_df
 
 if __name__ == '__main__':

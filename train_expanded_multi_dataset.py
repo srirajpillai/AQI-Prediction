@@ -29,7 +29,7 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATASET_DIR = os.path.join(SCRIPT_DIR, 'latest_dataset')
+DATASET_DIR = os.path.join(SCRIPT_DIR, 'datasets')
 HISTORICAL_CPCB = os.path.join(SCRIPT_DIR, 'datasets', 'city_day.csv')
 os.makedirs(DATASET_DIR, exist_ok=True)
 

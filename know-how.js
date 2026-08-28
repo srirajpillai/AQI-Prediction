@@ -160,16 +160,31 @@
         document.querySelectorAll('.section-block').forEach(el => observer.observe(el));
     }
 
-    // ===== 3D tilt =====
+    // ===== 3D tilt (rAF-throttled, cached rect) =====
     function init3DTilt() {
         document.querySelectorAll('.hover-3d').forEach(card => {
+            let rect = null;
+            let tiltTicking = false;
+            card.addEventListener('mouseenter', () => { rect = card.getBoundingClientRect(); });
+            window.addEventListener('resize', () => { if (rect) rect = card.getBoundingClientRect(); }, { passive: true });
             card.addEventListener('mousemove', e => {
-                const rect = card.getBoundingClientRect();
-                const x = (e.clientX - rect.left) / rect.width - 0.5;
-                const y = (e.clientY - rect.top) / rect.height - 0.5;
-                card.style.transform = `translateY(-8px) rotateX(${-y*6}deg) rotateY(${x*6}deg) scale(1.01)`;
+                if (!tiltTicking) {
+                    const cx = e.clientX, cy = e.clientY;
+                    requestAnimationFrame(() => {
+                        if (!rect) rect = card.getBoundingClientRect();
+                        const x = (cx - rect.left) / rect.width - 0.5;
+                        const y = (cy - rect.top) / rect.height - 0.5;
+                        card.style.transform = `translateY(-8px) rotateX(${-y*6}deg) rotateY(${x*6}deg) scale(1.01)`;
+                        tiltTicking = false;
+                    });
+                    tiltTicking = true;
+                }
             });
-            card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+            card.addEventListener('mouseleave', () => {
+                rect = null;
+                tiltTicking = false;
+                card.style.transform = '';
+            });
         });
     }
 
@@ -181,14 +196,21 @@
         });
     }
 
-    // ===== Mouse Glow =====
+    // ===== Mouse Glow (rAF-throttled) =====
     function initMouseGlow() {
         const mg = $('mouseGlow');
-        if (mg) {
-            document.addEventListener('mousemove', e => {
-                mg.style.transform = `translate(calc(${e.clientX}px - 50%), calc(${e.clientY}px - 50%))`;
-            });
-        }
+        if (!mg) return;
+        let ticking = false;
+        document.addEventListener('mousemove', e => {
+            if (!ticking) {
+                const cx = e.clientX, cy = e.clientY;
+                requestAnimationFrame(() => {
+                    mg.style.transform = `translate3d(calc(${cx}px - 50%), calc(${cy}px - 50%), 0)`;
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
     }
 
     // ===== Init =====

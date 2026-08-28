@@ -1,7 +1,21 @@
 # AirFlow AI Git Ignore
+
+# Python environment & cache
 node_modules/
 .venv/
 __pycache__/
 *.pyc
+
+# ML model binary (too large for git, run training scripts locally)
 *.pkl
-latest_dataset/master_air_quality_hourly_2020_2026.csv
+ml_model.json
+
+# Raw datasets (large CSVs not needed for frontend)
+datasets/
+
+# IDE / OS files
+*.code-workspace
+.DS_Store
+Thumbs.db
+addon.txt
+news_addon.css

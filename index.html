@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0c0c14">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AirFlow AI">
+    <link rel="manifest" href="manifest.json">
     <title>AirFlow AI — Real-Time AQI Prediction & Air Quality Intelligence</title>
     <meta name="description" content="AirFlow AI provides real-time Air Quality Index predictions with cross-city transfer learning. Monitor PM2.5, PM10, O3, NO2, SO2, CO with hourly forecasts.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=18">
+    <link rel="stylesheet" href="styles.css?v=20">
     <script>
         const savedTheme = localStorage.getItem('airflowTheme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
@@ -79,6 +85,11 @@
                     <i class="fas fa-location-crosshairs"></i>
                 </button>
                 
+                <!-- Notification Bell -->
+                <button class="nav-btn notif-bell-btn" id="notifBell" title="AQI Notifications" aria-label="Toggle AQI notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notif-badge" id="notifBadge" style="display:none;"></span>
+                </button>
                 <!-- Authentication & Profile Buttons -->
                 <button class="nav-sign-in-btn" id="signInBtn" title="Sign In">
                     <i class="fab fa-google"></i>
@@ -99,6 +110,18 @@
             </div>
         </div>
     </nav>
+
+    <!-- Notification Permission Banner -->
+    <div class="notif-permission-banner" id="notifPermissionBanner" style="display:none;" role="alert" aria-live="polite">
+        <div class="notif-perm-inner">
+            <i class="fas fa-bell-slash notif-perm-icon"></i>
+            <span class="notif-perm-text"><strong>Enable AQI Alerts</strong> — Get real-time push notifications when air quality changes or pollutants spike.</span>
+            <div class="notif-perm-actions">
+                <button class="notif-perm-allow" id="notifPermAllow"><i class="fas fa-check"></i> Allow</button>
+                <button class="notif-perm-dismiss" id="notifPermDismiss"><i class="fas fa-xmark"></i></button>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Content -->
     <!-- Geopolitical / Event Alert Banner -->
@@ -213,6 +236,56 @@
                     <span style="color:#9c27b0;">Very Bad<br><small>201-300</small></span>
                     <span style="color:#880e4f;">Hazardous<br><small>300+</small></span>
                 </div>
+            </div>
+        </section>
+
+        <!-- ===== Disease Risk &amp; Travel Safety Panel ===== -->
+        <section class="section-block" id="diseaseRiskSection" style="display:none;">
+            <div class="section-head">
+                <div class="head-icon" style="background:rgba(244,67,54,0.15);border-color:rgba(244,67,54,0.3);"><i class="fas fa-shield-heart" style="color:#f44336;"></i></div>
+                <div>
+                    <h2>Personal Disease Risk Assessment</h2>
+                    <p>AI-powered risk analysis based on your health profile and current air quality data.</p>
+                </div>
+                <button class="nav-btn" id="updateProfileBtn" title="Update Health Profile" style="margin-left:auto;"><i class="fas fa-pen"></i></button>
+            </div>
+
+            <!-- Risk Cards Grid -->
+            <div class="risk-cards-grid" id="riskCardsGrid">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Travel Safety Check -->
+            <div class="travel-check-panel glass-card" id="travelCheckPanel">
+                <div class="travel-check-header">
+                    <div class="travel-icon"><i class="fas fa-plane-departure"></i></div>
+                    <div>
+                        <h3>Travel Safety Advisor</h3>
+                        <p>Check if it is safe for you to travel based on your profile and destination AQI</p>
+                    </div>
+                </div>
+                <div class="travel-form-row">
+                    <div class="travel-search-box">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <input type="text" id="travelDestInput" placeholder="Enter destination city..." autocomplete="off">
+                        <div class="travel-search-dropdown" id="travelSearchDropdown"></div>
+                    </div>
+                    <select id="travelDuration">
+                        <option value="1">1 Day</option>
+                        <option value="3" selected>3 Days</option>
+                        <option value="7">1 Week</option>
+                        <option value="14">2 Weeks</option>
+                        <option value="30">1 Month</option>
+                    </select>
+                    <select id="travelPurpose">
+                        <option value="leisure"><i></i>Leisure</option>
+                        <option value="work">Work / Business</option>
+                        <option value="exercise">Outdoor Exercise</option>
+                        <option value="medical">Medical Trip</option>
+                    </select>
+                    <button class="btn-primary" id="checkTravelBtn"><i class="fas fa-search-location"></i> Check</button>
+                </div>
+                <div class="travel-result" id="travelResult" style="display:none;"></div>
             </div>
         </section>
 
@@ -389,46 +462,100 @@
         </footer>
     </main>
 
-    <!-- Health Profile Modal -->
+    <!-- Health Profile Modal (Expanded) -->
     <div class="modal-overlay" id="profileModalOverlay">
-        <div class="profile-modal glass-card">
+        <div class="profile-modal glass-card" style="max-width:660px;">
             <div class="modal-header">
                 <h2><i class="fas fa-user-shield"></i> My Health Profile</h2>
                 <button class="modal-close" id="profileModalClose"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <p class="modal-desc">Tell us a bit about your health so we can personalize your Air Quality recommendations and risk score.</p>
-                
+                <p class="modal-desc">Complete your health profile for personalised disease risk predictions, travel safety analysis and smart AQI push notifications.</p>
+
                 <form id="healthProfileForm">
-                    <div class="form-group">
-                        <label>Age</label>
-                        <input type="number" id="profileAge" min="1" max="120" placeholder="e.g. 25" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Pre-existing Conditions <span class="label-hint">(select all that apply)</span></label>
-                        <div class="conditions-grid">
-                            <button type="button" class="pill-toggle" id="condAsthma" data-cond="asthma">
-                                <i class="fas fa-lungs"></i> Asthma
-                            </button>
-                            <button type="button" class="pill-toggle" id="condCopd" data-cond="copd">
-                                <i class="fas fa-head-side-cough"></i> COPD
-                            </button>
-                            <button type="button" class="pill-toggle" id="condHeart" data-cond="heart">
-                                <i class="fas fa-heart-pulse"></i> Heart Disease
-                            </button>
-                            <button type="button" class="pill-toggle" id="condElderly" data-cond="elderly">
-                                <i class="fas fa-person-cane"></i> Elderly / Frail
-                            </button>
-                            <button type="button" class="pill-toggle" id="condPregnant" data-cond="pregnant">
-                                <i class="fas fa-baby"></i> Pregnant
-                            </button>
-                            <button type="button" class="pill-toggle" id="condImmuno" data-cond="immuno">
-                                <i class="fas fa-shield-virus"></i> Immunocompromised
-                            </button>
+
+                    <!-- Section: Basic Info -->
+                    <div class="profile-section-label"><i class="fas fa-id-card"></i> Basic Information</div>
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Age</label>
+                            <input type="number" id="profileAge" min="1" max="120" placeholder="e.g. 25" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select id="profileGender">
+                                <option value="">Prefer not to say</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
                         </div>
                     </div>
-                    
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Weight <span class="label-hint">(kg)</span></label>
+                            <input type="number" id="profileWeight" min="20" max="300" placeholder="e.g. 70">
+                        </div>
+                        <div class="form-group">
+                            <label>Height <span class="label-hint">(cm)</span></label>
+                            <input type="number" id="profileHeight" min="50" max="250" placeholder="e.g. 170">
+                        </div>
+                    </div>
+                    <div class="form-group bmi-display" id="bmiDisplay" style="display:none;">
+                        <label>BMI <span class="label-hint">(auto-calculated)</span></label>
+                        <div class="bmi-bar-wrap"><div class="bmi-bar-fill" id="bmiBarFill"></div></div>
+                        <div class="bmi-text" id="bmiText">--</div>
+                    </div>
+
+                    <!-- Section: Respiratory -->
+                    <div class="profile-section-label"><i class="fas fa-lungs"></i> Respiratory Conditions</div>
+                    <div class="conditions-grid">
+                        <button type="button" class="pill-toggle" id="condAsthma" data-cond="asthma"><i class="fas fa-lungs"></i> Asthma</button>
+                        <button type="button" class="pill-toggle" id="condCopd" data-cond="copd"><i class="fas fa-head-side-cough"></i> COPD</button>
+                        <button type="button" class="pill-toggle" id="condBronchitis" data-cond="bronchitis"><i class="fas fa-virus"></i> Bronchitis</button>
+                        <button type="button" class="pill-toggle" id="condRhinitis" data-cond="rhinitis"><i class="fas fa-wind"></i> Allergic Rhinitis</button>
+                        <button type="button" class="pill-toggle" id="condApnea" data-cond="apnea"><i class="fas fa-bed"></i> Sleep Apnea</button>
+                    </div>
+
+                    <!-- Section: Cardiovascular -->
+                    <div class="profile-section-label"><i class="fas fa-heart-pulse"></i> Cardiovascular &amp; Metabolic</div>
+                    <div class="conditions-grid">
+                        <button type="button" class="pill-toggle" id="condHeart" data-cond="heart"><i class="fas fa-heart-pulse"></i> Heart Disease</button>
+                        <button type="button" class="pill-toggle" id="condHyper" data-cond="hypertension"><i class="fas fa-arrow-up"></i> Hypertension</button>
+                        <button type="button" class="pill-toggle" id="condDiabetes" data-cond="diabetes"><i class="fas fa-syringe"></i> Diabetes</button>
+                        <button type="button" class="pill-toggle" id="condStroke" data-cond="stroke"><i class="fas fa-brain"></i> Stroke History</button>
+                    </div>
+
+                    <!-- Section: Special Groups -->
+                    <div class="profile-section-label"><i class="fas fa-users"></i> Special Health Groups</div>
+                    <div class="conditions-grid">
+                        <button type="button" class="pill-toggle" id="condElderly" data-cond="elderly"><i class="fas fa-person-cane"></i> Elderly / Frail</button>
+                        <button type="button" class="pill-toggle" id="condPregnant" data-cond="pregnant"><i class="fas fa-baby"></i> Pregnant</button>
+                        <button type="button" class="pill-toggle" id="condImmuno" data-cond="immuno"><i class="fas fa-shield-virus"></i> Immunocompromised</button>
+                        <button type="button" class="pill-toggle" id="condChild" data-cond="child"><i class="fas fa-child"></i> Child (&lt;12 yrs)</button>
+                    </div>
+
+                    <!-- Section: Lifestyle -->
+                    <div class="profile-section-label"><i class="fas fa-person-running"></i> Lifestyle</div>
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Smoking Status</label>
+                            <select id="profileSmoking">
+                                <option value="never">Never Smoked</option>
+                                <option value="ex">Ex-Smoker</option>
+                                <option value="active">Active Smoker</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Hours Outdoors / Day</label>
+                            <select id="profileOutdoorHours">
+                                <option value="1">&lt; 1 hour</option>
+                                <option value="3" selected>1–3 hours</option>
+                                <option value="6">3–6 hours</option>
+                                <option value="8">6+ hours (outdoor worker)</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label>Physical Activity Level Outdoors</label>
                         <select id="profileActivity">
@@ -437,10 +564,10 @@
                             <option value="high">High (Intense Exercise, Sports)</option>
                         </select>
                     </div>
-                    
+
                     <div class="modal-actions">
                         <button type="button" class="btn-secondary" id="signOutBtn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
-                        <button type="submit" class="btn-primary" id="saveProfileBtn"><i class="fas fa-check"></i> Save Profile</button>
+                        <button type="submit" class="btn-primary" id="saveProfileBtn"><i class="fas fa-check"></i> Save &amp; Analyse</button>
                     </div>
                 </form>
             </div>

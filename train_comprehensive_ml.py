@@ -30,8 +30,7 @@ import xgboost as xgb
 import joblib
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATASET_PATH_PRIMARY = os.path.join(SCRIPT_DIR, 'datasets', 'comprehensive_aqi_master_dataset.csv')
-DATASET_PATH_FALLBACK = os.path.join(SCRIPT_DIR, 'latest_dataset', 'master_air_quality_hourly_2020_2026.csv')
+DATASET_PATH = os.path.join(SCRIPT_DIR, 'datasets', 'comprehensive_aqi_master_dataset.csv')
 
 OUTPUT_PKL = os.path.join(SCRIPT_DIR, 'ml_model.pkl')
 OUTPUT_JSON = os.path.join(SCRIPT_DIR, 'ml_model.json')
@@ -67,7 +66,7 @@ FEATURE_COLS = [
 ]
 
 def load_data():
-    dataset_path = DATASET_PATH_PRIMARY if os.path.exists(DATASET_PATH_PRIMARY) else DATASET_PATH_FALLBACK
+    dataset_path = DATASET_PATH
     if not os.path.exists(dataset_path):
         raise FileNotFoundError(f"No master dataset found at {dataset_path}. Please run compile_comprehensive_datasets.py first.")
         

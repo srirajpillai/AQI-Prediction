@@ -119,9 +119,9 @@ The project follows a **Decoupled Client-Side Web Architecture** with an **Offli
 ## 4. Machine Learning Pipeline Details
 
 * **Training Dataset:** 
-  * **Primary:** Multi-City Long-Term Continuous Dataset (2020–2026) (`latest_dataset/latest_aqi_hourly_2020_2026.csv`, 149,640 records) with 0% missing data and meteorological covariates.
+  * **Primary:** Multi-City Long-Term Continuous Dataset (2020–2026) (`datasets/latest_aqi_hourly_2020_2026.csv`, 149,640 records) and Master Integrated Multi-Dataset Corpus (`datasets/comprehensive_aqi_master_dataset.csv`, 1.2M+ records) with 0% missing data and meteorological covariates.
   * **Historical Benchmark:** CPCB National Air Quality Dataset (2015–2020) by Rohan Rao (`datasets/city_day.csv`).
-* **Training Scripts:** `train_latest_dataset.py` and `train_version1_ml.py`
+* **Training Scripts:** `compile_comprehensive_datasets.py`, `train_comprehensive_ml.py`, `train_latest_dataset.py`, and `train_version1_ml.py`
 * **Features Trained on:** `PM2.5`, `PM10`, `NO2`, `SO2`, `CO`, `O3`, `sub_pm25`, `sub_pm10`, `sub_no2`, `sub_so2`, `sub_co`, `sub_o3`, `max_sub_index`, `pm_ratio`, `oxidant_sum`, `Temperature_C`, `Humidity_Pct`, `Pressure_hPa`, `Wind_Speed_kmh`, `Wind_Dir_Deg`, `month`, `hour`, `day_of_week`.
 * **Model Algorithms & Benchmarks:**
   * **XGBoost Continuous Regressor:** Evaluates continuous AQI with an **$R^2$ Score of $99.99\%$** ($\text{MAE} = 0.28\text{ AQI points}$).

@@ -1,0 +1,14 @@
+﻿# Python scripts (not served)
+*.py
+__pycache__/
+.venv/
+*.pkl
+
+# Datasets (large, not served)
+datasets/
+
+# Dev/IDE files
+*.code-workspace
+addon.txt
+node_modules/
+.git/

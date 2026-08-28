@@ -20,7 +20,7 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'latest_dataset')
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'datasets')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 CITIES = [
