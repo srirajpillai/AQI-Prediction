@@ -603,8 +603,26 @@
         // Fire push notification for AQI risk or pollutant spikes
         triggerAQINotification(data);
 
+        // Show/hide user-specific sections based on auth state
+        _updateAuthGatedUI();
+
         // Update personal disease risk panel if profile exists
         if (userHealthProfile) renderDiseaseRiskPanel(data, userHealthProfile);
+    }
+
+    // Auth-gated UI: shows/hides personalized sections based on login state
+    function _updateAuthGatedUI() {
+        const guestPrompt    = $('guestAuthPrompt');
+        const diseaseSection = $('diseaseRiskSection');
+        if (currentUser) {
+            // Logged in
+            if (guestPrompt)    guestPrompt.style.display    = 'none';
+            // diseaseRiskSection is controlled by renderDiseaseRiskPanel
+        } else {
+            // Guest — show sign-in prompt, hide personalized sections
+            if (guestPrompt)    guestPrompt.style.display    = '';
+            if (diseaseSection) diseaseSection.style.display = 'none';
+        }
     }
 
     // ===== Disease Risk Engine =====
@@ -766,6 +784,7 @@
             color: '#607d8b',
             description: 'Cumulative risk from chronic exposure to carcinogenic pollutants (IARC Group 1).',
             compute(p, h) {
+                const c = h.conditions || {};
                 let score = 0;
                 // PM2.5 is IARC Group 1 carcinogen
                 score += Math.min((p.pm25 / 55) * 40, 40);
@@ -2090,63 +2109,102 @@
 
     function triggerAQINotification(data) {
         if (!('Notification' in window)) return;
-        const now = Date.now();
+        const now   = Date.now();
         const aqi   = data.aqi;
         const level = getLevel(aqi);
         const theme = getTheme(aqi);
         const city  = currentCity.name;
+        const profile = userHealthProfile || {};
+        const conds = profile.conditions || {};
+        const userName = profile.name ? profile.name.split(' ')[0] : null;
 
-        // ── 1. AQI level-change notification (with 30-min cooldown) ──
-        const levelChanged = level !== _lastNotifLevel;
-        const cooldownExpired = (now - _lastNotifTime) > NOTIF_COOLDOWN_MS;
-        // Notify for moderate-or-above on change, or for any level if cooldown expired and level is bad
-        const isHighRisk = ['unhealthySG','unhealthy','veryUnhealthy','hazardous'].includes(level);
-
-        if ((levelChanged || (cooldownExpired && isHighRisk)) && (Notification.permission === 'granted')) {
-            const adv = HEALTH_ADVISORIES[level];
-            let title = `AQI Alert — ${city}: ${theme.status} (${aqi})`;
-            let body  = adv.text;
-
-            // Personalise if health profile active
-            if (userHealthProfile) {
-                const c = userHealthProfile.conditions || {};
-                if (c.asthma || c.copd) body = `High respiratory risk. ${body}`;
-                else if (c.heart) body = `Cardiovascular caution. ${body}`;
-                else if (c.elderly || c.pregnant || c.immuno) body = `Elevated personal risk. ${body}`;
+        // ── Helper: build personalized reason sentence ──
+        function _buildPersonalizedReason(baseText) {
+            const reasons = [];
+            // Condition-specific reasons with pollutant linkage
+            if ((conds.asthma || conds.copd) && data.iaqi?.pm25) {
+                const pm = data.iaqi.pm25.v;
+                reasons.push(`PM2.5 at ${pm ? pm.toFixed(1) : 'elevated'} µg/m³ is a direct trigger for your ${conds.asthma ? 'Asthma' : 'COPD'}`);
             }
+            if (conds.heart && data.iaqi?.no2) {
+                const no2 = data.iaqi.no2.v;
+                reasons.push(`NO₂ at ${no2 ? no2.toFixed(1) : 'elevated'} µg/m³ increases cardiac stress risk`);
+            }
+            if (conds.hypertension && data.iaqi?.pm10) {
+                reasons.push(`High particulate matter can spike blood pressure`);
+            }
+            if (conds.diabetes) {
+                reasons.push(`Air pollution worsens insulin resistance in Diabetes`);
+            }
+            if (conds.pregnant) {
+                reasons.push(`PM2.5 and NO₂ are harmful to foetal development`);
+            }
+            if (conds.elderly || conds.child) {
+                reasons.push(`${conds.elderly ? 'Elderly individuals' : 'Children'} have reduced respiratory defence`);
+            }
+            if (conds.immuno) {
+                reasons.push(`Immunocompromised individuals face heightened infection risk`);
+            }
+            const reasonStr = reasons.length > 0 ? ' Reason: ' + reasons.slice(0,2).join('; ') + '.' : '';
+            return baseText + reasonStr;
+        }
+
+        // ── 1. AQI level-change notification (30-min cooldown) ──
+        const levelChanged    = level !== _lastNotifLevel;
+        const cooldownExpired = (now - _lastNotifTime) > NOTIF_COOLDOWN_MS;
+        const isHighRisk      = ['unhealthySG','unhealthy','veryUnhealthy','hazardous'].includes(level);
+        const isMediumRisk    = level === 'moderate';
+
+        if ((levelChanged || (cooldownExpired && isHighRisk)) && Notification.permission === 'granted') {
+            const adv   = HEALTH_ADVISORIES[level];
+            const greeting = userName ? `${userName}, ` : '';
+            let title = `${greeting}AQI ${theme.status} in ${city} (${aqi})`;
+            let body  = _buildPersonalizedReason(adv.text);
+
+            // Add precaution hint based on profile
+            if (profile.activity === 'high' && isHighRisk) body += ' 🏃 Avoid outdoor workouts today.';
+            if ((conds.asthma || conds.copd) && isHighRisk)  body += ' Use your inhaler if needed.';
+            if (conds.heart && isHighRisk)                    body += ' Take extra rest indoors.';
 
             _sendOSNotification(title, body);
             _lastNotifLevel = level;
             _lastNotifTime  = now;
         }
 
-        // ── 2. Individual pollutant threshold alerts ──
+        // ── 2. Personalized pollutant threshold alerts ──
         if (Notification.permission === 'granted' && data.iaqi) {
-            POLL_THRESHOLDS.forEach(({ key, label, limit, msg }) => {
+            POLL_THRESHOLDS.forEach(({ key, label, limit, msg, icon }) => {
                 const raw = data.iaqi[key]?.v;
                 if (raw == null) return;
                 const lastT = _lastPollNotif[key] || 0;
-                if (raw > limit && (now - lastT) > POLL_COOLDOWN_MS) {
-                    _sendOSNotification(
-                        `${label} Alert — ${city}`,
-                        msg(typeof raw === 'number' ? raw.toFixed(1) : raw),
-                    );
+
+                // Lower threshold for high-risk groups
+                let effectiveLimit = limit;
+                if (key === 'pm25'  && (conds.asthma || conds.copd || conds.heart)) effectiveLimit = Math.floor(limit * 0.6);
+                if (key === 'no2'   && (conds.heart  || conds.hypertension))         effectiveLimit = Math.floor(limit * 0.65);
+                if (key === 'o3'    && (conds.asthma || profile.activity === 'high')) effectiveLimit = Math.floor(limit * 0.7);
+
+                if (raw > effectiveLimit && (now - lastT) > POLL_COOLDOWN_MS) {
+                    const greeting = userName ? `${userName} — ` : '';
+                    const baseMsg  = msg(typeof raw === 'number' ? raw.toFixed(1) : raw);
+                    const extra    = (key === 'pm25' && conds.asthma) ? ' Keep inhaler accessible.' :
+                                    (key === 'no2'  && conds.heart)   ? ' Limit roadside exposure.' : '';
+                    _sendOSNotification(`${icon} ${greeting}${label} Alert — ${city}`, baseMsg + extra);
                     _lastPollNotif[key] = now;
                 }
             });
         }
 
-        // ── 3. In-app banner: show for veryUnhealthy / hazardous (complements OS notification) ──
-        const banner = document.getElementById('eventAlertBanner');
+        // ── 3. In-app banner for very unhealthy / hazardous ──
+        const banner      = document.getElementById('eventAlertBanner');
         const bannerTitle = document.getElementById('eventAlertTitle');
         const bannerDesc  = document.getElementById('eventAlertDesc');
-        if (banner && isHighRisk && levelChanged) {
+        if (banner && (isHighRisk || isMediumRisk) && levelChanged) {
             if (bannerTitle) bannerTitle.textContent = `AQI ${theme.status} — ${city}: ${aqi}`;
-            if (bannerDesc)  bannerDesc.textContent  = HEALTH_ADVISORIES[level].text;
-            banner.style.display = 'block';
-            // Auto-hide after 12 seconds for non-hazardous
-            if (level !== 'hazardous') {
-                setTimeout(() => { if (banner) banner.style.display = 'none'; }, 12000);
+            if (bannerDesc)  bannerDesc.textContent  = _buildPersonalizedReason(HEALTH_ADVISORIES[level].text);
+            if (isHighRisk) {
+                banner.style.display = 'block';
+                if (level !== 'hazardous') setTimeout(() => { if (banner) banner.style.display = 'none'; }, 15000);
             }
         }
     }
@@ -2261,12 +2319,35 @@
                 const icon = els.locationBtn.querySelector('i');
                 if (icon) icon.className = 'fas fa-spinner fa-spin';
                 navigator.geolocation.getCurrentPosition(
-                    pos => {
+                    async pos => {
+                        const lat = pos.coords.latitude;
+                        const lon = pos.coords.longitude;
+                        let locName = 'My Location';
+                        let regionName = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+
+                        try {
+                            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
+                            const data = await res.json();
+                            if (data && data.address) {
+                                locName = data.address.city || data.address.town || data.address.village || data.address.county || 'My Location';
+                                regionName = data.address.state || data.address.country || regionName;
+                            }
+                        } catch(e) {
+                            try {
+                                const res2 = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+                                const data2 = await res2.json();
+                                if (data2 && (data2.city || data2.locality)) {
+                                    locName = data2.city || data2.locality || 'My Location';
+                                    regionName = data2.principalSubdivision || data2.countryName || regionName;
+                                }
+                            } catch(err) { console.warn("Reverse geocoding failed"); }
+                        }
+
                         if (icon) icon.className = 'fas fa-location-crosshairs';
                         currentCity = {
-                            name: 'My Location',
-                            lat: pos.coords.latitude, lon: pos.coords.longitude,
-                            region: `${pos.coords.latitude.toFixed(2)}, ${pos.coords.longitude.toFixed(2)}`,
+                            name: locName,
+                            lat: lat, lon: lon,
+                            region: regionName,
                             timezone: 'UTC'
                         };
                         localStorage.setItem('airflowLastCity', JSON.stringify(currentCity));
@@ -2435,44 +2516,71 @@
                     if (signInBtn) signInBtn.classList.add('hidden');
                     if (profileBtn) profileBtn.classList.remove('hidden');
 
-                    // Fetch user profile
+                    // Fetch user profile from Firestore first, then localStorage
+                    let fetched = null;
                     try {
-                        const doc = await db.collection('health_profiles').doc(user.uid).get();
-                        if (doc.exists) {
-                            userHealthProfile = doc.data();
-                        } else {
-                            // Try localStorage fallback
-                            const localRaw = localStorage.getItem('airflowProfile_' + user.uid);
-                            if (localRaw) userHealthProfile = JSON.parse(localRaw);
+                        if (db) {
+                            const doc = await db.collection('health_profiles').doc(user.uid).get();
+                            if (doc.exists) fetched = doc.data();
                         }
-                        if (userHealthProfile) {
-                            // Populate form — basic
-                            if ($('profileAge'))          $('profileAge').value = userHealthProfile.age || '';
-                            if ($('profileGender'))       $('profileGender').value = userHealthProfile.gender || '';
-                            if ($('profileWeight'))       $('profileWeight').value = userHealthProfile.weight || '';
-                            if ($('profileHeight'))       $('profileHeight').value = userHealthProfile.height || '';
-                            if ($('profileSmoking'))      $('profileSmoking').value = userHealthProfile.smoking || 'never';
-                            if ($('profileOutdoorHours')) $('profileOutdoorHours').value = userHealthProfile.outdoorHours || '3';
-                            if ($('profileActivity'))     $('profileActivity').value = userHealthProfile.activity || 'moderate';
-                            // Apply to pill toggles
-                            applyPillConditions(userHealthProfile.conditions);
-                            updateBMIDisplay();
-                            // Re-run display to update personalized risk
-                            if (lastAQIData) updateDisplay(lastAQIData);
-                        }
-                    } catch (e) {
-                        console.warn('Error fetching profile:', e);
-                        // Fallback to localStorage even on error
+                    } catch (e) { console.warn('Firestore fetch error:', e); }
+
+                    if (!fetched) {
                         try {
                             const localRaw = localStorage.getItem('airflowProfile_' + user.uid);
-                            if (localRaw) { userHealthProfile = JSON.parse(localRaw); if (lastAQIData) updateDisplay(lastAQIData); }
-                        } catch(_) {}
+                            if (localRaw) fetched = JSON.parse(localRaw);
+                        } catch (_) {}
                     }
+
+                    if (fetched) {
+                        userHealthProfile = fetched;
+                        // ─── Populate form fields ───
+                        if ($('profileAge'))          $('profileAge').value          = fetched.age || '';
+                        if ($('profileGender'))       $('profileGender').value       = fetched.gender || '';
+                        if ($('profileWeight'))       $('profileWeight').value       = fetched.weight || '';
+                        if ($('profileHeight'))       $('profileHeight').value       = fetched.height || '';
+                        if ($('profileSmoking'))      $('profileSmoking').value      = fetched.smoking || 'never';
+                        if ($('profileOutdoorHours')) $('profileOutdoorHours').value = fetched.outdoorHours || '3';
+                        if ($('profileActivity'))     $('profileActivity').value     = fetched.activity || 'moderate';
+                        applyPillConditions(fetched.conditions);
+                        updateBMIDisplay();
+                    }
+
+                    // ─── Name banner / input logic ───
+                    const banner     = $('profileNameBanner');
+                    const inputWrap  = $('profileNameInputWrap');
+                    const nameDisplay = $('profileNameDisplay');
+                    const savedName  = fetched && fetched.name ? fetched.name : null;
+                    if (savedName) {
+                        // Show locked banner
+                        if (banner)      { banner.style.display = 'flex'; }
+                        if (inputWrap)   { inputWrap.style.display = 'none'; }
+                        if (nameDisplay) { nameDisplay.textContent = savedName; }
+                        if (profileBtn)  { profileBtn.title = 'Health Profile — ' + savedName; }
+                    } else {
+                        // Show editable input
+                        if (banner)     { banner.style.display = 'none'; }
+                        if (inputWrap)  { inputWrap.style.display = 'block'; }
+                    }
+
+                    // Update auth-gated UI immediately
+                    _updateAuthGatedUI();
+
+                    // Update display with personalized data
+                    if (lastAQIData) { try { updateDisplay(lastAQIData); } catch(_) {} }
+
                 } else {
                     if (signInBtn) signInBtn.classList.remove('hidden');
                     if (profileBtn) profileBtn.classList.add('hidden');
                     userHealthProfile = null;
-                    if (lastAQIData) updateDisplay(lastAQIData);
+                    // Reset name UI
+                    const banner = $('profileNameBanner');
+                    const inputWrap = $('profileNameInputWrap');
+                    if (banner)   banner.style.display = 'none';
+                    if (inputWrap) inputWrap.style.display = 'none';
+                    // Update auth-gated UI immediately (show guest prompt)
+                    _updateAuthGatedUI();
+                    if (lastAQIData) { try { updateDisplay(lastAQIData); } catch(_) {} }
                 }
             });
 
@@ -2566,50 +2674,65 @@
                     if (!currentUser) return;
 
                     const saveBtn = $('saveProfileBtn');
-                    if (saveBtn) {
-                        saveBtn.disabled = true;
-                        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-                    }
+                    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
+
+                    // Get name — from input (first time) or from existing locked profile
+                    const existingName = userHealthProfile && userHealthProfile.name ? userHealthProfile.name : null;
+                    const nameInputVal = $('profileName') ? $('profileName').value.trim() : '';
+                    const finalName    = existingName || nameInputVal;
 
                     const profileData = {
-                        age: parseInt($('profileAge').value) || 25,
-                        gender: $('profileGender')?.value || '',
-                        weight: parseFloat($('profileWeight')?.value) || null,
-                        height: parseFloat($('profileHeight')?.value) || null,
-                        smoking: $('profileSmoking')?.value || 'never',
+                        name:         finalName,
+                        age:          parseInt($('profileAge')?.value) || 25,
+                        gender:       $('profileGender')?.value || '',
+                        weight:       parseFloat($('profileWeight')?.value) || null,
+                        height:       parseFloat($('profileHeight')?.value) || null,
+                        smoking:      $('profileSmoking')?.value || 'never',
                         outdoorHours: $('profileOutdoorHours')?.value || '3',
-                        activity: $('profileActivity').value,
-                        conditions: readPillConditions(),
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        activity:     $('profileActivity')?.value || 'moderate',
+                        conditions:   readPillConditions()
                     };
 
+                    // ① Save to localStorage immediately (offline-safe)
                     try {
-                        // ① Save locally first — instant, works offline, never blocks UI
-                        const localKey = 'airflowProfile_' + currentUser.uid;
-                        const localData = { ...profileData, updatedAt: Date.now() };
-                        localStorage.setItem(localKey, JSON.stringify(localData));
+                        localStorage.setItem('airflowProfile_' + currentUser.uid, JSON.stringify({ ...profileData, updatedAt: Date.now() }));
+                    } catch (_) { console.warn('localStorage write failed'); }
 
-                        userHealthProfile = profileData;
-                        overlay.classList.remove('active');
-                        if (lastAQIData) updateDisplay(lastAQIData);
-                        if (window._showToast) window._showToast('Health profile saved!', 'success');
-
-                        // ② Sync to Firebase in background — never await, never blocks UI
-                        if (db) {
-                            db.collection('health_profiles').doc(currentUser.uid).set(profileData, { merge: true })
-                                .catch(err => console.warn('Firebase background sync failed:', err));
-                        }
-                    } catch (err) {
-                        if (window._showToast) {
-                            window._showToast('Failed to save profile. Try again.', 'warn');
-                        }
-                        console.error('Profile save error:', err);
-                    } finally {
-                        if (saveBtn) {
-                            saveBtn.disabled = false;
-                            saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Profile';
+                    // ② AWAIT Firestore so we know it actually saved
+                    let firebaseSaved = false;
+                    if (db && currentUser.uid) {
+                        try {
+                            await db.collection('health_profiles').doc(currentUser.uid).set(
+                                { ...profileData, updatedAt: new Date() }, { merge: true }
+                            );
+                            firebaseSaved = true;
+                        } catch (fbErr) {
+                            console.error('Firestore save error:', fbErr);
+                            if (window._showToast) window._showToast('Cloud sync failed: ' + fbErr.message, 'warn');
                         }
                     }
+
+                    userHealthProfile = profileData;
+
+                    // ③ Update name banner — lock if name was just set
+                    const banner     = $('profileNameBanner');
+                    const inputWrap  = $('profileNameInputWrap');
+                    const nameDisplay = $('profileNameDisplay');
+                    if (finalName) {
+                        if (banner)      { banner.style.display = 'flex'; }
+                        if (inputWrap)   { inputWrap.style.display = 'none'; }
+                        if (nameDisplay) { nameDisplay.textContent = finalName; }
+                        const profileBtn = $('profileBtn');
+                        if (profileBtn)  { profileBtn.title = 'Health Profile — ' + finalName; }
+                    }
+
+                    if (overlay) overlay.classList.remove('active');
+                    if (window._showToast) window._showToast(firebaseSaved ? '✅ Profile saved & synced to cloud!' : '✅ Profile saved locally!', 'success');
+
+                    // ④ Re-render dashboard with new profile
+                    if (lastAQIData) { try { updateDisplay(lastAQIData); } catch (_) {} }
+
+                    if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-check"></i> Save &amp; Analyse'; }
                 });
             }
         }

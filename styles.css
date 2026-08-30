@@ -6,7 +6,7 @@
     --aqi-accent-rgb: 0, 230, 118;
     --aqi-glow: rgba(0, 230, 118, 0.3);
     --bg-severity: linear-gradient(135deg, #0a2e1a 0%, #0a0a14 50%, #1a1a2e 100%);
-    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
     --mono: 'JetBrains Mono', monospace;
     --r-sm: 12px; --r-md: 18px; --r-lg: 26px; --r-xl: 34px;
     --blur: 10px; --blur-heavy: 16px;

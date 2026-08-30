@@ -13,7 +13,7 @@
     <meta name="description" content="AirFlow AI provides real-time Air Quality Index predictions with cross-city transfer learning. Monitor PM2.5, PM10, O3, NO2, SO2, CO with hourly forecasts.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css?v=20">
     <script>
@@ -239,7 +239,21 @@
             </div>
         </section>
 
-        <!-- ===== Disease Risk &amp; Travel Safety Panel ===== -->
+        <!-- ===== Sign-In Prompt (shown only to guests) ===== -->
+        <section class="section-block" id="guestAuthPrompt" style="display:none;">
+            <div style="background: linear-gradient(135deg, rgba(0,100,255,0.08), rgba(0,230,118,0.06)); border: 1px solid rgba(0,230,118,0.2); border-radius: 20px; padding: 32px 28px; text-align: center;">
+                <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#0064ff22,#00e67622); border:2px solid rgba(0,230,118,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                    <i class="fas fa-user-shield" style="font-size:26px; color:#00e676;"></i>
+                </div>
+                <h3 style="font-size:20px; font-weight:700; margin:0 0 8px; color:var(--text);">Personalized Health Dashboard</h3>
+                <p style="color:rgba(255,255,255,0.55); font-size:14px; max-width:420px; margin:0 auto 20px; line-height:1.6;">Sign in to unlock AI-powered disease risk assessment, travel safety analysis, and smart AQI alerts tailored to your health profile.</p>
+                <button class="btn-primary" onclick="document.getElementById('signInBtn').click()" style="padding:12px 28px; font-size:15px; border-radius:50px;">
+                    <i class="fas fa-right-to-bracket"></i> Sign In to Unlock
+                </button>
+            </div>
+        </section>
+
+        <!-- ===== Disease Risk & Travel Safety Panel ===== -->
         <section class="section-block" id="diseaseRiskSection" style="display:none;">
             <div class="section-head">
                 <div class="head-icon" style="background:rgba(244,67,54,0.15);border-color:rgba(244,67,54,0.3);"><i class="fas fa-shield-heart" style="color:#f44336;"></i></div>
@@ -470,7 +484,27 @@
                 <button class="modal-close" id="profileModalClose"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <p class="modal-desc">Complete your health profile for personalised disease risk predictions, travel safety analysis and smart AQI push notifications.</p>
+
+                <!-- User Name Banner (shown at top, locked after first save) -->
+                <div id="profileNameBanner" style="display:none; background: linear-gradient(135deg, rgba(0,230,118,0.12), rgba(0,100,255,0.10)); border: 1px solid rgba(0,230,118,0.25); border-radius: 16px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+                    <div style="width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#00e676,#0064ff); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <i class="fas fa-user" style="color:white; font-size:18px;"></i>
+                    </div>
+                    <div>
+                        <div id="profileNameDisplay" style="font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.3px;">—</div>
+                        <div style="font-size:12px; color:rgba(255,255,255,0.45); margin-top:2px;"><i class="fas fa-lock" style="font-size:10px; margin-right:4px;"></i>Name locked · cannot be changed</div>
+                    </div>
+                </div>
+
+                <!-- Name input shown only if no name saved yet -->
+                <div id="profileNameInputWrap" style="display:none; margin-bottom:16px;">
+                    <div class="profile-section-label" style="margin-bottom:8px;"><i class="fas fa-id-badge"></i> Your Name <span style="font-size:11px; color:#ff9800; font-weight:400; margin-left:6px;">⚠ Set once — cannot be changed after saving</span></div>
+                    <div class="form-group" style="margin:0;">
+                        <input type="text" id="profileName" placeholder="Enter your full name..." style="font-size:15px;">
+                    </div>
+                </div>
+
+                <p class="modal-desc" style="margin-top:0;">Complete your health profile for personalised disease risk predictions, travel safety analysis and smart AQI push notifications.</p>
 
                 <form id="healthProfileForm">
 
