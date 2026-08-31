@@ -37,7 +37,52 @@
     const METEO_BASE = 'https://api.open-meteo.com/v1/forecast';
     const GEOCODE_BASE = 'https://geocoding-api.open-meteo.com/v1/search';
     const METEO_AIR_QUALITY = 'https://air-quality-api.open-meteo.com/v1/air-quality';
+    // Additional AQI sources for multi-API consensus
+    const WAQI_API = 'https://api.waqi.info/feed/geo';
+    const OPENAQ_API = 'https://api.openaq.io/v3/locations';
     const CACHE_TTL = 5 * 60 * 1000; // 5-minute cache TTL
+
+    // ===== IndexedDB Local Storage (fallback for Firebase) =====
+    let _idb = null;
+    function openIDB() {
+        return new Promise((resolve, reject) => {
+            if (_idb) { resolve(_idb); return; }
+            if (!window.indexedDB) { resolve(null); return; }
+            const req = indexedDB.open('airflowDB', 2);
+            req.onupgradeneeded = e => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('profiles')) {
+                    db.createObjectStore('profiles', { keyPath: 'uid' });
+                }
+            };
+            req.onsuccess = e => { _idb = e.target.result; resolve(_idb); };
+            req.onerror = () => resolve(null);
+        });
+    }
+    async function saveToIDB(uid, data) {
+        try {
+            const db = await openIDB();
+            if (!db) return false;
+            return new Promise(resolve => {
+                const tx = db.transaction('profiles', 'readwrite');
+                tx.objectStore('profiles').put({ uid, ...data, _idbSavedAt: Date.now() });
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            });
+        } catch(e) { return false; }
+    }
+    async function loadFromIDB(uid) {
+        try {
+            const db = await openIDB();
+            if (!db) return null;
+            return new Promise(resolve => {
+                const tx = db.transaction('profiles', 'readonly');
+                const req = tx.objectStore('profiles').get(uid);
+                req.onsuccess = () => resolve(req.result || null);
+                req.onerror = () => resolve(null);
+            });
+        } catch(e) { return null; }
+    }
 
     function escapeHTML(str) {
         if (typeof str !== 'string') return str;
@@ -311,7 +356,7 @@
 
     // ===== Theme =====
     function initTheme() {
-        const saved = localStorage.getItem('airflowTheme') || 'dark';
+        const saved = localStorage.getItem('airflowTheme') || 'light';
         document.documentElement.setAttribute('data-theme', saved);
     }
 
@@ -385,11 +430,16 @@
         });
     }
 
-    // ===== AQI Data Fetching & Pure ML Inference =====
+    // ===== AQI Data Fetching & Multi-Source ML Inference =====
     async function fetchAQI(city) {
         try {
             const meteoUrl = `${METEO_AIR_QUALITY}?latitude=${city.lat}&longitude=${city.lon}&current=us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&hourly=us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide&timezone=auto&forecast_days=2`;
-            const meteoData = await cachedFetch(meteoUrl);
+            
+            // Fire Open-Meteo and supplemental APIs in parallel
+            const [meteoData, supplementalAqi] = await Promise.all([
+                cachedFetch(meteoUrl),
+                fetchLiveAQIMultiSource(city)
+            ]);
 
             if (meteoData && meteoData.current) {
                 if (meteoData.timezone) {
@@ -400,9 +450,6 @@
 
                 // Open-Meteo units: CO in µg/m³, O3 in µg/m³, NO2 in µg/m³
                 // CPCB breakpoints expect: CO in ppm (~mg/m³), O3 in µg/m³, NO2 in µg/m³
-                // CO: 1 ppm ≈ 1145 µg/m³ at STP → divide by 1145 for ppm
-                // O3: already µg/m³ — pass directly (CPCB breakpoints in µg/m³)
-                // NO2: already µg/m³ — pass directly
                 const pollutants = {
                     pm25: c.pm2_5 != null ? +c.pm2_5 : 25,
                     pm10: c.pm10 != null ? +c.pm10 : 45,
@@ -413,8 +460,24 @@
                     nh3:  12.0
                 };
 
-                // Use Open-Meteo's scientifically-computed US AQI directly as primary value
+                // Use Open-Meteo's scientifically-computed US AQI as primary
                 const rawUsAqi = c.us_aqi != null ? Math.round(+c.us_aqi) : null;
+
+                // Multi-source AQI consensus: weight Open-Meteo 60%, supplemental 40%
+                let finalAqiRaw = rawUsAqi;
+                let sourceLabel = 'open-meteo';
+                let sourceCount = 1;
+
+                if (supplementalAqi != null && rawUsAqi != null) {
+                    // Weighted average — Open-Meteo is more reliable for global coverage
+                    finalAqiRaw = Math.round(rawUsAqi * 0.6 + supplementalAqi * 0.4);
+                    sourceLabel = 'multi-source';
+                    sourceCount = 2;
+                } else if (supplementalAqi != null && rawUsAqi == null) {
+                    finalAqiRaw = supplementalAqi;
+                    sourceLabel = 'waqi+openaq';
+                    sourceCount = 1;
+                }
 
                 // Fetch real-time weather in parallel (already cached if called from loadCity)
                 const wx = lastWeatherData || await fetchWeather(city.lat, city.lon);
@@ -434,12 +497,10 @@
                         date: c.time || new Date().toISOString()
                     });
                 } catch (e) {
-                    // Slim inline fallback — just find max sub-index for dominant pollutant label
                     mlResult = _quickSubIndexFallback(pollutants);
                 }
 
-                // Primary AQI: use Open-Meteo us_aqi (authoritative), fall back to ML sub-index
-                const finalAqi = rawUsAqi != null ? rawUsAqi : mlResult.predictedAqi;
+                const finalAqi = finalAqiRaw != null ? finalAqiRaw : mlResult.predictedAqi;
 
                 const mappedData = {
                     aqi: finalAqi,
@@ -458,7 +519,10 @@
                         co:   { v: pollutants.co }
                     },
                     time: { s: (c.time || new Date().toISOString()).replace('T', ' ') },
-                    _source: 'open-meteo',
+                    _source: sourceLabel,
+                    _sourceCount: sourceCount,
+                    _meteoAqi: rawUsAqi,
+                    _supplementalAqi: supplementalAqi,
                     _hourlyAqi:   meteoData.hourly?.us_aqi   || null,
                     _hourlyTimes: meteoData.hourly?.time      || null,
                     _hourlyPm25:  meteoData.hourly?.pm2_5    || null
@@ -471,6 +535,39 @@
             console.error('AQ fetch error:', e);
         }
         return useFinalFallback();
+    }
+
+    // ===== Multi-API AQI Consensus (WAQI + OpenAQ supplements) =====
+    async function fetchLiveAQIMultiSource(city) {
+        const results = await Promise.allSettled([
+            // Source 1: WAQI demo token (returns real-time station data)
+            cachedFetch(`${WAQI_API}:${city.lat};${city.lon}/?token=demo`)
+                .then(d => (d && d.status === 'ok' && d.data && d.data.aqi !== '-') ? Math.round(+d.data.aqi) : null)
+                .catch(() => null),
+            // Source 2: OpenAQ v3 - nearest location latest reading
+            cachedFetch(`${OPENAQ_API}?coordinates=${city.lat},${city.lon}&radius=50000&limit=3&order_by=distance`)
+                .then(d => {
+                    if (!d || !d.results || !d.results.length) return null;
+                    // openaq gives latest measurements per sensor; we try to infer AQI from PM2.5
+                    const loc = d.results[0];
+                    const pm25 = loc.sensors && loc.sensors.find(s => s.parameter && s.parameter.name === 'pm25');
+                    if (pm25 && pm25.latest && pm25.latest.value != null) {
+                        const pm = pm25.latest.value;
+                        // Convert PM2.5 µg/m³ → US AQI (USEPA breakpoints)
+                        if (pm <= 12) return Math.round((50/12)*pm);
+                        if (pm <= 35.4) return Math.round(50 + (50/23.4)*(pm-12));
+                        if (pm <= 55.4) return Math.round(100 + (50/20)*(pm-35.4));
+                        if (pm <= 150.4) return Math.round(150 + (50/95)*(pm-55.4));
+                        if (pm <= 250.4) return Math.round(200 + (100/100)*(pm-150.4));
+                        return Math.min(500, Math.round(300 + (200/149.6)*(pm-250.4)));
+                    }
+                    return null;
+                })
+                .catch(() => null)
+        ]);
+
+        const vals = results.map(r => r.status === 'fulfilled' ? r.value : null).filter(v => v != null && v > 0 && v <= 500);
+        return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
     }
 
     // Slim fallback: CPCB sub-index via inline breakpoint tables (no worker dependency)
@@ -534,9 +631,21 @@
         if (els.aqiStatus) els.aqiStatus.textContent = theme.status;
         if (els.aqiDescription) els.aqiDescription.textContent = theme.desc;
 
-        const sourceInfo = data._source === 'open-meteo' ? ' · Open-Meteo' : data._source === 'fallback' ? ' · Estimate' : ' · WAQI Live';
+        const sourceCount = data._sourceCount || 1;
+        const sourceInfo = data._source === 'multi-source'
+            ? ` · <span class="multi-api-badge">🛰 ${sourceCount} Sources</span>`
+            : data._source === 'open-meteo' ? ' · Open-Meteo'
+            : data._source === 'fallback'   ? ' · Estimate'
+            : ' · WAQI+OpenAQ';
         const refreshTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-        if (els.updateTime) els.updateTime.textContent = `Last refreshed: ${refreshTime}${sourceInfo}`;
+        if (els.updateTime) {
+            if (data._source === 'multi-source') {
+                els.updateTime.innerHTML = `Last refreshed: ${refreshTime}${sourceInfo}`;
+            } else {
+                els.updateTime.textContent = `Last refreshed: ${refreshTime}${sourceInfo}`;
+            }
+        }
+
 
         // Pollutants
         setPollutant('pm25', data.iaqi?.pm25?.v, 500);
@@ -656,12 +765,27 @@
             },
             precautions(score, p, h) {
                 const tips = [];
-                if (score >= 70) { tips.push('Stay indoors. Keep windows and doors sealed.'); tips.push('Use HEPA air purifier indoors.'); }
-                if ((h.conditions||{}).asthma || (h.conditions||{}).copd) tips.push('Keep inhaler/bronchodilator accessible at all times.');
-                if (p.pm25 > 55) tips.push(`PM2.5 at ${p.pm25.toFixed(1)} µg/m³ — wear N95/FFP2 mask outdoors.`);
-                if (p.o3 > 100)  tips.push('Ozone elevated — avoid outdoor cardio exercise.');
-                if (score >= 40) tips.push('Avoid areas with heavy traffic or industrial emissions.');
-                if (h.smoking === 'active') tips.push('Smoking significantly multiplies PM2.5 lung damage — consider cessation.');
+                const c = h.conditions || {};
+                if (score >= 70) {
+                    tips.push('Stay indoors with windows and doors sealed — outdoor air is hazardous to airways.');
+                    tips.push('Use a HEPA air purifier (MERV-13 or higher) running continuously in living spaces.');
+                }
+                if (score >= 40) {
+                    tips.push('Wear an N95 or FFP2 mask if going outdoors — surgical masks do NOT filter PM2.5.');
+                    tips.push('Avoid areas near traffic, construction sites, or industrial zones today.');
+                }
+                if (c.asthma) tips.push('🫁 Asthma: Carry your rescue inhaler at all times. Use preventive inhaler before any outdoor activity.');
+                if (c.copd)   tips.push('🌬️ COPD: Your lung reserve is reduced — contact your doctor if breathing worsens.');
+                if (c.bronchitis) tips.push('🤧 Bronchitis: Increased mucus production likely. Stay hydrated and use a steam inhaler.');
+                if (c.apnea) tips.push('😴 Sleep Apnea: High AQI can worsen nocturnal hypoxia — ensure your CPAP filter is clean.');
+                if (c.rhinitis) tips.push('🌿 Allergic Rhinitis: Take antihistamines prophylactically and use nasal saline rinse.');
+                if (p.pm25 > 35) tips.push(`⚠️ PM2.5 is ${p.pm25.toFixed(1)} µg/m³ — ${p.pm25 > 55 ? 'very dangerous' : 'elevated'}. Minimize all outdoor exposure.`);
+                if (p.o3 > 70)  tips.push(`☀️ Ozone at ${p.o3.toFixed(0)} µg/m³ — avoid intense outdoor exercise between 10am–6pm when ozone peaks.`);
+                if (p.so2 > 20) tips.push('🏭 SO₂ is elevated — avoid breathing deeply near roadsides or smokestacks.');
+                if (h.smoking === 'active') tips.push('🚬 Active smoking + PM2.5 exposure multiplies lung damage — consider cessation now.');
+                if (c.child)   tips.push('👶 Children: Keep indoors during recess/outdoor play. Use indoor ventilation systems.');
+                if (c.elderly) tips.push('👴 Elderly: Immune response to pollutants is reduced — extra caution for 48h post-exposure.');
+                if (h.activity === 'high') tips.push('🏃 High activity: Lungs at 10× ventilation — pollutant intake multiplied. Switch to indoor exercise.');
                 return tips;
             }
         },
@@ -688,12 +812,21 @@
             },
             precautions(score, p, h) {
                 const tips = [];
-                if (score >= 70) tips.push('Avoid physical exertion outdoors. Rest indoors in clean air.');
                 const c = h.conditions || {};
-                if (c.heart || c.hypertension) tips.push('Monitor blood pressure regularly during high AQI days.');
-                if (c.heart) tips.push('Keep emergency cardiac medication readily available.');
-                if (p.pm25 > 55) tips.push('Fine particles enter the bloodstream — N95 mask is essential.');
-                if (p.no2 > 100) tips.push('NO₂ causes artery inflammation — avoid roadside exposure.');
+                if (score >= 70) tips.push('🛑 Avoid all physical exertion outdoors. Rest in a clean, cool indoor environment immediately.');
+                if (score >= 50) tips.push('📊 Monitor blood pressure or heart rate every 2–3 hours during high AQI days.');
+                if (c.heart || c.hypertension) {
+                    tips.push('💊 Heart/Hypertension: Take prescribed medications on time — air pollution raises blood pressure.');
+                    tips.push('🩺 Contact your cardiologist if chest tightness, palpitations, or breathlessness occur.');
+                }
+                if (c.heart) tips.push('💉 Keep emergency cardiac medication (nitroglycerin/aspirin) readily accessible.');
+                if (c.stroke) tips.push('🧠 Stroke history: PM2.5 increases stroke recurrence risk — stay strictly indoors on bad AQI days.');
+                if (c.diabetes) tips.push('🩸 Diabetes: Pollution-induced inflammation raises blood glucose — monitor glucose levels closely.');
+                if (p.pm25 > 35) tips.push(`⚠️ PM2.5 at ${p.pm25.toFixed(1)} µg/m³ enters your bloodstream via lungs — N95 mask is essential if outdoors.`);
+                if (p.no2 > 50) tips.push(`🚗 NO₂ at ${p.no2.toFixed(0)} µg/m³ causes arterial inflammation — avoid roadside and traffic-heavy areas.`);
+                if (p.co > 1) tips.push('🔥 CO reduces oxygen delivery to heart muscles — avoid enclosed areas with combustion sources.');
+                if (h.smoking === 'active') tips.push('🚬 Smoking + air pollution dramatically elevates heart attack risk — seek cessation support urgently.');
+                if (c.elderly) tips.push('👴 Elderly cardiovascular patients: acute effects can occur within 1–2 hours of exposure.');
                 return tips;
             }
         },
@@ -715,10 +848,15 @@
             },
             precautions(score, p, h) {
                 const tips = [];
-                if (score >= 50) tips.push('Wear UV-blocking glasses or goggles outdoors.');
-                if (p.o3 > 80) tips.push('Ozone causes eye and mucous membrane irritation — reduce outdoor time.');
-                if (p.so2 > 40) tips.push('SO₂ irritates eyes and skin — avoid prolonged outdoor exposure.');
-                tips.push('Moisturise skin and rinse eyes with clean water after outdoor exposure.');
+                const c = h.conditions || {};
+                if (score >= 50) tips.push('👓 Wear UV-blocking sunglasses or safety goggles when outdoors — ozone irritates the cornea.');
+                if (p.o3 > 60) tips.push(`☀️ Ozone at ${p.o3.toFixed(0)} µg/m³ — causes eye redness, tearing, and mucous membrane inflammation.`);
+                if (p.so2 > 20) tips.push(`🏭 SO₂ at ${p.so2.toFixed(0)} µg/m³ — causes eye and throat burning. Avoid outdoor air for extended periods.`);
+                if (p.no2 > 50) tips.push('🚗 NO₂ causes redness and photosensitivity — rinse eyes with saline if irritated.');
+                tips.push('💧 Rinse eyes with clean water and moisturise exposed skin after returning indoors.');
+                tips.push('🧴 Apply SPF moisturiser — pollution accelerates skin oxidative damage.');
+                if (c.rhinitis) tips.push('🌿 Rhinitis: Nasal saline rinse twice daily helps flush out trapped particulates.');
+                if (parseInt(h.outdoorHours || 3) >= 4) tips.push('⏱️ You spend significant time outdoors — use a pollution-filtering face mask and wash face frequently.');
                 return tips;
             }
         },
@@ -741,11 +879,16 @@
             },
             precautions(score, p, h) {
                 const tips = [];
-                if (score >= 60) tips.push('High CO levels may cause headaches and cognitive impairment — ventilate enclosed spaces.');
                 const c = h.conditions || {};
-                if (c.stroke) tips.push('History of stroke elevates neurological sensitivity — avoid outdoor exposure on poor AQI days.');
-                if (c.child)  tips.push('Children\'s developing brains are especially vulnerable — keep children indoors.');
-                tips.push('Never use combustion heaters or generators indoors — CO poisoning risk.');
+                if (score >= 60) tips.push('🧠 High CO/PM2.5 causes cognitive impairment — avoid mental tasks requiring concentration during peak exposure.');
+                if (score >= 50) tips.push('💨 Ventilate all enclosed spaces immediately — open windows briefly to purge CO buildup.');
+                if (p.co > 0.5) tips.push(`🔥 CO at ${p.co.toFixed(2)} ppm — never use combustion heaters, generators, or gas stoves in enclosed spaces.`);
+                if (p.pm25 > 35) tips.push(`🧬 PM2.5 particles can cross the blood-brain barrier — minimize exposure time.`);
+                if (c.stroke) tips.push('🩺 Stroke history: PM2.5 can trigger a repeat ischemic event — avoid outdoor exposure on hazardous days.');
+                if (c.child) tips.push('👶 Children\'s developing brains are disproportionately affected by pollutants — keep children strictly indoors.');
+                if (c.elderly) tips.push('👴 Elderly: Age-related blood-brain barrier degradation increases neurological vulnerability.');
+                tips.push('🏠 Install CO detectors in every sleeping area — CO is colorless and odorless.');
+                if (h.smoking === 'active') tips.push('🚬 Smoking reduces oxygen delivery to the brain, compounding neurological effects of CO exposure.');
                 return tips;
             }
         },
@@ -769,11 +912,16 @@
             precautions(score, p, h) {
                 const tips = [];
                 const c = h.conditions || {};
-                if (!c.pregnant) return ['Not applicable — no pregnancy indicated in profile.'];
-                if (score >= 50) tips.push('Pregnant individuals should minimise outdoor time on poor AQI days.');
-                tips.push('Wear N95/FFP2 mask when outdoors — fine particles cross the placenta.');
-                tips.push('Maintain indoor HEPA filtration and avoid areas with traffic emissions.');
-                if (h.smoking === 'active') tips.push('Smoking combined with poor AQI dramatically increases fetal risk — seek cessation support.');
+                if (!c.pregnant) return ['ℹ️ Not applicable — no pregnancy indicated in your health profile.'];
+                if (score >= 70) tips.push('🚨 Critical: Pregnant individuals should not go outdoors on days with AQI > 150.');
+                if (score >= 50) tips.push('🤱 Minimise ALL outdoor time — fine particles cross the placenta and affect fetal oxygen supply.');
+                tips.push('😷 Wear N95/FFP2 mask whenever outdoors — surgical masks do not filter PM2.5.');
+                tips.push('🏠 Use HEPA air purifier in bedroom continuously — fetal exposure occurs during sleep too.');
+                tips.push('🪟 Keep windows closed, especially during rush hours and high-wind days.');
+                if (p.no2 > 40) tips.push(`🚗 NO₂ at ${p.no2.toFixed(0)} µg/m³ is linked to low birth weight and preterm birth — avoid roadside exposure.`);
+                if (p.co > 0.5) tips.push('🔥 CO reduces fetal oxygen delivery — ensure no combustion sources are used indoors.');
+                if (h.smoking === 'active') tips.push('🚬 ⚠️ Smoking combined with poor AQI massively elevates risk of miscarriage and birth defects — cessation is urgent.');
+                tips.push('🩺 Mention current AQI levels to your OB-GYN at next antenatal visit.');
                 return tips;
             }
         },
@@ -797,10 +945,22 @@
             },
             precautions(score, p, h) {
                 const tips = [];
-                if (score >= 60) tips.push('Chronic PM2.5 exposure is an IARC-classified carcinogen — reduce outdoor hours.');
-                tips.push('Use HEPA air purifiers with activated carbon to remove carcinogenic particles indoors.');
-                tips.push('Annual health checkups including lung function tests (spirometry) recommended.');
-                if (h.smoking === 'active') tips.push('Smoking + high PM2.5 exposure synergistically multiplies lung cancer risk.');
+                const c = h.conditions || {};
+                if (score >= 60) {
+                    tips.push('⚗️ PM2.5 is classified IARC Group 1 carcinogen — reduce cumulative daily outdoor exposure.');
+                    tips.push('🌬️ Long-term daily exposure increases lung cancer risk even at "moderate" AQI levels.');
+                }
+                tips.push('🏠 Use HEPA air purifier with activated carbon filter to capture carcinogenic particles and VOCs indoors.');
+                tips.push('🩺 Schedule an annual spirometry (lung function) test if you spend >3 hours/day outdoors in urban areas.');
+                if (p.no2 > 40) tips.push(`🚗 NO₂ is a proxy for benzene and VOC exposure — linked to hematological cancers. Avoid high-traffic areas.`);
+                if (c.immuno) tips.push('🛡️ Immunocompromised: Your body cannot repair pollution-induced DNA damage as effectively — extra protection needed.');
+                if (h.smoking === 'active') {
+                    tips.push('🚬 Smoking + PM2.5 synergistically multiply lung cancer risk up to 30× — cessation is the single most impactful action.');
+                }
+                if (parseInt(h.outdoorHours || 3) >= 6) {
+                    tips.push('⏱️ Outdoor workers: Request dust/pollution controls at your worksite. Wear P100 respirator when possible.');
+                }
+                tips.push('🥗 Antioxidant-rich diet (vitamins C, E, beta-carotene) may help mitigate oxidative stress from pollution.');
                 return tips;
             }
         }
@@ -836,6 +996,11 @@
         const section = $('diseaseRiskSection');
         const grid = $('riskCardsGrid');
         if (!section || !grid) return;
+
+        if (!healthProfile) {
+            section.style.display = 'none';
+            return;
+        }
 
         const results = computeDiseaseRisk(aqiData, healthProfile);
         if (!results.length) { section.style.display = 'none'; return; }
@@ -2009,18 +2174,33 @@
     function createParticles() {
         const c = $('bgParticles');
         if (!c) return;
+        // Reduced from 10 to 5 particles for better performance
+        const count = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 5;
         const frag = document.createDocumentFragment();
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < count; i++) {
             const p = document.createElement('div');
             p.className = 'particle';
             p.style.left = Math.random() * 100 + '%';
-            p.style.animationDuration = (Math.random() * 18 + 12) + 's';
-            p.style.animationDelay = Math.random() * 10 + 's';
+            p.style.animationDuration = (Math.random() * 18 + 14) + 's';
+            p.style.animationDelay = Math.random() * 12 + 's';
             const s = Math.random() * 2 + 1;
             p.style.width = s + 'px'; p.style.height = s + 'px';
             frag.appendChild(p);
         }
         c.appendChild(frag);
+    }
+
+    // ===== Page Visibility API — Pause animations when tab hidden =====
+    function initPageVisibility() {
+        const handleVisibility = () => {
+            if (document.hidden) {
+                document.documentElement.classList.add('page-bg-paused');
+            } else {
+                document.documentElement.classList.remove('page-bg-paused');
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibility, { passive: true });
+        handleVisibility();
     }
 
     // ===== Push Notification Engine =====
@@ -2409,6 +2589,7 @@
         initMouseGlow();
         initNotifications();
         initTravelAdvisor();
+        initPageVisibility(); // Pause animations when tab is hidden (performance)
 
         if (els.themeToggle) els.themeToggle.addEventListener('click', toggleTheme);
         if (els.refreshBtn) els.refreshBtn.addEventListener('click', () => { requestCache.clear(); loadCity(); });
@@ -2516,19 +2697,41 @@
                     if (signInBtn) signInBtn.classList.add('hidden');
                     if (profileBtn) profileBtn.classList.remove('hidden');
 
-                    // Fetch user profile from Firestore first, then localStorage
+                    // ─── Fetch profile: Firestore → localStorage → IndexedDB ───
                     let fetched = null;
-                    try {
-                        if (db) {
-                            const doc = await db.collection('health_profiles').doc(user.uid).get();
-                            if (doc.exists) fetched = doc.data();
-                        }
-                    } catch (e) { console.warn('Firestore fetch error:', e); }
 
+                    // Attempt 1: Firestore
+                    if (db) {
+                        try {
+                            const doc = await db.collection('health_profiles').doc(user.uid).get();
+                            if (doc.exists) {
+                                fetched = doc.data();
+                                console.log('✅ Profile loaded from Firestore');
+                            }
+                        } catch (e) {
+                            console.warn('Firestore fetch error:', e.code, e.message);
+                        }
+                    }
+
+                    // Attempt 2: localStorage
                     if (!fetched) {
                         try {
                             const localRaw = localStorage.getItem('airflowProfile_' + user.uid);
-                            if (localRaw) fetched = JSON.parse(localRaw);
+                            if (localRaw) {
+                                fetched = JSON.parse(localRaw);
+                                console.log('✅ Profile loaded from localStorage');
+                            }
+                        } catch (_) {}
+                    }
+
+                    // Attempt 3: IndexedDB
+                    if (!fetched) {
+                        try {
+                            const idbData = await loadFromIDB(user.uid);
+                            if (idbData) {
+                                fetched = idbData;
+                                console.log('✅ Profile loaded from IndexedDB');
+                            }
                         } catch (_) {}
                     }
 
@@ -2552,23 +2755,49 @@
                     const nameDisplay = $('profileNameDisplay');
                     const savedName  = fetched && fetched.name ? fetched.name : null;
                     if (savedName) {
-                        // Show locked banner
                         if (banner)      { banner.style.display = 'flex'; }
                         if (inputWrap)   { inputWrap.style.display = 'none'; }
                         if (nameDisplay) { nameDisplay.textContent = savedName; }
                         if (profileBtn)  { profileBtn.title = 'Health Profile — ' + savedName; }
                     } else {
-                        // Show editable input
                         if (banner)     { banner.style.display = 'none'; }
                         if (inputWrap)  { inputWrap.style.display = 'block'; }
+                    }
+
+                    // ─── Show login success banner & smooth reveal ───
+                    const loginBanner = $('loginSuccessBanner');
+                    if (loginBanner) {
+                        const userName = savedName || (user.displayName ? user.displayName.split(' ')[0] : null) || user.email?.split('@')[0] || 'User';
+                        loginBanner.innerHTML = `<i class="fas fa-check-circle"></i><div><span>Welcome back, <span class="login-banner-name">${escapeHTML(userName)}</span>!</span><span class="login-banner-sub">Your personalized health dashboard is ready below.</span></div>`;
+                        loginBanner.style.display = 'flex';
+                        loginBanner.classList.add('login-reveal-animate');
+                        setTimeout(() => { if (loginBanner) loginBanner.style.display = 'none'; }, 5000);
                     }
 
                     // Update auth-gated UI immediately
                     _updateAuthGatedUI();
 
-                    // Update display with personalized data
-                    if (lastAQIData) { try { updateDisplay(lastAQIData); } catch(_) {} }
-
+                    // ─── Immediately render personalized sections ───
+                    if (lastAQIData) {
+                        try {
+                            updateDisplay(lastAQIData);
+                            // Smooth reveal animation on disease risk section
+                            const riskSec = $('diseaseRiskSection');
+                            if (riskSec && userHealthProfile) {
+                                riskSec.classList.add('login-reveal-animate');
+                                // Scroll to personalized section after a brief delay
+                                setTimeout(() => {
+                                    riskSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }, 400);
+                            }
+                        } catch(_) {}
+                    }
+                    
+                    // Show profile form automatically if new user (no profile fetched)
+                    if (!fetched) {
+                        const overlay = $('profileModalOverlay');
+                        if (overlay) overlay.classList.add('active');
+                    }
                 } else {
                     if (signInBtn) signInBtn.classList.remove('hidden');
                     if (profileBtn) profileBtn.classList.add('hidden');
@@ -2578,6 +2807,9 @@
                     const inputWrap = $('profileNameInputWrap');
                     if (banner)   banner.style.display = 'none';
                     if (inputWrap) inputWrap.style.display = 'none';
+                    // Hide login banner
+                    const loginBanner = $('loginSuccessBanner');
+                    if (loginBanner) loginBanner.style.display = 'none';
                     // Update auth-gated UI immediately (show guest prompt)
                     _updateAuthGatedUI();
                     if (lastAQIData) { try { updateDisplay(lastAQIData); } catch(_) {} }
@@ -2667,6 +2899,25 @@
             if ($('profileBtn')) $('profileBtn').addEventListener('click', () => overlay.classList.add('active'));
             if ($('profileModalClose')) $('profileModalClose').addEventListener('click', () => overlay.classList.remove('active'));
 
+            // ===== Save Profile with Retry + IndexedDB Fallback =====
+            async function saveProfileToFirestore(uid, profileData, attempt = 1) {
+                if (!db || !uid) return false;
+                try {
+                    await db.collection('health_profiles').doc(uid).set(
+                        { ...profileData, updatedAt: new Date() }, { merge: true }
+                    );
+                    return true;
+                } catch (err) {
+                    console.warn(`Firestore save attempt ${attempt} failed:`, err.code, err.message);
+                    if (attempt < 3 && err.code !== 'permission-denied') {
+                        // Exponential backoff: 500ms, 1500ms, 4500ms
+                        await new Promise(r => setTimeout(r, 500 * Math.pow(3, attempt - 1)));
+                        return saveProfileToFirestore(uid, profileData, attempt + 1);
+                    }
+                    throw err;
+                }
+            }
+
             // Save Profile
             if ($('healthProfileForm')) {
                 $('healthProfileForm').addEventListener('submit', async (e) => {
@@ -2698,23 +2949,12 @@
                         localStorage.setItem('airflowProfile_' + currentUser.uid, JSON.stringify({ ...profileData, updatedAt: Date.now() }));
                     } catch (_) { console.warn('localStorage write failed'); }
 
-                    // ② AWAIT Firestore so we know it actually saved
-                    let firebaseSaved = false;
-                    if (db && currentUser.uid) {
-                        try {
-                            await db.collection('health_profiles').doc(currentUser.uid).set(
-                                { ...profileData, updatedAt: new Date() }, { merge: true }
-                            );
-                            firebaseSaved = true;
-                        } catch (fbErr) {
-                            console.error('Firestore save error:', fbErr);
-                            if (window._showToast) window._showToast('Cloud sync failed: ' + fbErr.message, 'warn');
-                        }
-                    }
+                    // ② Save to IndexedDB (reliable offline storage)
+                    try { await saveToIDB(currentUser.uid, profileData); } catch(_) {}
 
+                    // ③ Optimistic UI Update: update profile immediately
                     userHealthProfile = profileData;
 
-                    // ③ Update name banner — lock if name was just set
                     const banner     = $('profileNameBanner');
                     const inputWrap  = $('profileNameInputWrap');
                     const nameDisplay = $('profileNameDisplay');
@@ -2727,12 +2967,34 @@
                     }
 
                     if (overlay) overlay.classList.remove('active');
-                    if (window._showToast) window._showToast(firebaseSaved ? '✅ Profile saved & synced to cloud!' : '✅ Profile saved locally!', 'success');
+                    if (window._showToast) window._showToast('✅ Profile saved locally! Syncing...', 'success');
 
-                    // ④ Re-render dashboard with new profile
+                    // ④ Re-render dashboard with new profile immediately
                     if (lastAQIData) { try { updateDisplay(lastAQIData); } catch (_) {} }
 
                     if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-check"></i> Save &amp; Analyse'; }
+
+                    // ⑤ Background Sync to Firestore with retries
+                    if (db && currentUser.uid) {
+                        saveProfileToFirestore(currentUser.uid, profileData)
+                            .then(success => {
+                                if (success && window._showToast) {
+                                    window._showToast('✅ Profile fully synced to cloud!', 'success');
+                                }
+                            })
+                            .catch(fbErr => {
+                                console.error('Firestore save error (all retries failed):', fbErr.code, fbErr.message);
+                                if (window._showToast) {
+                                    const isPermErr = fbErr.code === 'permission-denied';
+                                    window._showToast(
+                                        isPermErr
+                                            ? '⚠ Cloud sync blocked: Check Firestore security rules.'
+                                            : `⚠ Cloud sync failed (${fbErr.code}). Profile saved locally.`,
+                                        'warn'
+                                    );
+                                }
+                            });
+                    }
                 });
             }
         }

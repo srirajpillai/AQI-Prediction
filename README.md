@@ -26,13 +26,12 @@ version1/
 ├── know-how.html       # Explainable AI (SHAP) & medical encyclopedia
 ├── about.html          # Project methodology & team info
 ├── styles.css          # Glassmorphism design system & animations
-├── styles_backup.css   # Backup stylesheet
-├── news_addon.css      # Addon styles
-├── addon.txt           # Notes & addon definitions
+├── manifest.json       # PWA manifest
 ├── app.js              # Dashboard client logic & API integrations
 ├── know-how.js         # Know-how page logic
 ├── about.js            # About page logic
 ├── worker.js           # Browser Web Worker for AI computations
+├── unified_master_pipeline.py # Consolidated ML & dataset pipeline
 └── README.md           # This documentation
 ```
 

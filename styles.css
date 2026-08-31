@@ -95,9 +95,10 @@ body {
 }
 @keyframes bgBreath { 0%,100%{opacity:.85;} 50%{opacity:1;} }
 
+/* Reduced blur on orbs for performance — blur(80px) causes heavy GPU repaint */
 .bg-orb {
     position:absolute; border-radius:50%;
-    filter: blur(80px);
+    filter: blur(50px);
     animation: orbFloat 20s ease-in-out infinite;
     transition: background 1.5s var(--ease);
 }
@@ -2463,3 +2464,108 @@ body {
     font-size: 13px;
     display: flex; align-items: center; gap: 10px;
 }
+
+/* ===== YELLOW TEXT VISIBILITY FIX (Light Mode) =====
+   Yellow (#ffeb3b) is nearly invisible on white backgrounds.
+   Apply a thin dark text-stroke so it remains legible in light mode.
+*/
+[data-theme="light"] .aqi-number,
+[data-theme="light"] .hub-aqi,
+[data-theme="light"] .tc-aqi,
+[data-theme="light"] .hour-aqi,
+[data-theme="light"] .neighbor-dot,
+[data-theme="light"] .pred-value {
+    -webkit-text-stroke: 0.4px rgba(0,0,0,0.42);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+
+/* Target inline yellow color styles (moderate AQI = #ffeb3b) */
+[data-theme="light"] *[style*="color: #ffeb3b"],
+[data-theme="light"] *[style*="color:#ffeb3b"] {
+    -webkit-text-stroke: 0.4px rgba(0,0,0,0.4) !important;
+    text-shadow: 0 0 3px rgba(0,0,0,0.25) !important;
+}
+
+/* ===== PERFORMANCE: Pause heavy animations when page is hidden ===== */
+.page-bg-paused .bg-orb,
+.page-bg-paused .bg-grid,
+.page-bg-paused .particle,
+.page-bg-paused .logo-cube {
+    animation-play-state: paused !important;
+}
+
+/* ===== REDUCED MOTION SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+    .bg-orb, .bg-grid, .particle, .logo-cube,
+    .ai-badge, .pulse-btn, .thumb-glow {
+        animation: none !important;
+    }
+    .hover-3d:hover {
+        transform: translateY(-4px) !important;
+    }
+}
+
+/* ===== POST-LOGIN SECTION REVEAL ANIMATION ===== */
+@keyframes loginReveal {
+    from { opacity: 0; transform: translateY(22px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.login-reveal-animate {
+    animation: loginReveal 0.6s cubic-bezier(0.34,1.2,0.64,1) both;
+}
+
+/* Login success banner */
+#loginSuccessBanner {
+    display: none;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 22px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, rgba(0,230,118,0.1), rgba(0,100,255,0.07));
+    border: 1px solid rgba(0,230,118,0.28);
+    border-radius: var(--r-md);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+}
+#loginSuccessBanner i { color: #00e676; font-size: 22px; }
+#loginSuccessBanner .login-banner-name { color: var(--aqi-accent); }
+#loginSuccessBanner .login-banner-sub { font-size: 12px; color: var(--text3); font-weight: 400; display: block; margin-top: 2px; }
+
+/* ===== MULTI-API SOURCE BADGE ===== */
+.multi-api-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(var(--aqi-accent-rgb), 0.1);
+    border: 1px solid rgba(var(--aqi-accent-rgb), 0.22);
+    color: var(--aqi-accent);
+    letter-spacing: 0.5px; text-transform: uppercase; margin-left: 6px;
+}
+.api-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #00e676; display: inline-block;
+}
+.api-dot.partial { background: #ff9800; }
+.api-dot.failed { background: #f44336; }
+
+/* ===== LIGHT MODE TEXT IMPROVEMENTS ===== */
+[data-theme="light"] .aqi-last-update span { color: var(--text2) !important; }
+[data-theme="light"] .aqi-desc { color: var(--text2); }
+[data-theme="light"] #guestAuthPrompt p { color: var(--text2) !important; }
+
+/* ===== ENHANCED PRECAUTION ITEMS ===== */
+.risk-precautions ul { display: flex; flex-direction: column; gap: 0; }
+.risk-precautions li {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 12.5px; color: var(--text2); line-height: 1.5;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--glass-border);
+}
+.risk-precautions li:last-child { border-bottom: none; }
+.risk-precautions li::before {
+    content: "→"; color: var(--aqi-accent);
+    font-weight: 700; flex-shrink: 0; margin-top: 1px;
+}
+[data-theme="light"] .risk-precautions li { color: var(--text2); }
+
