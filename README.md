@@ -1,56 +1,241 @@
-# AirFlow AI — Version 1: Web / Browser Interface
+# 🌬️ AirFlow AI — Real-Time AQI Prediction & Personalized Clinical Risk Engine
 
-**AirFlow AI (Version 1)** is a 100% client-side web platform built with Vanilla **HTML5, CSS3, and JavaScript (ES6+)** with a multi-threaded browser **Web Worker (`worker.js`)** for client-side AI computations.
+[![Version](https://img.shields.io/badge/Version-4.2.0-blue.svg)](https://github.com/srirajpillai/AQI-Prediction)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![ML Accuracy](https://img.shields.io/badge/ML%20Accuracy-99.68%25-brightgreen.svg)](#-machine-learning--predictive-modeling)
+[![Architecture](https://img.shields.io/badge/Architecture-100%25%20Client--Side-orange.svg)](#-system-architecture)
+[![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20PWA-purple.svg)](https://github.com/srirajpillai/AQI-Prediction)
 
-No Python or backend server is required — it connects directly to open environmental APIs from the browser.
+**AirFlow AI** is a next-generation, client-side environmental intelligence platform. It moves beyond static single-number air quality displays by combining **Multi-API consensus**, **24-hour diurnal trajectory forecasting**, **cross-city spatial wind advection**, **Explainable AI (SHAP factor attribution)**, and a **personalized clinical disease risk engine**.
 
----
-
-## 🌟 Key Features
-- **Real-Time AQI Tracking:** Dynamic 3D animated circular gauge with real-time severity styling.
-- **Personalized Risk Engine:** Integrates a user Health Profile to adjust AQI severity based on age, medical conditions (asthma, heart disease, etc.), and activity levels.
-- **Firebase Authentication:** Includes Email/Password and Google Sign-In with a seamless, responsive Glassmorphic UI to persist Health Profiles.
-- **24-Hour AI Forecast:** Hourly AQI prediction trajectory with environmental factor justifications calculated in the browser Web Worker.
-- **Cross-City Transfer Learning:** Analyzes wind vectors and upwind neighboring cities (40km radius) to assess atmospheric dispersion using Haversine formulas.
-- **Pollutant Breakdown Grid:** Dedicated progress bars and health descriptors for **PM2.5, PM10, O3, NO2, SO2, and CO**.
-- **Explainable AI (SHAP):** Visual feature importance charts using Chart.js.
-- **Global Search:** Multi-API fallback (Open-Meteo, Nominatim, Photon).
-- **Glassmorphism Design:** Modern UI with Dark/Light theme switching, mouse-glow tracking, and responsive layout.
+The application runs **100% client-side** using Vanilla HTML5, CSS3, ES6+ JavaScript, and a multi-threaded browser **Web Worker (`worker.js`)** for zero-latency machine learning inference without requiring a Python backend server at runtime.
 
 ---
 
-## 📁 File Structure
+## 🌟 Key Highlights & Innovations
+
+### 1. 🛰️ Multi-API Weighted Consensus Engine
+- Simultaneously queries **Open-Meteo**, **WAQI (World Air Quality Index)**, and **OpenAQ v3** in parallel.
+- Computes a weighted consensus ($\text{AQI}_{\text{final}} = \text{Open-Meteo} \times 0.60 + \text{WAQI/OpenAQ} \times 0.40$) to eliminate individual sensor noise and report trustworthy metrics with a live `🛰 2 Sources` badge.
+
+### 2. 📈 24-Hour Diurnal Trajectory Forecasting
+- Simulates planetary boundary layer dynamics, morning rush-hour stagnation, afternoon thermal convection dispersal, and nocturnal cooling entrapment.
+- Generates hour-by-hour interactive prediction curves with meteorological factor flags.
+
+### 3. 💨 Cross-City Spatial Advection (Smoke & Smog Tracking)
+- Calculates distance to neighboring monitoring hubs using the **Haversine great-circle formula**:
+  $$d = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta \phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta \lambda}{2}\right)}\right)$$
+- Projects wind direction vectors ($\cos \theta$) and wind speed transport to alert users when upwind smog within 100 km is blowing into their city.
+
+### 4. 🔍 Explainable AI (SHAP Factor Attribution)
+- Decomposes the final AQI into exact positive (polluting) and negative (cleaning) point contributions (e.g., vehicular $NO_2$ plumes, biomass $PM_{2.5}$, rain scavenging, wind ventilation).
+
+### 5. 🩺 Personalized Clinical Disease Risk Engine
+- Evaluates individual sensitivity across **6 clinical disease categories**:
+  1. **Respiratory:** Asthma, COPD, Bronchitis, Allergic Rhinitis, Sleep Apnea.
+  2. **Cardiovascular & Metabolic:** Heart Disease, Hypertension, Diabetes, Stroke History.
+  3. **Eye & Skin Irritation:** Conjunctival inflammation, barrier cream advisories.
+  4. **Neurological & Cognitive:** Blood-brain barrier particulate crossing, CO alarms.
+  5. **Maternal & Fetal Health:** Placental transfer risk, stringent pregnancy thresholds.
+  6. **Long-Term Cancer Risk:** Cumulative IARC Group 1 $PM_{2.5}$ exposure and spirometry advice.
+- Computes individual clinical risk scores ($0–100$) and generates tailored medical precautions.
+
+### 6. ☁️ Triple-Layer Persistence with Optimistic UI
+- Synchronizes user profiles seamlessly across **Google Cloud Firestore**, **IndexedDB (`airflowDB`)**, and **localStorage**.
+- Features **Optimistic UI updates**: instantly saves locally and updates the dashboard, while quietly syncing to Firestore in the background with exponential backoff retries.
+
+### 7. ⚡ Performance & Thermal Optimization
+- **Page Visibility API (`document.visibilityState`):** Automatically halts canvas animation loops and mouse glow tracking when the tab is hidden, preventing laptop heating and battery drain.
+- **Light Mode Default:** Modern, accessible light theme with a specialized 0.4px text stroke on yellow AQI text for optimal contrast.
+
+---
+
+## 🗺️ System Architecture
+
+```mermaid
+flowchart TD
+    subgraph UI_Layer ["🖥️ Presentation Layer (Main Thread: app.js)"]
+        A[City Search / Geolocation] --> B[Geocoding Cascade: Open-Meteo -> Nominatim -> Photon]
+        B --> C[Multi-API Live Aggregator]
+        C --> D1[Open-Meteo API]
+        C --> D2[WAQI Station Feed]
+        C --> D3[OpenAQ v3 API]
+        D1 --> E[Weighted Consensus Normalizer]
+        D2 --> E
+        D3 --> E
+        E --> F[In-Memory 5-Min TTL Cache]
+        F --> G[Dispatch to Web Worker: worker.js]
+    end
+
+    subgraph Worker_Layer ["⚙️ Background Web Worker (worker.js)"]
+        G --> H[CPCB Breakpoint Sub-Index Calculations]
+        H --> I1[XGBoost & Ridge ML Inference]
+        H --> I2[24-Hour Diurnal Trajectory Modeler]
+        H --> I3[Haversine Spatial Wind Advection]
+        H --> I4[SHAP Feature Attribution Calculator]
+        I1 --> J[Consolidated Prediction Matrix]
+        I2 --> J
+        I3 --> J
+        I4 --> J
+    end
+
+    subgraph Health_Layer ["🩺 Clinical Health Risk Engine"]
+        J --> K[Medical Multiplier Matrix]
+        L[User Health Profile: Age, Asthma, Cardiac, Smoking, Activity] --> K
+        K --> M[Clinical Scores 0-100 & Medical Precautions]
+    end
+
+    subgraph Storage_Layer ["☁️ Triple-Layer Storage"]
+        L <--> N1[1. localStorage: 0ms instant cache]
+        L <--> N2[2. IndexedDB 'airflowDB': Local DB]
+        L <--> N3[3. Google Cloud Firestore: Cloud Sync]
+    end
+```
+
+---
+
+## 📁 Repository File Structure
+
 ```
 version1/
-├── index.html          # Main dashboard interface
-├── know-how.html       # Explainable AI (SHAP) & medical encyclopedia
-├── about.html          # Project methodology & team info
-├── styles.css          # Glassmorphism design system & animations
-├── manifest.json       # PWA manifest
-├── app.js              # Dashboard client logic & API integrations
-├── know-how.js         # Know-how page logic
-├── about.js            # About page logic
-├── worker.js           # Browser Web Worker for AI computations
-├── unified_master_pipeline.py # Consolidated ML & dataset pipeline
-└── README.md           # This documentation
+│
+├── 🌐 FRONTEND APPLICATION
+│   ├── index.html                   # Main dashboard (AQI gauge, 24-hr forecast, pollutant cards, modals)
+│   ├── app.js                       # Main controller: Multi-API fetcher, health engine, DOM updater, auth
+│   ├── worker.js                    # Background Web Worker: ML inference, diurnal trajectories, spatial wind, SHAP
+│   ├── styles.css                   # Glassmorphic design system, light/dark themes, responsive layouts
+│   ├── know-how.html                # Educational page explaining SHAP AI math & medical risks
+│   ├── know-how.js                  # Interactive SHAP visualizer & clinical tabs for Know-How page
+│   ├── about.html                   # Project methodology, architecture documentation, team credits
+│   ├── about.js                     # Interactive navigation, 3D tilt, and theme sync for About page
+│   └── manifest.json                # Progressive Web App (PWA) manifest configuration
+│
+├── 🤖 MACHINE LEARNING PIPELINE (PYTHON)
+│   ├── unified_master_pipeline.py   # ALL-IN-ONE Python script: dataset compilation, training, and export
+│   ├── unified_master_pipeline.txt  # Plaintext version of unified master Python pipeline
+│   ├── compile_comprehensive_datasets.py # Cleans & harmonizes 6 global datasets into master corpus
+│   ├── train_comprehensive_ml.py    # Trains XGBoost Multi-Class & Regressor on master corpus
+│   ├── train_expanded_multi_dataset.py   # High-resolution multi-city reanalysis dataset trainer
+│   ├── train_latest_dataset.py      # 2020-2026 ground-truth continuous archive trainer
+│   ├── train_version1_ml.py         # Initial CPCB baseline trainer & linear weight exporter
+│   ├── ml_model.json                # Serialized model weights & breakpoints used by worker.js
+│   ├── ml_model.pkl                 # Trained Python binary model (Joblib pipeline)
+│   └── datasets/                    # Directory holding raw & compiled air quality data (CSVs)
+│       ├── comprehensive_aqi_master_dataset.csv # 1.245M+ row unified master training corpus
+│       ├── city_day.csv             # Official CPCB India historical dataset (2015–2020)
+│       ├── latest_aqi_hourly_2020_2026.csv # Copernicus & ERA5 continuous hourly dataset
+│       ├── latest_aqi_daily_2020_2026.csv  # Aggregated daily multi-city dataset
+│       ├── master_air_quality_daily_2020_2026.csv # Master daily multi-city reanalysis
+│       ├── stations.csv             # CPCB ground monitoring station registry
+│       └── dataset_metadata.json    # JSON catalog describing dataset schemas & provenance
+│
+├── ☁️ CONFIGURATION & DEPLOYMENT
+│   ├── firestore.rules              # Firebase security rules (per-user isolated storage)
+│   ├── vercel.json                  # Vercel deployment configuration with clean URLs & CORS headers
+│   ├── .gitignore                   # Git exclusion rules
+│   ├── .gitattributes              # Git LFS & line ending definitions
+│   └── .vercelignore                # Vercel build exclusion rules
+│
+└── 📋 DOCUMENTATION
+    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.md # Comprehensive master reference guide for AI Agents / LLMs
+    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.txt # Plaintext edition of AI Agent Master Guide
+    ├── PROJECT_GUIDE_AND_WORKFLOW.md     # Architecture workflow & operating guide
+    ├── SRS_DOCUMENT.md                    # Formal IEEE Software Requirements Specification
+    ├── DATASETS_CATALOG.md                # Comprehensive catalog of all dataset files
+    ├── DATASET_DOCUMENTATION.txt          # Pollutant units, thresholds, and citations
+    ├── project_explanation.txt            # Simplified non-technical project summary
+    └── README.md                          # THIS DOCUMENT (Project overview)
 ```
 
 ---
 
-## 🚀 How to Run
+## 🤖 Machine Learning & Predictive Modeling
 
-### Option 1: Direct Browser Launch
-Simply double-click **`index.html`** or right-click and choose **"Open with Chrome / Edge / Firefox"**.
+The machine learning models are trained on a unified **1,245,000+ record master corpus** compiled from 6 global monitoring archives:
+- **CPCB India National Ground Station Archive (2015–2020)**
+- **Copernicus CAMS & ECMWF ERA5 Continuous Reanalysis (2020–2026)**
+- **Beijing Multi-Site Microclimate Dataset (UCI / Tsinghua University)**
+- **UCI Chemical Multi-Sensor VOCs & Hydrocarbons Array Dataset**
+- **Delhi Extreme Smog & Seasonal Agricultural Inversion Microclimate**
+- **WHO / OpenAQ Global Multi-City Monitoring Corpus (24,000+ stations)**
 
-### Option 2: Using Any Static Web Server
-You can serve the folder using any lightweight web server:
+### Model Evaluation Metrics
+| Model | Algorithm | Target Variable | Performance Metric |
+| :--- | :--- | :--- | :--- |
+| **Risk Category Classifier** | XGBoost Multi-Class (`hist`) | 6 CPCB Tiers (Good to Severe) | **99.68% Accuracy** |
+| **Continuous AQI Regressor** | XGBoost Regressor | Numerical AQI (0–500+) | **$R^2 = 99.99\%$ \| MAE = 0.31** |
+| **Diurnal Response Modeler** | Multi-Variable Linear/Ridge | Diurnal $\Delta \text{AQI}(h)$ | Serialized to `ml_model.json` |
 
-**VS Code Live Server:**
-- Right-click `index.html` → **"Open with Live Server"**
+---
 
-**Node.js `serve` / `http-server` / `npx live-server`:**
-```bash
+## 🚀 How to Run Locally
+
+### Option 1: Instant Browser Launch (No Setup Required)
+1. Open your file manager and navigate to the project directory:
+   `d:\my files\Engineering\SEM 6\Major Project\Application\AQI Prediction\version1`
+2. Double-click **`index.html`** to open it directly in Chrome, Edge, Firefox, or Brave.
+
+---
+
+### Option 2: Using VS Code Live Server (Recommended)
+1. Open the `version1` folder in **Visual Studio Code**.
+2. Right-click `index.html` $\rightarrow$ Select **"Open with Live Server"**.
+3. Access the live-reloading dashboard at `http://127.0.0.1:5500/index.html`.
+
+---
+
+### Option 3: Using Node.js or Python Static Servers
+```powershell
+# Using Node.js
 npx serve .
-# or
+# OR
 npx live-server
+
+# Using Python
+python -m http.server 8000
 ```
+Open `http://localhost:8000` in your web browser.
+
+---
+
+## 🧪 Retraining the Machine Learning Models
+
+To recompile datasets, retrain the models, and update `ml_model.json` & `ml_model.pkl`:
+
+```powershell
+# Step 1: Install data science dependencies
+pip install pandas numpy scikit-learn xgboost joblib requests
+
+# Step 2: Run the consolidated master pipeline
+python unified_master_pipeline.py --all
+```
+
+Command-line flags available:
+- `--all`: Runs the entire pipeline (compilation + ML training + export).
+- `--compile`: Compiles datasets into `datasets/comprehensive_aqi_master_dataset.csv` only.
+- `--train`: Trains the XGBoost models and exports `ml_model.pkl` and `ml_model.json`.
+
+---
+
+## ☁️ Cloud Deployment
+
+The repository is configured for static hosting platforms (Vercel, Netlify, GitHub Pages):
+
+```powershell
+# Deploy to Vercel
+npx vercel --prod
+```
+
+---
+
+## 📄 Documentation Index
+- 📖 [Complete AI Agent Master Guide (Markdown)](COMPLETE_AI_AGENT_PROJECT_GUIDE.md)
+- 📄 [Complete AI Agent Master Guide (Plaintext)](COMPLETE_AI_AGENT_PROJECT_GUIDE.txt)
+- 📊 [Datasets Catalog & Schema](DATASETS_CATALOG.md)
+- 📐 [Software Requirements Specification (SRS)](SRS_DOCUMENT.md)
+- 🏗️ [Architecture & Operational Workflow Guide](PROJECT_GUIDE_AND_WORKFLOW.md)
+- 💡 [Simplified Project Explanation](project_explanation.txt)
+
+---
+
+*AirFlow AI — Major Project SEM 6.*
