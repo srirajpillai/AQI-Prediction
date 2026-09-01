@@ -14,22 +14,20 @@
 (function () {
     'use strict';
 
-    // ===== Firebase Configuration & State =====
-    // Replace these placeholder values with actual Firebase Config in production
-    const firebaseConfig = {
-        apiKey: "AIzaSyCsBDB8RhwsXybBDLDoMFkf2LCo8qgPe2E",
-        authDomain: "airflowai-0126.firebaseapp.com",
-        projectId: "airflowai-0126",
-        storageBucket: "airflowai-0126.firebasestorage.app",
-        messagingSenderId: "117088155951",
-        appId: "1:117088155951:web:f91b2e1b32ecebad06c9da",
-        measurementId: "G-Q3XGTW36YS"
-    };
-    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+    // ===== Supabase Configuration & State =====
+    // Supabase project URL and anon key (safe to expose in frontend)
+    const SUPABASE_URL  = 'https://your-project-id.supabase.co';   // TODO: replace with your project URL
+    const SUPABASE_ANON = 'your-anon-public-key';                   // TODO: replace with your anon key
+
+    let _supabase = null;
+    function getSupabase() {
+        if (_supabase) return _supabase;
+        if (typeof window.supabase !== 'undefined') {
+            _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+        }
+        return _supabase;
     }
-    const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
-    const db = typeof firebase !== 'undefined' ? firebase.firestore() : null;
+
     let currentUser = null;
     let userHealthProfile = null;
 
@@ -42,7 +40,7 @@
     const OPENAQ_API = 'https://api.openaq.io/v3/locations';
     const CACHE_TTL = 5 * 60 * 1000; // 5-minute cache TTL
 
-    // ===== IndexedDB Local Storage (fallback for Firebase) =====
+    // ===== IndexedDB Local Storage (offline-first fallback) =====
     let _idb = null;
     function openIDB() {
         return new Promise((resolve, reject) => {
@@ -631,19 +629,13 @@
         if (els.aqiStatus) els.aqiStatus.textContent = theme.status;
         if (els.aqiDescription) els.aqiDescription.textContent = theme.desc;
 
-        const sourceCount = data._sourceCount || 1;
-        const sourceInfo = data._source === 'multi-source'
-            ? ` · <span class="multi-api-badge">🛰 ${sourceCount} Sources</span>`
-            : data._source === 'open-meteo' ? ' · Open-Meteo'
-            : data._source === 'fallback'   ? ' · Estimate'
-            : ' · WAQI+OpenAQ';
         const refreshTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        const sourceLabel = data._source === 'multi-source' ? 'Multi-Source'
+            : data._source === 'open-meteo' ? 'Open-Meteo'
+            : data._source === 'fallback'   ? 'Estimate'
+            : 'WAQI+OpenAQ';
         if (els.updateTime) {
-            if (data._source === 'multi-source') {
-                els.updateTime.innerHTML = `Last refreshed: ${refreshTime}${sourceInfo}`;
-            } else {
-                els.updateTime.textContent = `Last refreshed: ${refreshTime}${sourceInfo}`;
-            }
+            els.updateTime.textContent = `Last refreshed: ${refreshTime} · ${sourceLabel}`;
         }
 
 
@@ -1006,7 +998,29 @@
         if (!results.length) { section.style.display = 'none'; return; }
 
         section.style.display = '';
-        grid.innerHTML = results.map(r => `
+        grid.innerHTML = results.map(r => {
+            // Show only condition-relevant precautions (lines that mention an active condition emoji/keyword)
+            // Fall back to score-based general tips if no condition-specific ones exist
+            const conditionKeys = Object.entries(healthProfile.conditions || {})
+                .filter(([, v]) => v)
+                .map(([k]) => k.toLowerCase());
+            const conditionEmojis = ['🫁','🌬️','🤧','😴','🌿','💊','🩺','💉','🧠','🩸','🔥','👶','👴','🤱','🚨','🚗','🏭','🚬','🏃','⚗️','🛡️'];
+            // Precautions explicitly tied to a condition contain an emoji marker or the condition name
+            const conditionPrecs = r.precautions.filter(tip => {
+                const lower = tip.toLowerCase();
+                return conditionKeys.some(k => lower.includes(k)) ||
+                       conditionEmojis.some(e => tip.startsWith(e));
+            });
+            // General score-based precautions (no leading emoji from condition list)
+            const generalPrecs = r.precautions.filter(tip => !conditionEmojis.some(e => tip.startsWith(e)));
+            // Prefer condition-specific; add 1 general tip if fewer than 2 specific ones
+            let shownPrecs = conditionPrecs.length > 0 ? conditionPrecs : generalPrecs;
+            if (conditionPrecs.length > 0 && conditionPrecs.length < 2) {
+                const extra = generalPrecs.find(g => !shownPrecs.includes(g));
+                if (extra) shownPrecs = [...shownPrecs, extra];
+            }
+            shownPrecs = shownPrecs.slice(0, 3);
+            return `
             <div class="risk-card glass-card hover-3d">
                 <div class="risk-card-header">
                     <div class="risk-icon" style="--rc:${r.risk.color};"><i class="fas ${r.icon}"></i></div>
@@ -1024,12 +1038,13 @@
                     <span>Risk Score</span><strong>${r.score}/100</strong>
                 </div>
                 <p class="risk-desc">${r.description}</p>
-                ${r.precautions.length ? `
+                ${shownPrecs.length ? `
                 <div class="risk-precautions">
                     <div class="risk-prec-title"><i class="fas fa-shield-halved"></i> Precautions</div>
-                    <ul>${r.precautions.slice(0,3).map(p => `<li>${p}</li>`).join('')}</ul>
+                    <ul>${shownPrecs.map(p => `<li>${p}</li>`).join('')}</ul>
                 </div>` : ''}
-            </div>`).join('');
+            </div>`;
+        }).join('');
 
         // Also update notification bell personalized messages
         const maxRisk = Math.max(...results.map(r => r.score));
@@ -2641,8 +2656,9 @@
         }
         window._showToast = showToast;
 
-        // ===== Firebase Auth & Profile Setup =====
-        if (auth && db) {
+        // ===== Supabase Auth & Profile Setup =====
+        const sb = getSupabase();
+        if (sb) {
 
             // ===== Pill Toggle Init =====
             function initPillToggles() {
@@ -2689,7 +2705,8 @@
             }
             [$('profileWeight'), $('profileHeight')].filter(Boolean).forEach(el => el.addEventListener('input', updateBMIDisplay));
 
-            auth.onAuthStateChanged(async (user) => {
+            sb.auth.onAuthStateChange(async (_event, session) => {
+                const user = session?.user || null;
                 currentUser = user;
                 const signInBtn = $('signInBtn');
                 const profileBtn = $('profileBtn');
@@ -2697,26 +2714,28 @@
                     if (signInBtn) signInBtn.classList.add('hidden');
                     if (profileBtn) profileBtn.classList.remove('hidden');
 
-                    // ─── Fetch profile: Firestore → localStorage → IndexedDB ───
+                    // ─── Fetch profile: Supabase → localStorage → IndexedDB ───
                     let fetched = null;
 
-                    // Attempt 1: Firestore
-                    if (db) {
-                        try {
-                            const doc = await db.collection('health_profiles').doc(user.uid).get();
-                            if (doc.exists) {
-                                fetched = doc.data();
-                                console.log('✅ Profile loaded from Firestore');
-                            }
-                        } catch (e) {
-                            console.warn('Firestore fetch error:', e.code, e.message);
+                    // Attempt 1: Supabase (PostgreSQL)
+                    try {
+                        const { data: rows, error } = await sb
+                            .from('health_profiles')
+                            .select('profile_data')
+                            .eq('uid', user.id)
+                            .maybeSingle();
+                        if (!error && rows && rows.profile_data) {
+                            fetched = rows.profile_data;
+                            console.log('✅ Profile loaded from Supabase');
                         }
+                    } catch (e) {
+                        console.warn('Supabase fetch error:', e.message);
                     }
 
                     // Attempt 2: localStorage
                     if (!fetched) {
                         try {
-                            const localRaw = localStorage.getItem('airflowProfile_' + user.uid);
+                            const localRaw = localStorage.getItem('airflowProfile_' + user.id);
                             if (localRaw) {
                                 fetched = JSON.parse(localRaw);
                                 console.log('✅ Profile loaded from localStorage');
@@ -2727,7 +2746,7 @@
                     // Attempt 3: IndexedDB
                     if (!fetched) {
                         try {
-                            const idbData = await loadFromIDB(user.uid);
+                            const idbData = await loadFromIDB(user.id);
                             if (idbData) {
                                 fetched = idbData;
                                 console.log('✅ Profile loaded from IndexedDB');
@@ -2814,15 +2833,11 @@
                     _updateAuthGatedUI();
                     if (lastAQIData) { try { updateDisplay(lastAQIData); } catch(_) {} }
                 }
-            });
+            }); // end onAuthStateChange
 
             // Authentication Modal Logic
             const authOverlay = $('authModalOverlay');
-            if ($('signInBtn')) {
-                $('signInBtn').addEventListener('click', () => {
-                    authOverlay.classList.add('active');
-                });
-            }
+            if ($('signInBtn')) $('signInBtn').addEventListener('click', () => authOverlay.classList.add('active'));
             if ($('authModalClose')) {
                 $('authModalClose').addEventListener('click', () => {
                     authOverlay.classList.remove('active');
@@ -2853,43 +2868,49 @@
                 $('authForm').addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const email = $('authEmail').value;
-                    const pass = $('authPassword').value;
+                    const pass  = $('authPassword').value;
                     const errorMsg = $('authErrorMsg');
                     errorMsg.classList.add('hidden');
-
                     try {
+                        let sbErr;
                         if (isLoginMode) {
-                            await auth.signInWithEmailAndPassword(email, pass);
+                            const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+                            sbErr = error;
                         } else {
-                            await auth.createUserWithEmailAndPassword(email, pass);
+                            const { error } = await sb.auth.signUp({ email, password: pass });
+                            sbErr = error;
                         }
+                        if (sbErr) throw sbErr;
                         authOverlay.classList.remove('active');
                         $('authForm').reset();
                     } catch (err) {
-                        errorMsg.innerHTML = '<i class="fas fa-circle-exclamation"></i> ' + err.message;
+                        errorMsg.innerHTML = '<i class="fas fa-circle-exclamation"></i> ' + (err.message || 'Authentication failed.');
                         errorMsg.classList.remove('hidden');
                     }
                 });
             }
 
-            // Google Sign In from Modal
+            // Google Sign In from Modal (Supabase OAuth)
             if ($('googleSignInBtn')) {
-                $('googleSignInBtn').addEventListener('click', () => {
-                    const provider = new firebase.auth.GoogleAuthProvider();
-                    auth.signInWithPopup(provider).then(() => {
-                        authOverlay.classList.remove('active');
-                    }).catch(err => {
-                        const errorMsg = $('authErrorMsg');
-                        errorMsg.innerHTML = '<i class="fas fa-circle-exclamation"></i> ' + err.message;
-                        errorMsg.classList.remove('hidden');
+                $('googleSignInBtn').addEventListener('click', async () => {
+                    const { error } = await sb.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: { redirectTo: window.location.origin }
                     });
+                    if (error) {
+                        const errorMsg = $('authErrorMsg');
+                        errorMsg.innerHTML = '<i class="fas fa-circle-exclamation"></i> ' + error.message;
+                        errorMsg.classList.remove('hidden');
+                    } else {
+                        authOverlay.classList.remove('active');
+                    }
                 });
             }
 
             // Sign Out Button
             if ($('signOutBtn')) {
-                $('signOutBtn').addEventListener('click', () => {
-                    auth.signOut();
+                $('signOutBtn').addEventListener('click', async () => {
+                    await sb.auth.signOut();
                     $('profileModalOverlay').classList.remove('active');
                 });
             }
@@ -2899,23 +2920,13 @@
             if ($('profileBtn')) $('profileBtn').addEventListener('click', () => overlay.classList.add('active'));
             if ($('profileModalClose')) $('profileModalClose').addEventListener('click', () => overlay.classList.remove('active'));
 
-            // ===== Save Profile with Retry + IndexedDB Fallback =====
-            async function saveProfileToFirestore(uid, profileData, attempt = 1) {
-                if (!db || !uid) return false;
-                try {
-                    await db.collection('health_profiles').doc(uid).set(
-                        { ...profileData, updatedAt: new Date() }, { merge: true }
-                    );
-                    return true;
-                } catch (err) {
-                    console.warn(`Firestore save attempt ${attempt} failed:`, err.code, err.message);
-                    if (attempt < 3 && err.code !== 'permission-denied') {
-                        // Exponential backoff: 500ms, 1500ms, 4500ms
-                        await new Promise(r => setTimeout(r, 500 * Math.pow(3, attempt - 1)));
-                        return saveProfileToFirestore(uid, profileData, attempt + 1);
-                    }
-                    throw err;
-                }
+            // ===== Save Profile to Supabase (upsert) =====
+            async function saveProfileToSupabase(uid, profileData) {
+                const { error } = await sb
+                    .from('health_profiles')
+                    .upsert({ uid, profile_data: { ...profileData, updatedAt: new Date().toISOString() } }, { onConflict: 'uid' });
+                if (error) throw error;
+                return true;
             }
 
             // Save Profile
@@ -2946,11 +2957,11 @@
 
                     // ① Save to localStorage immediately (offline-safe)
                     try {
-                        localStorage.setItem('airflowProfile_' + currentUser.uid, JSON.stringify({ ...profileData, updatedAt: Date.now() }));
+                        localStorage.setItem('airflowProfile_' + currentUser.id, JSON.stringify({ ...profileData, updatedAt: Date.now() }));
                     } catch (_) { console.warn('localStorage write failed'); }
 
                     // ② Save to IndexedDB (reliable offline storage)
-                    try { await saveToIDB(currentUser.uid, profileData); } catch(_) {}
+                    try { await saveToIDB(currentUser.id, profileData); } catch(_) {}
 
                     // ③ Optimistic UI Update: update profile immediately
                     userHealthProfile = profileData;
@@ -2974,25 +2985,15 @@
 
                     if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-check"></i> Save &amp; Analyse'; }
 
-                    // ⑤ Background Sync to Firestore with retries
-                    if (db && currentUser.uid) {
-                        saveProfileToFirestore(currentUser.uid, profileData)
-                            .then(success => {
-                                if (success && window._showToast) {
-                                    window._showToast('✅ Profile fully synced to cloud!', 'success');
-                                }
+                    // ⑤ Background Sync to Supabase
+                    if (currentUser && currentUser.id) {
+                        saveProfileToSupabase(currentUser.id, profileData)
+                            .then(() => {
+                                if (window._showToast) window._showToast('✅ Profile fully synced to cloud!', 'success');
                             })
-                            .catch(fbErr => {
-                                console.error('Firestore save error (all retries failed):', fbErr.code, fbErr.message);
-                                if (window._showToast) {
-                                    const isPermErr = fbErr.code === 'permission-denied';
-                                    window._showToast(
-                                        isPermErr
-                                            ? '⚠ Cloud sync blocked: Check Firestore security rules.'
-                                            : `⚠ Cloud sync failed (${fbErr.code}). Profile saved locally.`,
-                                        'warn'
-                                    );
-                                }
+                            .catch(sbErr => {
+                                console.error('Supabase save error:', sbErr.message);
+                                if (window._showToast) window._showToast(`⚠ Cloud sync failed: ${sbErr.message}. Profile saved locally.`, 'warn');
                             });
                     }
                 });
