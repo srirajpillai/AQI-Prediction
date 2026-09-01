@@ -149,22 +149,33 @@ version1/
 │   ├── app.js                       # Main thread controller: API fetchers, DOM updater, Chart.js graphs
 │   ├── worker.js                    # Web Worker thread: ML evaluations, trajectory modeling, SHAP math
 │   ├── know-how.js                  # Logic & interactive widgets for the Know-How educational page
-│   └── about.js                     # Interactive navigation & animations for the About page
+│   ├── about.js                     # Interactive navigation & animations for the About page
+│   └── manifest.json                # Progressive Web App (PWA) manifest configuration
 │
 ├── 🤖 MACHINE LEARNING PIPELINE (PYTHON)
-│   ├── ml_model.json                # Lightweight serialized model weights used by worker.js
-│   ├── ml_model.pkl                 # Trained Scikit-Learn binary model (Python)
+│   ├── unified_master_pipeline.py   # ALL-IN-ONE consolidated master Python pipeline
 │   ├── compile_comprehensive_datasets.py # Cleans & unifies 6 global datasets into a master corpus
 │   ├── train_comprehensive_ml.py    # Trains Gradient Boosting/Random Forest & exports to JSON/PKL
-│   ├── train_latest_dataset.py      # Secondary script for training specifically on 2020-2026 data
+│   ├── train_expanded_multi_dataset.py # Multi-city reanalysis dataset trainer
+│   ├── train_latest_dataset.py      # Ground-truth continuous archive trainer
+│   ├── ml_model.json                # Lightweight serialized model weights used by worker.js
+│   ├── ml_model.pkl                 # Trained Scikit-Learn / XGBoost binary model (Python)
 │   └── datasets/                    # Directory holding raw & compiled air quality data (CSVs)
 │
+├── ☁️ CONFIGURATION & CLOUD DEPLOYMENT
+│   ├── firestore.rules              # Firebase security rules (per-user isolated storage)
+│   ├── vercel.json                  # Vercel deployment configuration with clean URLs & CORS headers
+│   └── .gitignore                   # Git exclusion rules
+│
 └── 📋 DOCUMENTATION & SPECIFICATIONS
+    ├── PROJECT_REPORT.md            # Complete Academic Major Project Report (University Submission)
+    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.md # Markdown Master Reference Guide
+    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.txt # Plaintext Master Reference Guide
     ├── README.md                    # Quick overview & quick-launch instructions
     ├── SRS_DOCUMENT.md              # Formal Software Requirements Specification
-    ├── project_explanation.txt      # Simplified, non-technical overview
-    ├── DATASET_DOCUMENTATION.txt    # Data definitions, units, and source citations
     ├── DATASETS_CATALOG.md          # Comprehensive catalog of all dataset files
+    ├── DATASET_DOCUMENTATION.txt    # Data definitions, units, and source citations
+    ├── project_explanation.txt      # Simplified, non-technical overview
     └── PROJECT_GUIDE_AND_WORKFLOW.md# THIS DOCUMENT (Full workflow & operation guide)
 ```
 

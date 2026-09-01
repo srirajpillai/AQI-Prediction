@@ -55,10 +55,16 @@ How does the website work in 6 simple steps?
    - Strong Wind Dispersion: -15 points (Good!)
    - Final Calculated AQI: 15 points (Clean air!)
 
-6. IT CUSTOMIZES FOR YOUR HEALTH (Personalized Risk Profile)
-   Different people are affected differently by air quality. The built-in Health 
-   Engine lets you select your profile (e.g., Asthma, Elderly, Child, Outdoor Athlete). 
-   The app adjusts risk warnings and health advice specifically for your group.
+6. IT CUSTOMIZES FOR YOUR HEALTH (Personalized Risk Profile Across 6 Disease Categories)
+   Different people are affected differently by air quality. The built-in Clinical 
+   Health Engine evaluates individual sensitivity across 6 distinct medical domains:
+   - Respiratory: Asthma, COPD, Bronchitis, Inhaler reminders
+   - Cardiovascular & Metabolic: Heart disease, Hypertension, Arterial strain
+   - Eye & Skin Irritation: Photochemical smog barrier creams, saline rinses
+   - Neurological & Cognitive: Blood-brain barrier particulate crossing, CO alerts
+   - Maternal & Fetal Health: Placental transfer protection, pregnancy safety
+   - Long-Term Cancer Risk: Cumulative IARC Group 1 fine particulate exposure
+   The app adjusts risk warnings and provides tailored medical precautions.
 
 ------------------------------------------------------------------------
 What powers the Machine Learning Brain? (Latest Pipeline Updates)

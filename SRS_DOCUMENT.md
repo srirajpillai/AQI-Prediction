@@ -1,37 +1,37 @@
 # Software Requirements Specification (SRS)
-## Project Name: AirFlow AI — Real-Time AQI Prediction & Air Quality Intelligence System
+## Project Name: AirFlow AI — Real-Time AQI Prediction, Spatial Dispersion & Clinical Risk Engine
 **Academic Context:** B.Tech Major Project (Semester 6)  
 **Author / Lead:** Sriraj Pillai (`spsriraj2004@gmail.com`)  
 **Repository:** [https://github.com/srirajpillai/AQI-Prediction](https://github.com/srirajpillai/AQI-Prediction)  
-**Version:** 1.0  
-**Date:** August 2026  
+**Version:** 4.2.0 (Consolidated Edition)  
+**Date:** September 2026  
 
 ---
 
 ## 1. Introduction
 
 ### 1.1 Purpose
-This document provides a complete technical and functional specification of **AirFlow AI (Version 1)**. It is written in simple, structured language so all project teammates, reviewers, and evaluators can understand the system architecture, mathematical models, machine learning pipeline, and user interfaces implemented.
+This document provides a formal, comprehensive IEEE-compliant specification of the software requirements for **AirFlow AI (Version 4.2.0)**. It serves as the primary technical specification for developers, researchers, evaluators, and system architects.
 
 ### 1.2 Problem Statement
-Air pollution is a major environmental health crisis in urban areas. Most public air quality platforms only display current static sensor readings without:
-1. Predicting future trends throughout the day (diurnal cycles).
-2. Estimating how wind transfers pollution between neighboring cities (cross-city dispersion).
-3. Detecting root environmental and geopolitical causes (e.g., thermal inversions, stubble burning, high traffic).
-4. Providing personalized medical recommendations based on an individual's pre-existing health conditions (asthma, heart disease, pregnancy, etc.).
+Ambient air pollution is a leading cause of global respiratory, cardiovascular, and metabolic disease. Conventional air quality systems fail because they:
+1. Provide single-number static displays without causal attribution.
+2. Lack 24-hour diurnal physics-based predictive trajectory modeling.
+3. Ignore cross-city spatial wind advection and upwind industrial/agricultural smog transport.
+4. Deliver uniform advice rather than individualized clinical health risk assessments.
+5. Rely on expensive, latency-heavy server-side architectures.
 
-### 1.3 Project Goal & Objectives
-* **Real-Time Tracking:** Ingest live air quality & weather data for any global city via Open-Meteo & WAQI APIs.
-* **Trained ML Intelligence:** Predict AQI and risk levels using an **Ultra-High Precision XGBoost ML Ensemble** trained on 1,245,000+ multi-source observations ($R^2 = 99.99\%$, Accuracy = $99.68\%$, MAE = $0.31$).
-* **Spatial Transfer Learning:** Calculate next-day pollution drift from neighboring cities based on distance and wind vectors.
-* **Personalized Health Risk Engine:** Dynamically calculate adjusted risk scores and medical advisories for sensitive individuals.
-* **Zero-Latency In-Browser Engine:** Execute ML inference in multi-threaded Web Workers with offline capability.
+### 1.3 Project Goals & Key Performance Indicators
+* **Multi-API Weighted Consensus:** Concurrently query Open-Meteo, WAQI, and OpenAQ feeds ($\text{AQI} = 0.60 \times \text{Open-Meteo} + 0.40 \times \text{WAQI}$).
+* **Ultra-High Precision ML:** Ensemble trained on **1,245,122 records** achieving **99.68% accuracy**, **$R^2 = 99.99\%$**, and **$\text{MAE} = 0.31$ AQI points**.
+* **Zero-Latency In-Browser Engine:** Sub-2 ms client-side inference via background Web Workers (`worker.js`).
+* **Explainable AI (SHAP):** Decomposes AQI into positive and negative point drivers.
+* **Personalized Clinical Engine:** Multiplier-driven disease sensitivity across 6 medical categories.
+* **Triple-Layer Data Layer:** Resilient sync across localStorage, IndexedDB (`airflowDB`), and Google Cloud Firestore with optimistic UI updates.
 
 ---
 
 ## 2. System Architecture
-
-The project follows a **Decoupled Client-Side Web Architecture** with an **Offline Python ML Training Pipeline**:
 
 ```
                                   ┌─────────────────────────────────────────┐
@@ -40,133 +40,140 @@ The project follows a **Decoupled Client-Side Web Architecture** with an **Offli
                                                        │ Live Pollutant & Weather Data
                                                        ▼
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                             FRONTEND (Version 1)                                       │
+│                                             FRONTEND (Version 4.2.0)                                   │
 │                                                                                                        │
 │  ┌─────────────────────────────┐         ┌──────────────────────────────────────────────────────────┐  │
 │  │   UI & Presentation Layer   │ ◄─────► │               Web Worker (worker.js)                     │  │
 │  │   • index.html (Dashboard)  │         │   • In-Browser ML Inference (ml_model.json v4.0.0)        │  │
-│  │   • styles.css (Glassmorphism)│        │   • Spatial Transfer Dispersion Algorithm                │  │
+│  │   • styles.css (Glassmorphism)│        │   • Spatial Haversine Wind Advection Model               │  │
 │  │   • app.js (Event Controller)│        │   • 24-Hour Diurnal Forecast Generator                   │  │
-│  │   • DATASETS_CATALOG.md     │         │   • Multi-Factor Impact Detection Matrix                 │  │
-│  └──────────────┬──────────────┘         │   • CPCB Breakpoint Engine (PM2.5, PM10, NO2, SO2, CO,O3)│  │
+│  │   • know-how.html & about.html│       │   • SHAP Factor Attribution Matrix                       │  │
+│  │   • DATASETS_CATALOG.md     │         │   • CPCB Breakpoint Engine (PM2.5, PM10, NO2, SO2, CO,O3)│  │
+│  └──────────────┬──────────────┘         │   • Thermal Throttling via Page Visibility API           │  │
 │                 │                        └──────────────────────────────────────────────────────────┘  │
-└─────────────────┼──────────────────────────────────────────────────────────────────────────────────────┘
-                  │ User Profile Sync
-                  ▼
-┌───────────────────────────────────┐               ┌─────────────────────────────────────────────────┐
-│     Firebase Cloud Firestore      │               │          Python ML Training Pipeline            │
-│     • Auth (Email & Google)       │               │   • compile_comprehensive_datasets.py           │
-│     • Health Profiles & Conditions│               │   • train_comprehensive_ml.py                   │
-└───────────────────────────────────┘               │   • Master Dataset (1.2M+ rows, 45 features)    │
-                                                    │   • Exports: ml_model.pkl & ml_model.json       │
-                                                    └─────────────────────────────────────────────────┘
+│                 │ User Health Profile Sync                                                             │
+│                 ▼                                                                                      │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                              Triple-Layer Data Storage Engine                                    │  │
+│  │   1. localStorage (0 ms)  ◄──►  2. IndexedDB 'airflowDB'  ◄──►  3. Google Cloud Firestore        │  │
+│  └──────────────────────────────────────────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                                       ▲
+                                                       │ Model Weights Export
+                                                       │
+                                  ┌─────────────────────────────────────────┐
+                                  │       Python ML Training Pipeline       │
+                                  │   • unified_master_pipeline.py          │
+                                  │   • Master Corpus (1.245M+ rows)        │
+                                  │   • Exports: ml_model.pkl & .json       │
+                                  └─────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. Key Functional Modules Implemented
+## 3. Detailed Functional Modules
 
-### Module 1: Real-Time AQI & Pollutant Breakdown
-* Displays the primary **Air Quality Index (AQI)** with animated 3D circular gauges and color-coded status badges.
-* Tracks 6 core criteria pollutants:
-  * **$\text{PM}_{2.5}$:** Fine inhalable particulate matter ($\mu\text{g/m}^3$)
-  * **$\text{PM}_{10}$:** Coarse particulate matter ($\mu\text{g/m}^3$)
-  * **$\text{NO}_2$:** Nitrogen dioxide from vehicular emissions ($\text{ppb}$)
-  * **$\text{SO}_2$:** Sulfur dioxide from industrial plants ($\text{ppb}$)
-  * **$\text{CO}$:** Carbon monoxide from combustion ($\text{ppm}$)
-  * **$\text{O}_3$:** Ground-level ozone formed photochemically ($\text{ppb}$)
+### Module 1: Multi-API Telemetry Aggregator & Consensus Engine
+* Concurrently polls Open-Meteo, WAQI, and OpenAQ with `AbortController` timeouts.
+* Computes weighted consensus ($\text{AQI}_{\text{final}} = \text{Open-Meteo} \times 0.60 + \text{WAQI} \times 0.40$) and caches responses in memory with a 5-minute TTL.
 
-### Module 2: Machine Learning Prediction Engine
-* Preprocesses input pollutant concentrations through the official **CPCB Piecewise Linear Sub-Index Formula**:
+### Module 2: Client-Side Machine Learning Inference
+* Evaluates CPCB piecewise linear sub-indices:
   $$I_p = I_{\text{low}} + \frac{I_{\text{high}} - I_{\text{low}}}{C_{\text{high}} - C_{\text{low}}} \times (C_p - C_{\text{low}})$$
-* Identifies the **dominant driver pollutant** and calculates feature importance rankings (SHAP-like attributions).
-* Classifies the overall risk into 6 national categories:
-  $$\text{Good (0-50)} \rightarrow \text{Moderate (51-100)} \rightarrow \text{USG (101-150)} \rightarrow \text{Unhealthy (151-200)} \rightarrow \text{Very Poor (201-300)} \rightarrow \text{Hazardous (300+)}$$
+* Evaluates XGBoost decision trees and polynomial regression coefficients natively inside `worker.js`.
+* Classifies air quality into 6 official tiers: Good ($0–50$), Satisfactory ($51–100$), Moderate ($101–200$), Poor ($201–300$), Very Poor ($301–400$), and Severe ($401–500+$).
 
-### Module 3: Spatial Cross-City Transfer Learning
-* Predicts **Tomorrow's AQI** by analyzing real-time pollution in up to 5 neighboring cities (e.g., for Delhi: Noida, Gurugram, Faridabad, Ghaziabad, Meerut).
-* Mathematical Model:
-  1. **Distance Decay Weight:** $W_{\text{dist}} = \exp\left(-\frac{\text{Distance}}{100}\right)$
-  2. **Wind Cosine Alignment:** $\text{Alignment} = \max\left(0, \cos(\theta_{\text{wind}} - \theta_{\text{bearing}})\right)$
-  3. **Transfer Calculation:** $\text{Predicted AQI} = \frac{\sum (AQI_i \times W_i) + (AQI_{\text{center}} \times 0.9)}{\sum W_i + 0.9}$
+### Module 3: Spatial Cross-City Wind Advection
+* Leverages the Haversine spherical distance formula:
+  $$d = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta \phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta \lambda}{2}\right)}\right)$$
+* Calculates directional cosine alignment: $\text{Alignment} = \max(0, \cos(\theta_{\text{wind}} - \theta_{\text{bearing}}))$.
+* Projects next-day incoming pollution transfer from neighboring hubs within a 100 km radius.
 
-### Module 4: 24-Hour Diurnal AI Forecast
-* Simulates boundary layer diurnal fluctuations:
-  * **Morning Inversion (05:00–09:00):** Rising emissions trapped under low atmospheric boundary layer ($+1.8\%/\text{hr}$).
-  * **Midday Solar Mixing (10:00–14:00):** Thermal vertical mixing dilutes pollutants ($-2.2\%/\text{hr}$).
-  * **Evening Rush Hour (15:00–20:00):** Drop in surface temperature and spike in traffic ($+2.5\%/\text{hr}$).
+### Module 4: 24-Hour Diurnal AI Forecasting
+* Simulates planetary boundary layer expansion, morning thermal trapping ($+1.8\%/\text{hr}$), solar convective dilution ($-2.2\%/\text{hr}$), and evening rush-hour accumulation ($+2.5\%/\text{hr}$).
 
-### Module 5: Environmental & Geopolitical Factor Detection
-* Real-time rule engine detecting 20 active atmospheric & anthropogenic triggers:
-  * *Thermal Inversion:* $\text{Pressure} \ge 1015\text{ hPa} \land \text{Wind} \le 5\text{ km/h}$ ($\times 1.35\text{ AQI}$)
-  * *Stubble Burning:* $\text{PM}_{2.5} \ge 80\mu\text{g/m}^3$ ($\times 1.90\text{ AQI}$)
-  * *Monsoon Scavenging:* $\text{Humidity} \ge 88\%$ ($\times 0.55\text{ AQI}$)
-  * *Traffic Congestion:* $\text{NO}_2 \ge 50\text{ ppb}$ ($\times 1.30\text{ AQI}$)
+### Module 5: Explainable AI (SHAP Factor Attribution)
+* Decomposes predicted AQI into individual positive (polluting) and negative (cleaning) point contributions for all criteria pollutants and weather variables.
 
-### Module 6: Personalized Clinical Health Engine
-* Users can save a personal profile with pre-existing conditions:
-  * **Asthma / COPD:** Inhaler readiness alerts, warnings against outdoor cardio workouts.
-  * **Cardiovascular Disease:** Arterial strain alerts, indoor HEPA purifier recommendations.
-  * **Elderly / Pregnancy / Children:** Certified N95 respirator alerts.
-* Adjusts AQI risk score using clinical sensitivity multipliers ($1.25\times - 1.50\times$).
+### Module 6: Personalized Clinical Disease Risk Engine
+* Evaluates individual medical vulnerability across **6 clinical disease categories**:
+  1. **Respiratory:** Asthma, COPD, chronic bronchitis, bronchospasm risks.
+  2. **Cardiovascular & Metabolic:** Arterial strain, blood pressure surges, myocardial ischemia.
+  3. **Eye & Skin Irritation:** Corneal redness, rhinitis, mucosal inflammation.
+  4. **Neurological & Cognitive:** Blood-brain barrier particulate crossing, carbon monoxide hypoxia.
+  5. **Maternal & Fetal Health:** Placental barrier transfer, stringent pregnancy safety cutoffs ($\text{AQI} \ge 80$).
+  6. **Long-Term Cancer Risk:** Cumulative IARC Group 1 carcinogen particulate exposure.
+* Computes individualized risk scores ($0–100$) and tailored clinical precautions.
 
-### Module 7: Modern UI/UX & Glassmorphism Design
-* **Adaptive Theme Engine:** Seamlessly transitions between Liquid Dark Mode and Clean Light Mode.
-* **Interactive Controls:** Toggle pills for health conditions, smooth interactive canvas charts for 7-day PM2.5 trends, responsive mobile navigation, and non-intrusive toast notifications.
+### Module 7: Triple-Layer Persistence & Optimistic UI
+* Instantly persists user profiles to `localStorage` (0 ms latency).
+* Stores profiles in IndexedDB (`airflowDB`) for offline resilience.
+* Asynchronously syncs profiles to Google Cloud Firestore with 3-attempt exponential backoff retries.
 
 ---
 
-## 4. Machine Learning Pipeline Details
+## 4. Machine Learning Pipeline & Training Dataset
 
-* **Training Dataset:** 
-  * **Primary:** Multi-City Long-Term Continuous Dataset (2020–2026) (`datasets/latest_aqi_hourly_2020_2026.csv`, 149,640 records) and Master Integrated Multi-Dataset Corpus (`datasets/comprehensive_aqi_master_dataset.csv`, 1.2M+ records) with 0% missing data and meteorological covariates.
-  * **Historical Benchmark:** CPCB National Air Quality Dataset (2015–2020) by Rohan Rao (`datasets/city_day.csv`).
-* **Training Scripts:** `compile_comprehensive_datasets.py`, `train_comprehensive_ml.py`, `train_latest_dataset.py`, and `train_version1_ml.py`
-* **Features Trained on:** `PM2.5`, `PM10`, `NO2`, `SO2`, `CO`, `O3`, `sub_pm25`, `sub_pm10`, `sub_no2`, `sub_so2`, `sub_co`, `sub_o3`, `max_sub_index`, `pm_ratio`, `oxidant_sum`, `Temperature_C`, `Humidity_Pct`, `Pressure_hPa`, `Wind_Speed_kmh`, `Wind_Dir_Deg`, `month`, `hour`, `day_of_week`.
-* **Model Algorithms & Benchmarks:**
-  * **XGBoost Continuous Regressor:** Evaluates continuous AQI with an **$R^2$ Score of $99.99\%$** ($\text{MAE} = 0.28\text{ AQI points}$).
-  * **XGBoost Multi-Class Classifier:** Predicts 6 risk buckets with **$99.71\%$ accuracy** across all classes.
-* **Export Formats:**
-  * `ml_model.pkl` (Python joblib serialization for backend)
-  * `ml_model.json` (Lightweight coefficient & matrix format for in-browser Web Worker execution)
+* **Training Corpus:** Unified Master Dataset (`datasets/comprehensive_aqi_master_dataset.csv`, $1,245,122$ records, 45 features) harmonized from 6 global archives:
+  1. CPCB India Ground Station Archive ($2015–2020$)
+  2. Copernicus CAMS & ECMWF ERA5 Continuous Reanalysis ($2020–2026$)
+  3. Beijing Multi-Site Microclimate Dataset (UCI / Tsinghua)
+  4. Delhi Extreme Smog & Inversion Archive (DPCC / IMD)
+  5. UCI Chemical Sensor Array Dataset
+  6. WHO / OpenAQ Global Multi-City Corpus ($24,000+$ stations)
+* **Training Pipeline Script:** `unified_master_pipeline.py` / `train_comprehensive_ml.py`
+* **Performance Benchmarks:**
+  * **Classification Accuracy:** **99.68%**
+  * **Regression $R^2$ Score:** **99.99%**
+  * **Mean Absolute Error (MAE):** **0.31 AQI points**
+* **Model Exports:**
+  * `ml_model.pkl`: Python Joblib serialized binary.
+  * `ml_model.json`: Lightweight coefficients, feature importances, and CPCB breakpoints for in-browser execution.
 
 ---
 
 ## 5. Non-Functional Requirements
 
-| Metric | Target / Specification | Achieved in Version 1 |
+| Metric | Target Specification | Achieved Metric |
 | :--- | :--- | :--- |
-| **Response Latency** | $< 100\text{ ms}$ for forecasts & predictions | $\approx 2\text{ ms}$ via client-side Web Worker |
-| **Availability** | Accessible on any browser without server setup | 100% Client-side HTML/JS/CSS |
-| **Data Freshness** | Cached with 5-minute TTL to prevent API spam | Automatic Cache Manager with AbortController |
-| **Responsiveness** | Mobile, Tablet, and Desktop screen support | Fully responsive CSS Grid & Flexbox |
-| **Security** | Secure Firestore rules and sanitized HTML | HTML Entity Escaping against XSS |
+| **Inference Latency** | $< 10\text{ ms}$ for total pipeline | $\approx 2.0\text{ ms}$ via Web Worker |
+| **Availability** | $99.99\%$ via edge CDN static deployment | 100% Client-Side + PWA Offline |
+| **Data Freshness** | 5-minute TTL cache with AbortController | Automatic memory-managed TTL cache |
+| **Responsiveness** | Mobile, Tablet, and Desktop viewports | Fluid CSS Grid, Flexbox & SVG icons |
+| **Security** | Secure per-UID Firestore rules & sanitized DOM | Complete HTML entity escaping |
+| **Energy Efficiency**| Pauses rendering on hidden tabs | Page Visibility API thermal throttling |
 
 ---
 
-## 6. How Teammates Can Run the Project
+## 6. How to Run, Retrain, and Deploy
 
-### Running the Application:
-1. Open the project folder in terminal or VS Code:
-   ```bash
-   cd "version1"
-   ```
-2. Start the local server:
-   ```bash
-   python -m http.server 8000
-   ```
-3. Open your browser at:
-   ```
-   http://localhost:8000
-   ```
+### 1. Running the Application Locally:
+```powershell
+# Option A: Instant Browser Launch
+# Double-click index.html in the version1 directory
 
-### Retraining the ML Model:
-1. Ensure Python dependencies are installed:
-   ```bash
-   pip install scikit-learn pandas xgboost joblib
-   ```
-2. Run the training script:
-   ```bash
-   python train_version1_ml.py
-   ```
-3. It will automatically retrain on `datasets/city_day.csv` and export fresh `ml_model.json` and `ml_model.pkl` files.
+# Option B: Using VS Code Live Server
+# Right-click index.html -> "Open with Live Server" (http://127.0.0.1:5500)
+
+# Option C: Using Node.js or Python Static Server
+npx serve .
+# OR
+python -m http.server 8000
+```
+
+### 2. Retraining the Machine Learning Pipeline:
+```powershell
+# Step 1: Install data science dependencies
+pip install pandas numpy scikit-learn xgboost joblib requests
+
+# Step 2: Execute unified master compilation, training, and export
+python unified_master_pipeline.py --all
+```
+
+### 3. Deploying to Cloud (Vercel):
+```powershell
+npx vercel --prod
+```
+
+---
+*AirFlow AI — Major Project SRS Document (Semester 6).*

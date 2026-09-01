@@ -229,6 +229,7 @@ npx vercel --prod
 ---
 
 ## 📄 Documentation Index
+- 📘 **[Academic Major Project Report (University Submission)](PROJECT_REPORT.md)**
 - 📖 [Complete AI Agent Master Guide (Markdown)](COMPLETE_AI_AGENT_PROJECT_GUIDE.md)
 - 📄 [Complete AI Agent Master Guide (Plaintext)](COMPLETE_AI_AGENT_PROJECT_GUIDE.txt)
 - 📊 [Datasets Catalog & Schema](DATASETS_CATALOG.md)
@@ -239,3 +240,4 @@ npx vercel --prod
 ---
 
 *AirFlow AI — Major Project SEM 6.*
+
