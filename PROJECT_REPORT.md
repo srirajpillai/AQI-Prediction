@@ -87,7 +87,7 @@ To overcome these deficiencies, this project presents **AirFlow AI**, a next-gen
 4. **Spatial Haversine Wind Advection Engine:** Leverages spherical trigonometry and wind vector cosine projections ($\cos \theta$) to track upwind pollutant plumes across neighboring cities within a 100 km radius.
 5. **Personalized Clinical Disease Risk Engine & Explainable AI (SHAP):** Decomposes AQI into exact point contributions and computes individualized clinical risk scores ($0–100$) across **6 medical categories** (Respiratory, Cardiovascular, Eye/Skin, Neurological, Maternal/Fetal, and Cancer Risk).
 
-The complete inference engine executes **100% client-side** using a multi-threaded browser **Web Worker (`worker.js`)**, achieving sub-2 millisecond inference latency without server dependency. The web platform features a modern glassmorphic interface, triple-layer persistence (localStorage, IndexedDB `airflowDB`, and Google Cloud Firestore), PWA offline support, and high-availability Vercel cloud deployment.
+The complete inference engine executes **100% client-side** using a multi-threaded browser **Web Worker (`worker.js`)**, achieving sub-2 millisecond inference latency without server dependency. The web platform features a modern glassmorphic interface, triple-layer persistence (localStorage, IndexedDB `airflowDB`, and Supabase PostgreSQL), PWA offline support, and high-availability Vercel cloud deployment.
 
 **Keywords:** *Air Quality Index (AQI), Machine Learning, XGBoost, Explainable AI (SHAP), Diurnal Forecasting, Spatial Advection, Haversine Formula, Clinical Health Risk, Web Worker, Client-Side Inference, Progressive Web App (PWA).*
 
@@ -295,7 +295,7 @@ The objective of this project is to conceptualize, train, and deploy **AirFlow A
 3. **Multi-API Consensus Engine:** Implement a multi-source data ingestion engine combining Open-Meteo, WAQI, and OpenAQ feeds with in-memory TTL caching.
 4. **Client-Side Multithreading:** Implement a browser Web Worker (`worker.js`) to execute ML inference, Haversine spatial advection, and SHAP calculations off the UI main thread.
 5. **Personalized Clinical Engine:** Implement an individualized medical risk assessment matrix covering Respiratory, Cardiovascular, Dermatological/Ocular, Neurological, Maternal/Fetal, and Long-Term Cancer categories.
-6. **Triple-Layer Data Layer:** Integrate localStorage, IndexedDB (`airflowDB`), and Google Cloud Firestore with optimistic UI state synchronization.
+6. **Triple-Layer Data Layer:** Integrate localStorage, IndexedDB (`airflowDB`), and Supabase PostgreSQL (`health_profiles` table) with optimistic UI state synchronization.
 7. **Production Deployment:** Package the system as an offline-capable Progressive Web Application (PWA) hosted on Vercel.
 
 ## 1.5 Scope of the Project
@@ -355,7 +355,7 @@ Current systems exhibit several key gaps:
 | **Explainable AI (SHAP)** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ SHAP Factor Attribution** |
 | **Personalized Health Risk** | ❌ Generic | ❌ Generic | ❌ Generic | ⚠️ Basic | **✅ 6 Clinical Disease Engines** |
 | **Offline PWA Support** | ❌ No | ⚠️ App Only | ❌ No | ⚠️ App Only | **✅ Full PWA + IndexedDB Cache** |
-| **Cloud Sync & Optimistic UI**| ❌ No | ⚠️ Account Req. | ❌ No | ⚠️ Account Req. | **✅ Cloud Firestore + Optimistic** |
+| **Cloud Sync & Optimistic UI**| ❌ No | ⚠️ Account Req. | ❌ No | ⚠️ Account Req. | **✅ Supabase PostgreSQL + Optimistic** |
 
 ---
 
@@ -394,14 +394,15 @@ Current systems exhibit several key gaps:
 ## 3.3 Functional Requirements
 
 * **FR-01: Multi-Source Telemetry Ingestion:** The system shall concurrently query Open-Meteo, WAQI, and OpenAQ APIs with an abortable controller and 5-minute in-memory TTL caching.
-* **FR-02: Weighted Consensus Normalization:** The system shall calculate a combined weighted index ($\text{Open-Meteo} \times 0.60 + \text{WAQI/OpenAQ} \times 0.40$) and report live confidence status.
-* **FR-03: Sub-Index Computation:** The system shall compute piecewise linear sub-indices for $\text{PM}_{2.5}, \text{PM}_{10}, \text{NO}_2, \text{SO}_2, \text{CO}, \text{O}_3,$ and $\text{NH}_3$ adhering to official CPCB standards.
-* **FR-04: Client-Side ML Inference:** The background Web Worker shall execute the trained XGBoost model to classify risk categories (Good to Hazardous) and predict numerical AQI.
-* **FR-05: 24-Hour Diurnal Trajectory Simulation:** The system shall generate an hour-by-hour forecast curve reflecting solar convection, morning inversions, and evening traffic peaks.
-* **FR-06: Spatial Cross-City Wind Advection:** The system shall compute great-circle distance and wind vector cosine alignment to detect upwind smog transport from neighboring cities within 100 km.
-* **FR-07: Explainable AI (SHAP Breakdown):** The system shall compute and display exact positive and negative point attributions for each pollutant and weather covariate.
-* **FR-08: Personalized Clinical Health Engine:** The system shall evaluate individual user profiles across 6 clinical disease categories, calculating risk scores ($0–100$) and medical advisories.
-* **FR-09: Triple-Layer Persistence & Sync:** The system shall save user profiles instantly to localStorage, persist them in IndexedDB, and synchronize to Cloud Firestore with exponential backoff retries.
+* **FR-01: Real-Time Air Quality Ingestion:** The system shall ingest live criteria pollutants ($\text{PM}_{2.5}, \text{PM}_{10}, \text{NO}_2, \text{SO}_2, \text{CO}, \text{O}_3, \text{NH}_3$) and weather covariates via Open-Meteo, WAQI, and OpenAQ v3.
+* **FR-02: Multi-API Consensus Scoring:** The system shall compute a weighted consensus AQI to prevent single-station failure modes.
+* **FR-03: Client-Side Machine Learning Inference:** The Web Worker shall execute tree-based XGBoost regression and classification in under 5 ms.
+* **FR-04: Explainable AI Breakdown:** The system shall display exact positive and negative SHAP factor contributions for every feature.
+* **FR-05: 24-Hour Diurnal Trajectory:** The system shall project a 24-hour continuous diurnal trajectory modeling solar convection, nocturnal boundary layer trapping, and rush-hour emissions.
+* **FR-06: Spatial Vector Advection:** The system shall compute downwind pollution transfer between neighboring geographic nodes using Haversine formulas.
+* **FR-07: Personalized Clinical Risk:** The system shall evaluate individual health profiles to compute adjusted clinical risk scores across 6 medical categories.
+* **FR-08: Travel Route Safety Advisor:** The system shall compare origin and destination air quality, delivering tailored duration-specific travel advisories.
+* **FR-09: Triple-Layer Persistence & Sync:** The system shall save user profiles instantly to localStorage, persist them in IndexedDB, and synchronize to Supabase PostgreSQL with Row-Level Security policies.
 * **FR-10: Responsive & Accessible Interface:** The UI shall support light/dark theme toggles, high-contrast text strokes, responsive mobile layouts, and Page Visibility API thermal throttling.
 
 ## 3.4 Non-Functional Requirements
@@ -491,7 +492,7 @@ sequenceDiagram
     participant Main as Main Thread (app.js)
     participant APIs as Telemetry APIs (Open-Meteo / WAQI)
     participant Worker as Web Worker (worker.js)
-    participant DB as Triple-Layer Storage (IDB / Firestore)
+    participant DB as Triple-Layer Storage (IDB / Supabase)
 
     User->>Main: Enters City / Uses GPS Geolocation
     Main->>APIs: Fetch Live Pollutants & Weather in Parallel
@@ -523,7 +524,7 @@ To ensure the UI remains fluid at 60 frames per second, all CPU-intensive mathem
 User profiles (age, pre-existing conditions, alert thresholds, saved locations) are managed across three distinct storage layers:
 1. **Tier 1 — `localStorage`:** 0 ms synchronous access for immediate startup rendering.
 2. **Tier 2 — IndexedDB (`airflowDB`):** Asynchronous structured client database for offline persistence.
-3. **Tier 3 — Google Cloud Firestore:** Cloud synchronization allowing users to access their profile across multiple devices, secured with strict security rules and exponential backoff retry logic.
+3. **Tier 3 — Supabase PostgreSQL:** Cloud synchronization allowing users to access their profile across multiple devices, secured with strict Row-Level Security (RLS) policies (`auth.uid() = uid`).
 
 ---
 
@@ -787,7 +788,7 @@ The user interface was validated on:
 
 ## 9.4 Security & Data Sanitization Testing
 * **XSS Prevention:** All user inputs and API strings are sanitized using HTML entity encoding prior to DOM injection.
-* **Firestore Isolation:** Verified that unauthenticated or mismatched client tokens cannot read or overwrite third-party profile documents.
+* **Supabase Row-Level Security Isolation:** Verified that unauthenticated or mismatched client tokens cannot read or overwrite third-party profile rows in the `health_profiles` table.
 
 ## 9.5 Google Lighthouse Performance & Accessibility Audit
 Google Lighthouse audits on production Vercel builds achieved:

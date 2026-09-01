@@ -101,14 +101,14 @@ Ambient air pollution is a leading cause of global respiratory, cardiovascular, 
   2. **Cardiovascular & Metabolic:** Arterial strain, blood pressure surges, myocardial ischemia.
   3. **Eye & Skin Irritation:** Corneal redness, rhinitis, mucosal inflammation.
   4. **Neurological & Cognitive:** Blood-brain barrier particulate crossing, carbon monoxide hypoxia.
-  5. **Maternal & Fetal Health:** Placental barrier transfer, stringent pregnancy safety cutoffs ($\text{AQI} \ge 80$).
+  5. **Maternal & Fetal Health:** Placental barrier transfer, stringent pregnancy safety cutoffs (context-aware, automatically hidden when not applicable).
   6. **Long-Term Cancer Risk:** Cumulative IARC Group 1 carcinogen particulate exposure.
-* Computes individualized risk scores ($0–100$) and tailored clinical precautions.
+* Computes individualized risk scores ($0–100$), actionable 1-sentence guidance, and color-coded Font Awesome medical icons.
 
 ### Module 7: Triple-Layer Persistence & Optimistic UI
 * Instantly persists user profiles to `localStorage` (0 ms latency).
 * Stores profiles in IndexedDB (`airflowDB`) for offline resilience.
-* Asynchronously syncs profiles to Google Cloud Firestore with 3-attempt exponential backoff retries.
+* Asynchronously syncs profiles to Supabase PostgreSQL (`health_profiles` table) with Row-Level Security (`auth.uid() = uid`).
 
 ---
 

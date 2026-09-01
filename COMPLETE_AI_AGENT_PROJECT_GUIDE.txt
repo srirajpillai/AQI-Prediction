@@ -134,7 +134,7 @@ version1/
 │       └── dataset_metadata.json    # JSON catalog describing dataset schemas & provenance
 │
 ├── ☁️ CONFIGURATION & CLOUD DEPLOYMENT
-│   ├── firestore.rules              # Firebase security rules (per-user UID isolated read/write)
+│   ├── supabase_schema.sql          # Supabase PostgreSQL schema & Row-Level Security (RLS) rules
 │   ├── vercel.json                  # Vercel deployment configuration with clean URLs & CORS headers
 │   ├── .gitignore                   # Git exclusion rules
 │   ├── .gitattributes              # Git LFS & line ending definitions
@@ -170,9 +170,9 @@ When saving or loading a user's health profile:
   1. Instant write to localStorage.setItem('airflowProfile_' + uid, ...) (0 ms latency).
   2. Asynchronous write to IndexedDB (airflowDB -> profiles object store).
   3. Optimistic UI update: closes the modal, triggers success toast, and re-renders the dashboard immediately.
-  4. Background sync to Firebase Firestore (db.collection('health_profiles').doc(uid).set(...)) with 3 retry attempts and exponential backoff (500 ms, 1500 ms, 4500 ms).
+  4. Background sync to Supabase PostgreSQL (health_profiles table) with Row-Level Security (auth.uid() = uid).
 - Load Strategy:
-  1. Checks Firestore cloud document first.
+  1. Checks Supabase PostgreSQL cloud document first.
   2. Falls back to localStorage if offline or slow.
   3. Falls back to IndexedDB if localStorage was cleared.
 
@@ -259,26 +259,21 @@ SHAP decomposes the predicted AQI into individual positive (polluting) and negat
 AirFlow AI computes user-specific clinical risk scores (0 - 100) and generates tailored medical precautions across 6 clinical categories:
 
 1. Respiratory (Asthma / COPD):
-   - Bronchospasm risk, rescue inhaler protocols, PM2.5/O3/SO2 thresholds, CPAP advisories.
+   - Bronchospasm risk, rescue inhaler protocols, HEPA air purifiers, N95 masks, PM2.5/O3/SO2 thresholds.
 2. Cardiovascular & Metabolic:
    - Blood pressure spikes, myocardial stress, cardiologist triggers, NO2/CO vascular impacts.
 3. Eye & Skin Irritation:
-   - Corneal inflammation, rhinitis saline rinses, photochemical smog barrier creams.
+   - Corneal inflammation, UV sunglasses, skin moisturizers, rhinitis saline rinses.
 4. Neurological & Cognitive:
    - Systemic neuro-inflammation, CO alarms, blood-brain barrier particulate penetration.
 5. Maternal & Fetal Health:
-   - Placental barrier transfer, preterm risk, stringent NO2/CO thresholds, OB-GYN tips.
+   - Placental barrier transfer, preterm risk, stringent NO2/CO thresholds (context-aware, automatically hidden when not pregnant).
 6. Long-Term Cancer Risk:
    - IARC Group 1 carcinogen PM2.5 cumulative exposure, P100 respirators, annual spirometry.
 
-Clinical Multipliers:
-- Asthma: x 1.6
-- COPD: x 1.7
-- Heart Disease / Hypertension: x 1.65
-- Pregnant: x 1.5
-- Active Smoker: x 1.8
-- Outdoor Worker (>= 6 hrs/day): x 1.4
-- Elderly (>= 65 yrs) or Child (< 12 yrs): x 1.35
+Iconography & Presentation:
+- Uses Font Awesome colored vector icons (.tip-icon in var(--aqi-accent)) instead of OS emojis to eliminate black box font rendering issues.
+- Concise 1-sentence actionable guidance (max 3 tips per card) under "What to do" headers.
 
 ================================================================================
 8. USER EXPERIENCE, THEMING & PERFORMANCE ENGINEERING
@@ -302,12 +297,12 @@ During continuous testing on laptops, heavy background canvas rendering can caus
 ================================================================================
 
 9.1 AUTHENTICATION PROVIDERS
-Supported via Firebase v8 SDK:
-1. Google Sign-In: Pop-up OAuth authentication via firebase.auth.GoogleAuthProvider().
-2. Email & Password: Registration (createUserWithEmailAndPassword) and Login (signInWithEmailAndPassword).
+Supported via Supabase JS SDK v2:
+1. Google Sign-In: OAuth authentication via supabase.auth.signInWithOAuth().
+2. Email & Password: Registration (supabase.auth.signUp) and Login (supabase.auth.signInWithPassword) with custom rate limit & error handlers.
 
 9.2 FIRST-TIME VS. RETURNING USER FLOW
-- First-Time User: Upon successful authentication, if no saved profile is detected in Firestore/IndexedDB, the Health Profile Modal slides in automatically so the user can immediately set up their parameters.
+- First-Time User: Upon successful authentication, if no saved profile is detected in Supabase/IndexedDB, the Health Profile Modal slides in automatically so the user can immediately set up their parameters.
 - Returning User: If a profile is found:
   1. Form fields are auto-populated.
   2. The name banner displays the user's name.
@@ -379,13 +374,14 @@ Here is the complete context of the project:
 1. Overview: AirFlow AI is a client-side web application for real-time AQI prediction, 24-hour diurnal forecasting, cross-city spatial wind transfer learning, SHAP explainable AI, and personalized clinical disease risk recommendations.
 2. Architecture: Pure client-side HTML5/CSS3/ES6+ JavaScript. Heavy computation runs in a background Web Worker (worker.js). All ML models (trained in Python via XGBoost) are serialized into ml_model.json for zero-server in-browser inference.
 3. Data Layer: Multi-API consensus (Open-Meteo, WAQI, OpenAQ v3) with in-memory 5-minute TTL caching and AbortController.
-4. User Persistence: Triple-tier storage: Google Cloud Firestore + IndexedDB (airflowDB) + localStorage with optimistic UI updates.
+4. User Persistence: Triple-tier storage: Supabase PostgreSQL (health_profiles) + IndexedDB (airflowDB) + localStorage with optimistic UI updates.
 5. Key Files:
    - index.html: Main dashboard, 3D gauge, forecast chart, health profile modals.
-   - app.js: Main thread controller, multi-API fetcher, disease risk engine, Firebase auth, Page Visibility optimizations.
+   - app.js: Main thread controller, multi-API fetcher, disease risk engine, Supabase auth & sync, Page Visibility optimizations.
    - worker.js: Background thread for ML inference, diurnal trajectories, Haversine spatial transfer math, and SHAP factor attribution.
-   - styles.css: Glassmorphic design system, light mode default, yellow text stroke.
+   - styles.css: Glassmorphic design system, light mode default, yellow text stroke, Font Awesome .tip-icon styles.
    - unified_master_pipeline.py: Consolidated Python pipeline for dataset compilation and XGBoost model training.
+   - supabase_schema.sql: Supabase PostgreSQL table definition and Row-Level Security policies.
    - ml_model.json: Serialized ML model weights and CPCB breakpoints.
 6. When answering questions or proposing modifications, ensure you preserve the zero-server client-side execution model, maintain triple-layer storage fallbacks, and adhere to official CPCB breakpoint formulas.
 

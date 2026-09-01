@@ -223,12 +223,16 @@ SHAP decomposes the predicted AQI into individual positive (polluting) and negat
 
 AirFlow AI computes user-specific clinical risk scores ($0 - 100$) and generates tailored medical precautions across 6 clinical categories:
 
-1. **Respiratory (Asthma / COPD):** Bronchospasm risk, rescue inhaler protocols, PM2.5/O3/SO2 thresholds, CPAP advisories.
+1. **Respiratory (Asthma / COPD):** Bronchospasm risk, rescue inhaler protocols, HEPA air purifiers, N95 masks, PM2.5/O3/SO2 thresholds.
 2. **Cardiovascular & Metabolic:** Blood pressure spikes, myocardial stress, cardiologist triggers, NO2/CO vascular impacts.
-3. **Eye & Skin Irritation:** Corneal inflammation, rhinitis saline rinses, photochemical smog barrier creams.
+3. **Eye & Skin Irritation:** Corneal inflammation, UV sunglasses, skin moisturizers, rhinitis saline rinses.
 4. **Neurological & Cognitive:** Systemic neuro-inflammation, CO alarms, blood-brain barrier particulate penetration.
-5. **Maternal & Fetal Health:** Placental barrier transfer, preterm risk, stringent NO2/CO thresholds, OB-GYN tips.
+5. **Maternal & Fetal Health:** Placental barrier transfer, preterm risk, stringent NO2/CO thresholds (context-aware, automatically hidden when not pregnant).
 6. **Long-Term Cancer Risk:** IARC Group 1 carcinogen PM2.5 cumulative exposure, P100 respirators, annual spirometry.
+
+**Iconography & UX Design:**
+* **Font Awesome Vector Icons:** Replaces OS emojis with CSS-styled `.tip-icon` (rendered in `--aqi-accent`) to eliminate black box font rendering artifacts on Windows/Linux.
+* **Concise Actionable Guidance:** Max 3 high-priority, 1-sentence tips per card under clear "**What to do**" headings.
 
 ---
 
