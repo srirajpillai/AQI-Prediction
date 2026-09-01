@@ -409,7 +409,7 @@ Current systems exhibit several key gaps:
 * **NFR-01: Low Latency:** Complete client-side prediction, spatial transfer, and SHAP calculation shall execute in under **5 milliseconds** inside the Web Worker.
 * **NFR-02: High Availability & Offline Resilience:** The web app shall remain operational offline via PWA caching and local IndexedDB profile storage.
 * **NFR-03: Cross-Browser Compatibility:** The application shall function without discrepancies across Google Chrome, Mozilla Firefox, Apple Safari, Microsoft Edge, and mobile browsers.
-* **NFR-04: Security & Data Privacy:** User medical profiles shall be isolated using Firebase security rules (`auth.uid == userId`) and protected against Cross-Site Scripting (XSS) via HTML entity escaping.
+* **NFR-04: Security & Data Privacy:** User medical profiles shall be isolated using Supabase Row-Level Security (RLS) policies (`auth.uid() = uid`) on PostgreSQL and protected against Cross-Site Scripting (XSS) via HTML entity escaping.
 * **NFR-05: Thermal & Battery Efficiency:** Canvas animation loops and mouse tracking listeners shall automatically halt when the browser tab is hidden (`document.visibilityState === 'hidden'`).
 * **NFR-06: Scalability:** The zero-backend client-side architecture shall support unlimited concurrent users without server resource exhaustion.
 

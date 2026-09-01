@@ -126,7 +126,7 @@ version1/
 │       └── dataset_metadata.json    # JSON catalog describing dataset schemas & provenance
 │
 ├── ☁️ CONFIGURATION & CLOUD DEPLOYMENT
-│   ├── firestore.rules              # Firebase security rules (per-user UID isolated read/write)
+│   ├── supabase_schema.sql          # Supabase PostgreSQL schema & Row-Level Security (RLS) rules
 │   ├── vercel.json                  # Vercel deployment configuration with clean URLs & CORS headers
 │   ├── .gitignore                   # Git exclusion rules
 │   ├── .gitattributes              # Git LFS & line ending definitions
@@ -164,7 +164,7 @@ When saving or loading a user's health profile:
   1. Instant write to `localStorage.setItem('airflowProfile_' + uid, ...)` (0 ms latency).
   2. Asynchronous write to IndexedDB (`airflowDB` $\rightarrow$ `profiles` object store).
   3. Optimistic UI update: closes the modal, triggers success toast, and re-renders the dashboard immediately.
-  4. Background sync to Firebase Firestore (`db.collection('health_profiles').doc(uid).set(...)`) with 3 retry attempts and exponential backoff (500 ms, 1500 ms, 4500 ms).
+  4. Background sync to Supabase PostgreSQL (`health_profiles` table) with Row-Level Security (`auth.uid() = uid`).
 - **Load Strategy:**
   1. Checks Firestore cloud document first.
   2. Falls back to localStorage if offline or slow.
@@ -251,7 +251,7 @@ AirFlow AI computes user-specific clinical risk scores ($0 - 100$) and generates
 
 ## 9. 🔐 Authentication & State Synchronization
 
-- **Authentication Providers:** Google Sign-In and Email/Password via Firebase SDK.
+- **Authentication Providers:** Google Sign-In (OAuth) and Email/Password via Supabase SDK.
 - **First-Time Users:** The Health Profile Modal opens automatically to guide initial profile setup.
 - **Returning Users:** Profiles are pre-populated, the personalized risk engine renders instantly, and welcome banners greet the user.
 
@@ -292,7 +292,7 @@ Here is the complete context of the project:
 4. User Persistence: Triple-tier storage: Google Cloud Firestore + IndexedDB (airflowDB) + localStorage with optimistic UI updates.
 5. Key Files:
    - index.html: Main dashboard, 3D gauge, forecast chart, health profile modals.
-   - app.js: Main thread controller, multi-API fetcher, disease risk engine, Firebase auth, Page Visibility optimizations.
+   - app.js: Main thread controller, multi-API fetcher, disease risk engine, Supabase auth & sync, Page Visibility optimizations.
    - worker.js: Background thread for ML inference, diurnal trajectories, Haversine spatial transfer math, and SHAP factor attribution.
    - styles.css: Glassmorphic design system, light mode default, yellow text stroke.
    - unified_master_pipeline.py: Consolidated Python pipeline for dataset compilation and XGBoost model training.

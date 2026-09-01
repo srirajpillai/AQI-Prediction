@@ -106,7 +106,7 @@ AirFlow AI uses a **hybrid, lightweight data management architecture** split acr
 │   1. Historical Master  │   2. Real-Time Ingestion │   3. User & Session    │
 │      Datasets (Python)  │      & Caching (Browser) │      Persistence       │
 ├─────────────────────────┼──────────────────────────┼────────────────────────┤
-│ • 6 Global CSV sources  │ • Zero-SQL Live APIs     │ • Firebase Firestore   │
+│ • 6 Global CSV sources  │ • Zero-SQL Live APIs     │ • Supabase PostgreSQL  │
 │ • 1.24+ Million records │ • 5-min TTL Memory Cache │   (Cloud profiles)     │
 │ • Automated Data Pipeline│ • localStorage fallback  │ • Web Storage API      │
 │ • Serialized JSON models│ • Offline JSON store     │   (Last visited city)  │
@@ -131,7 +131,7 @@ AirFlow AI uses a **hybrid, lightweight data management architecture** split acr
 - The browser Web Worker loads this JSON directly into memory on initialization, acting as an **embedded, in-memory AI database**.
 
 ### 4. User Health Profile & Cloud Persistence
-- **Firebase Firestore Integration:** When users authenticate (Email or Google Sign-In), their custom Health Risk Profile (e.g. Asthma, Cardiac history, Elderly, Activity level) is synced to Google Cloud Firestore (`db.collection('users')`).
+- **Supabase PostgreSQL Integration:** When users authenticate (Email or Google Sign-In), their custom Health Risk Profile (e.g. Asthma, Cardiac history, Elderly, Activity level) is synced to Supabase (`health_profiles` table) with Row-Level Security isolation.
 - **Browser `localStorage` Fallback:** For unauthenticated or guest users, settings such as the last searched city (`airflowLastCity`), selected theme (dark/light), and active health parameters are stored locally in the browser's persistent key-value store.
 
 ---
@@ -163,7 +163,7 @@ version1/
 │   └── datasets/                    # Directory holding raw & compiled air quality data (CSVs)
 │
 ├── ☁️ CONFIGURATION & CLOUD DEPLOYMENT
-│   ├── firestore.rules              # Firebase security rules (per-user isolated storage)
+│   ├── supabase_schema.sql          # Supabase PostgreSQL schema & Row-Level Security (RLS) rules
 │   ├── vercel.json                  # Vercel deployment configuration with clean URLs & CORS headers
 │   └── .gitignore                   # Git exclusion rules
 │

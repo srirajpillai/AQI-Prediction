@@ -130,7 +130,7 @@ version1/
 │       └── dataset_metadata.json    # JSON catalog describing dataset schemas & provenance
 │
 ├── ☁️ CONFIGURATION & DEPLOYMENT
-│   ├── firestore.rules              # Firebase security rules (per-user isolated storage)
+│   ├── supabase_schema.sql          # Supabase PostgreSQL schema & Row-Level Security (RLS) rules
 │   ├── vercel.json                  # Vercel deployment configuration with clean URLs & CORS headers
 │   ├── .gitignore                   # Git exclusion rules
 │   ├── .gitattributes              # Git LFS & line ending definitions
