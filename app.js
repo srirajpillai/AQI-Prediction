@@ -16,8 +16,8 @@
 
     // ===== Supabase Configuration & State =====
     // Supabase project URL and anon key (safe to expose in frontend)
-    const SUPABASE_URL  = 'https://your-project-id.supabase.co';   // TODO: replace with your project URL
-    const SUPABASE_ANON = 'your-anon-public-key';                   // TODO: replace with your anon key
+    const SUPABASE_URL = 'https://vgokjhqahrbyfuywsuky.supabase.co';   // TODO: replace with your project URL
+    const SUPABASE_ANON = 'sb_publishable_HOHkMeDxEjDTtOeocUiCkw_XruZCRhu';                   // TODO: replace with your anon key
 
     let _supabase = null;
     function getSupabase() {
@@ -67,7 +67,7 @@
                 tx.oncomplete = () => resolve(true);
                 tx.onerror = () => resolve(false);
             });
-        } catch(e) { return false; }
+        } catch (e) { return false; }
     }
     async function loadFromIDB(uid) {
         try {
@@ -79,7 +79,7 @@
                 req.onsuccess = () => resolve(req.result || null);
                 req.onerror = () => resolve(null);
             });
-        } catch(e) { return null; }
+        } catch (e) { return null; }
     }
 
     function escapeHTML(str) {
@@ -97,7 +97,7 @@
     }
 
     function aqiColor(aqi) {
-        if (aqi <= 50)  return '#00e676';
+        if (aqi <= 50) return '#00e676';
         if (aqi <= 100) return '#ffeb3b';
         if (aqi <= 150) return '#ff9800';
         if (aqi <= 200) return '#f44336';
@@ -106,16 +106,16 @@
     }
 
     function getTheme(aqi) {
-        if (aqi <= 50)  return { status: 'Good',           accent: '#00e676' };
-        if (aqi <= 100) return { status: 'Moderate',       accent: '#ffeb3b' };
+        if (aqi <= 50) return { status: 'Good', accent: '#00e676' };
+        if (aqi <= 100) return { status: 'Moderate', accent: '#ffeb3b' };
         if (aqi <= 150) return { status: 'Unhealthy for Sensitive Groups', accent: '#ff9800' };
-        if (aqi <= 200) return { status: 'Unhealthy',      accent: '#f44336' };
+        if (aqi <= 200) return { status: 'Unhealthy', accent: '#f44336' };
         if (aqi <= 300) return { status: 'Very Unhealthy', accent: '#9c27b0' };
         return { status: 'Hazardous', accent: '#880e4f' };
     }
 
     function getLevel(aqi) {
-        if (aqi <= 50)  return 'good';
+        if (aqi <= 50) return 'good';
         if (aqi <= 100) return 'moderate';
         if (aqi <= 150) return 'unhealthySG';
         if (aqi <= 200) return 'unhealthy';
@@ -432,7 +432,7 @@
     async function fetchAQI(city) {
         try {
             const meteoUrl = `${METEO_AIR_QUALITY}?latitude=${city.lat}&longitude=${city.lon}&current=us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&hourly=us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide&timezone=auto&forecast_days=2`;
-            
+
             // Fire Open-Meteo and supplemental APIs in parallel
             const [meteoData, supplementalAqi] = await Promise.all([
                 cachedFetch(meteoUrl),
@@ -451,11 +451,11 @@
                 const pollutants = {
                     pm25: c.pm2_5 != null ? +c.pm2_5 : 25,
                     pm10: c.pm10 != null ? +c.pm10 : 45,
-                    o3:   c.ozone != null ? +c.ozone : 70,
-                    no2:  c.nitrogen_dioxide != null ? +c.nitrogen_dioxide : 20,
-                    so2:  c.sulphur_dioxide != null ? +c.sulphur_dioxide : 10,
-                    co:   c.carbon_monoxide != null ? +(c.carbon_monoxide / 1145).toFixed(3) : 0.5,
-                    nh3:  12.0
+                    o3: c.ozone != null ? +c.ozone : 70,
+                    no2: c.nitrogen_dioxide != null ? +c.nitrogen_dioxide : 20,
+                    so2: c.sulphur_dioxide != null ? +c.sulphur_dioxide : 10,
+                    co: c.carbon_monoxide != null ? +(c.carbon_monoxide / 1145).toFixed(3) : 0.5,
+                    nh3: 12.0
                 };
 
                 // Use Open-Meteo's scientifically-computed US AQI as primary
@@ -481,10 +481,10 @@
                 const wx = lastWeatherData || await fetchWeather(city.lat, city.lon);
                 const weather = {
                     temperature: wx?.temperature || 25,
-                    humidity:    wx?.humidity    || 50,
-                    pressure:    wx?.pressure    || 1013,
-                    windSpeed:   wx?.windSpeed   || 10,
-                    windDir:     wx?.windDir     || 0
+                    humidity: wx?.humidity || 50,
+                    pressure: wx?.pressure || 1013,
+                    windSpeed: wx?.windSpeed || 10,
+                    windDir: wx?.windDir || 0
                 };
 
                 // Run ML sub-index breakdown in worker (for pollutant panel & dominant pollutant)
@@ -511,19 +511,19 @@
                     iaqi: {
                         pm25: { v: pollutants.pm25 },
                         pm10: { v: pollutants.pm10 },
-                        o3:   { v: pollutants.o3 },
-                        no2:  { v: pollutants.no2 },
-                        so2:  { v: pollutants.so2 },
-                        co:   { v: pollutants.co }
+                        o3: { v: pollutants.o3 },
+                        no2: { v: pollutants.no2 },
+                        so2: { v: pollutants.so2 },
+                        co: { v: pollutants.co }
                     },
                     time: { s: (c.time || new Date().toISOString()).replace('T', ' ') },
                     _source: sourceLabel,
                     _sourceCount: sourceCount,
                     _meteoAqi: rawUsAqi,
                     _supplementalAqi: supplementalAqi,
-                    _hourlyAqi:   meteoData.hourly?.us_aqi   || null,
-                    _hourlyTimes: meteoData.hourly?.time      || null,
-                    _hourlyPm25:  meteoData.hourly?.pm2_5    || null
+                    _hourlyAqi: meteoData.hourly?.us_aqi || null,
+                    _hourlyTimes: meteoData.hourly?.time || null,
+                    _hourlyPm25: meteoData.hourly?.pm2_5 || null
                 };
                 lastAQIData = mappedData;
                 updateDisplay(mappedData);
@@ -552,12 +552,12 @@
                     if (pm25 && pm25.latest && pm25.latest.value != null) {
                         const pm = pm25.latest.value;
                         // Convert PM2.5 µg/m³ → US AQI (USEPA breakpoints)
-                        if (pm <= 12) return Math.round((50/12)*pm);
-                        if (pm <= 35.4) return Math.round(50 + (50/23.4)*(pm-12));
-                        if (pm <= 55.4) return Math.round(100 + (50/20)*(pm-35.4));
-                        if (pm <= 150.4) return Math.round(150 + (50/95)*(pm-55.4));
-                        if (pm <= 250.4) return Math.round(200 + (100/100)*(pm-150.4));
-                        return Math.min(500, Math.round(300 + (200/149.6)*(pm-250.4)));
+                        if (pm <= 12) return Math.round((50 / 12) * pm);
+                        if (pm <= 35.4) return Math.round(50 + (50 / 23.4) * (pm - 12));
+                        if (pm <= 55.4) return Math.round(100 + (50 / 20) * (pm - 35.4));
+                        if (pm <= 150.4) return Math.round(150 + (50 / 95) * (pm - 55.4));
+                        if (pm <= 250.4) return Math.round(200 + (100 / 100) * (pm - 150.4));
+                        return Math.min(500, Math.round(300 + (200 / 149.6) * (pm - 250.4)));
                     }
                     return null;
                 })
@@ -571,13 +571,13 @@
     // Slim fallback: CPCB sub-index via inline breakpoint tables (no worker dependency)
     function _quickSubIndexFallback(pollutants) {
         const bps = {
-            'PM2.5': [[0,30,0,50],[30,60,51,100],[60,90,101,200],[90,120,201,300],[120,250,301,400],[250,500,401,500]],
-            'PM10':  [[0,50,0,50],[50,100,51,100],[100,250,101,200],[250,350,201,300],[350,430,301,400],[430,600,401,500]],
-            'NO2':   [[0,40,0,50],[40,80,51,100],[80,180,101,200],[180,280,201,300],[280,400,301,400],[400,800,401,500]],
-            'SO2':   [[0,40,0,50],[40,80,51,100],[80,380,101,200],[380,800,201,300],[800,1600,301,400],[1600,2000,401,500]],
-            'CO':    [[0,1,0,50],[1,2,51,100],[2,10,101,200],[10,17,201,300],[17,34,301,400],[34,50,401,500]],
-            'O3':    [[0,50,0,50],[50,100,51,100],[100,168,101,200],[168,208,201,300],[208,748,301,400],[748,1000,401,500]],
-            'NH3':   [[0,200,0,50],[200,400,51,100],[400,800,101,200],[800,1200,201,300],[1200,1800,301,400],[1800,2400,401,500]]
+            'PM2.5': [[0, 30, 0, 50], [30, 60, 51, 100], [60, 90, 101, 200], [90, 120, 201, 300], [120, 250, 301, 400], [250, 500, 401, 500]],
+            'PM10': [[0, 50, 0, 50], [50, 100, 51, 100], [100, 250, 101, 200], [250, 350, 201, 300], [350, 430, 301, 400], [430, 600, 401, 500]],
+            'NO2': [[0, 40, 0, 50], [40, 80, 51, 100], [80, 180, 101, 200], [180, 280, 201, 300], [280, 400, 301, 400], [400, 800, 401, 500]],
+            'SO2': [[0, 40, 0, 50], [40, 80, 51, 100], [80, 380, 101, 200], [380, 800, 201, 300], [800, 1600, 301, 400], [1600, 2000, 401, 500]],
+            'CO': [[0, 1, 0, 50], [1, 2, 51, 100], [2, 10, 101, 200], [10, 17, 201, 300], [17, 34, 301, 400], [34, 50, 401, 500]],
+            'O3': [[0, 50, 0, 50], [50, 100, 51, 100], [100, 168, 101, 200], [168, 208, 201, 300], [208, 748, 301, 400], [748, 1000, 401, 500]],
+            'NH3': [[0, 200, 0, 50], [200, 400, 51, 100], [400, 800, 101, 200], [800, 1200, 201, 300], [1200, 1800, 301, 400], [1800, 2400, 401, 500]]
         };
         const rawMap = { 'PM2.5': pollutants.pm25, 'PM10': pollutants.pm10, 'NO2': pollutants.no2, 'SO2': pollutants.so2, 'CO': pollutants.co, 'O3': pollutants.o3, 'NH3': pollutants.nh3 };
         const units = { 'PM2.5': 'µg/m³', 'PM10': 'µg/m³', 'NO2': 'µg/m³', 'SO2': 'µg/m³', 'CO': 'ppm', 'O3': 'µg/m³', 'NH3': 'µg/m³' };
@@ -632,8 +632,8 @@
         const refreshTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
         const sourceLabel = data._source === 'multi-source' ? 'Multi-Source'
             : data._source === 'open-meteo' ? 'Open-Meteo'
-            : data._source === 'fallback'   ? 'Estimate'
-            : 'WAQI+OpenAQ';
+                : data._source === 'fallback' ? 'Estimate'
+                    : 'WAQI+OpenAQ';
         if (els.updateTime) {
             els.updateTime.textContent = `Last refreshed: ${refreshTime} · ${sourceLabel}`;
         }
@@ -662,7 +662,7 @@
             let multiplier = 1.0;
             const c = userHealthProfile.conditions || {};
             const activeConditions = [];
-            
+
             if (c.asthma) { multiplier *= 1.45; activeConditions.push('Asthma'); }
             if (c.copd) { multiplier *= 1.5; activeConditions.push('COPD'); }
             if (c.heart) { multiplier *= 1.35; activeConditions.push('Heart Condition'); }
@@ -688,8 +688,8 @@
             }
 
             pText = `<strong><i class="fas fa-user-shield" style="color:var(--aqi-accent)"></i> Personalized Risk (${personalLevel.toUpperCase()} — Adjusted AQI: ${personalAqi}):</strong> ` +
-                    HEALTH_ADVISORIES[personalLevel].text + conditionAdvice;
-            
+                HEALTH_ADVISORIES[personalLevel].text + conditionAdvice;
+
             pTags.push('Personalized Profile');
             if (multiplier > 1.25) pTags.push('High Sensitivity');
         }
@@ -713,15 +713,15 @@
 
     // Auth-gated UI: shows/hides personalized sections based on login state
     function _updateAuthGatedUI() {
-        const guestPrompt    = $('guestAuthPrompt');
+        const guestPrompt = $('guestAuthPrompt');
         const diseaseSection = $('diseaseRiskSection');
         if (currentUser) {
             // Logged in
-            if (guestPrompt)    guestPrompt.style.display    = 'none';
+            if (guestPrompt) guestPrompt.style.display = 'none';
             // diseaseRiskSection is controlled by renderDiseaseRiskPanel
         } else {
             // Guest — show sign-in prompt, hide personalized sections
-            if (guestPrompt)    guestPrompt.style.display    = '';
+            if (guestPrompt) guestPrompt.style.display = '';
             if (diseaseSection) diseaseSection.style.display = 'none';
         }
     }
@@ -743,15 +743,15 @@
                 score += Math.min((p.so2 / 80) * 10, 10);
                 // Health modifiers
                 const c = h.conditions || {};
-                if (c.asthma)     score *= 1.55;
-                if (c.copd)       score *= 1.6;
+                if (c.asthma) score *= 1.55;
+                if (c.copd) score *= 1.6;
                 if (c.bronchitis) score *= 1.4;
-                if (c.rhinitis)   score *= 1.2;
-                if (c.child)      score *= 1.25;
-                if (c.elderly)    score *= 1.2;
+                if (c.rhinitis) score *= 1.2;
+                if (c.child) score *= 1.25;
+                if (c.elderly) score *= 1.2;
                 if (h.smoking === 'active') score *= 1.35;
-                if (h.smoking === 'ex')     score *= 1.15;
-                if (h.activity === 'high')  score *= 1.25;
+                if (h.smoking === 'ex') score *= 1.15;
+                if (h.activity === 'high') score *= 1.25;
                 score += Math.min(parseInt(h.outdoorHours || 3) * 2, 16);
                 return Math.min(Math.round(score), 100);
             },
@@ -767,15 +767,15 @@
                     tips.push('Avoid areas near traffic, construction sites, or industrial zones today.');
                 }
                 if (c.asthma) tips.push('🫁 Asthma: Carry your rescue inhaler at all times. Use preventive inhaler before any outdoor activity.');
-                if (c.copd)   tips.push('🌬️ COPD: Your lung reserve is reduced — contact your doctor if breathing worsens.');
+                if (c.copd) tips.push('🌬️ COPD: Your lung reserve is reduced — contact your doctor if breathing worsens.');
                 if (c.bronchitis) tips.push('🤧 Bronchitis: Increased mucus production likely. Stay hydrated and use a steam inhaler.');
                 if (c.apnea) tips.push('😴 Sleep Apnea: High AQI can worsen nocturnal hypoxia — ensure your CPAP filter is clean.');
                 if (c.rhinitis) tips.push('🌿 Allergic Rhinitis: Take antihistamines prophylactically and use nasal saline rinse.');
                 if (p.pm25 > 35) tips.push(`⚠️ PM2.5 is ${p.pm25.toFixed(1)} µg/m³ — ${p.pm25 > 55 ? 'very dangerous' : 'elevated'}. Minimize all outdoor exposure.`);
-                if (p.o3 > 70)  tips.push(`☀️ Ozone at ${p.o3.toFixed(0)} µg/m³ — avoid intense outdoor exercise between 10am–6pm when ozone peaks.`);
+                if (p.o3 > 70) tips.push(`☀️ Ozone at ${p.o3.toFixed(0)} µg/m³ — avoid intense outdoor exercise between 10am–6pm when ozone peaks.`);
                 if (p.so2 > 20) tips.push('🏭 SO₂ is elevated — avoid breathing deeply near roadsides or smokestacks.');
                 if (h.smoking === 'active') tips.push('🚬 Active smoking + PM2.5 exposure multiplies lung damage — consider cessation now.');
-                if (c.child)   tips.push('👶 Children: Keep indoors during recess/outdoor play. Use indoor ventilation systems.');
+                if (c.child) tips.push('👶 Children: Keep indoors during recess/outdoor play. Use indoor ventilation systems.');
                 if (c.elderly) tips.push('👴 Elderly: Immune response to pollutants is reduced — extra caution for 48h post-exposure.');
                 if (h.activity === 'high') tips.push('🏃 High activity: Lungs at 10× ventilation — pollutant intake multiplied. Switch to indoor exercise.');
                 return tips;
@@ -793,13 +793,13 @@
                 score += Math.min((p.no2 / 200) * 20, 20);
                 score += Math.min((p.co / 5) * 20, 20);
                 const c = h.conditions || {};
-                if (c.heart)        score *= 1.65;
+                if (c.heart) score *= 1.65;
                 if (c.hypertension) score *= 1.45;
-                if (c.diabetes)     score *= 1.35;
-                if (c.stroke)       score *= 1.4;
-                if (c.elderly)      score *= 1.25;
+                if (c.diabetes) score *= 1.35;
+                if (c.stroke) score *= 1.4;
+                if (c.elderly) score *= 1.25;
                 if (h.smoking === 'active') score *= 1.4;
-                if (h.activity === 'high')  score *= 1.2;
+                if (h.activity === 'high') score *= 1.2;
                 return Math.min(Math.round(score), 100);
             },
             precautions(score, p, h) {
@@ -865,7 +865,7 @@
                 const c = h.conditions || {};
                 if (c.stroke) score *= 1.5;
                 if (c.elderly) score *= 1.3;
-                if (c.child)   score *= 1.25;
+                if (c.child) score *= 1.25;
                 if (h.smoking === 'active') score *= 1.2;
                 return Math.min(Math.round(score), 100);
             },
@@ -892,7 +892,7 @@
             description: 'Risk to maternal health and fetal development from prolonged pollutant exposure.',
             compute(p, h) {
                 const c = h.conditions || {};
-                if (!c.pregnant && parseInt(h.age||30) > 50) return 0;
+                if (!c.pregnant && parseInt(h.age || 30) > 50) return 0;
                 let score = 0;
                 score += Math.min((p.pm25 / 55) * 45, 45);
                 score += Math.min((p.no2 / 200) * 30, 30);
@@ -931,7 +931,7 @@
                 score += Math.min((p.no2 / 200) * 20, 20); // NO2 as benzene proxy
                 score += Math.min(parseInt(h.outdoorHours || 3) * 2.5, 20);
                 if (h.smoking === 'active') score *= 1.8;
-                if (h.smoking === 'ex')     score *= 1.3;
+                if (h.smoking === 'ex') score *= 1.3;
                 if (c && c.immuno) score *= 1.25;
                 return Math.min(Math.round(score), 100);
             },
@@ -969,10 +969,10 @@
         const p = {
             pm25: aqiData.iaqi?.pm25?.v || 0,
             pm10: aqiData.iaqi?.pm10?.v || 0,
-            o3:   aqiData.iaqi?.o3?.v   || 0,
-            no2:  aqiData.iaqi?.no2?.v  || 0,
-            so2:  aqiData.iaqi?.so2?.v  || 0,
-            co:   aqiData.iaqi?.co?.v   || 0,
+            o3: aqiData.iaqi?.o3?.v || 0,
+            no2: aqiData.iaqi?.no2?.v || 0,
+            so2: aqiData.iaqi?.so2?.v || 0,
+            co: aqiData.iaqi?.co?.v || 0,
         };
         return RISK_CATEGORIES.map(cat => {
             // Workaround: c variable needed inside longterm_cancer compute
@@ -1004,12 +1004,12 @@
             const conditionKeys = Object.entries(healthProfile.conditions || {})
                 .filter(([, v]) => v)
                 .map(([k]) => k.toLowerCase());
-            const conditionEmojis = ['🫁','🌬️','🤧','😴','🌿','💊','🩺','💉','🧠','🩸','🔥','👶','👴','🤱','🚨','🚗','🏭','🚬','🏃','⚗️','🛡️'];
+            const conditionEmojis = ['🫁', '🌬️', '🤧', '😴', '🌿', '💊', '🩺', '💉', '🧠', '🩸', '🔥', '👶', '👴', '🤱', '🚨', '🚗', '🏭', '🚬', '🏃', '⚗️', '🛡️'];
             // Precautions explicitly tied to a condition contain an emoji marker or the condition name
             const conditionPrecs = r.precautions.filter(tip => {
                 const lower = tip.toLowerCase();
                 return conditionKeys.some(k => lower.includes(k)) ||
-                       conditionEmojis.some(e => tip.startsWith(e));
+                    conditionEmojis.some(e => tip.startsWith(e));
             });
             // General score-based precautions (no leading emoji from condition list)
             const generalPrecs = r.precautions.filter(tip => !conditionEmojis.some(e => tip.startsWith(e)));
@@ -1079,16 +1079,16 @@
         input.addEventListener('input', () => {
             clearTimeout(travelSearchTimer);
             const q = input.value.trim();
-            if (q.length < 2) { if(dropdown) dropdown.innerHTML = ''; if(dropdown) dropdown.style.display='none'; return; }
+            if (q.length < 2) { if (dropdown) dropdown.innerHTML = ''; if (dropdown) dropdown.style.display = 'none'; return; }
             travelSearchTimer = setTimeout(async () => {
                 try {
                     const url = `${GEOCODE_BASE}?name=${encodeURIComponent(q)}&count=5&language=en&format=json`;
                     const data = await cachedFetch(url);
                     const results = data.results || [];
-                    if (!results.length || !dropdown) { dropdown.style.display='none'; return; }
+                    if (!results.length || !dropdown) { dropdown.style.display = 'none'; return; }
                     dropdown.innerHTML = results.map(r =>
-                        `<div class="travel-dd-item" data-lat="${r.latitude}" data-lon="${r.longitude}" data-name="${escapeHTML(r.name)}" data-region="${escapeHTML(r.country||'')}">
-                            <i class="fas fa-map-marker-alt"></i> <strong>${escapeHTML(r.name)}</strong> <span>${escapeHTML(r.admin1||'')}${r.admin1?', ':''}${escapeHTML(r.country||'')}</span>
+                        `<div class="travel-dd-item" data-lat="${r.latitude}" data-lon="${r.longitude}" data-name="${escapeHTML(r.name)}" data-region="${escapeHTML(r.country || '')}">
+                            <i class="fas fa-map-marker-alt"></i> <strong>${escapeHTML(r.name)}</strong> <span>${escapeHTML(r.admin1 || '')}${r.admin1 ? ', ' : ''}${escapeHTML(r.country || '')}</span>
                         </div>`
                     ).join('');
                     dropdown.style.display = 'block';
@@ -1099,7 +1099,7 @@
                             dropdown.style.display = 'none';
                         });
                     });
-                } catch(e) { /* ignore */ }
+                } catch (e) { /* ignore */ }
             }, 400);
         });
 
@@ -1118,7 +1118,7 @@
                 if (!destCity) { if (window._showToast) window._showToast('Please select a city from the dropdown.', 'warn'); return; }
 
                 const duration = parseInt($('travelDuration')?.value || 3);
-                const purpose  = $('travelPurpose')?.value || 'leisure';
+                const purpose = $('travelPurpose')?.value || 'leisure';
 
                 checkBtn.disabled = true;
                 checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
@@ -1133,19 +1133,19 @@
                         iaqi: {
                             pm25: { v: dc.pm2_5 || 0 },
                             pm10: { v: dc.pm10 || 0 },
-                            o3:   { v: dc.ozone || 0 },
-                            no2:  { v: dc.nitrogen_dioxide || 0 },
-                            so2:  { v: dc.sulphur_dioxide || 0 },
-                            co:   { v: (dc.carbon_monoxide || 0) / 1145 }
+                            o3: { v: dc.ozone || 0 },
+                            no2: { v: dc.nitrogen_dioxide || 0 },
+                            so2: { v: dc.sulphur_dioxide || 0 },
+                            co: { v: (dc.carbon_monoxide || 0) / 1145 }
                         }
                     };
 
                     renderTravelResult(resultEl, {
                         origin: { name: currentCity.name, aqiData: lastAQIData || { aqi: 50, iaqi: {} } },
-                        dest:   { name: destCity.name, aqiData: destAQI },
+                        dest: { name: destCity.name, aqiData: destAQI },
                         duration, purpose, profile: userHealthProfile
                     });
-                } catch(e) {
+                } catch (e) {
                     if (resultEl) resultEl.innerHTML = '<div class="travel-error"><i class="fas fa-triangle-exclamation"></i> Could not fetch destination AQI data. Check your connection.</div>';
                     if (resultEl) resultEl.style.display = '';
                 } finally {
@@ -1159,13 +1159,13 @@
     function renderTravelResult(el, { origin, dest, duration, purpose, profile }) {
         if (!el) return;
         const originRisks = computeDiseaseRisk(origin.aqiData, profile);
-        const destRisks   = computeDiseaseRisk(dest.aqiData,   profile);
-        const originMax   = originRisks.length ? Math.max(...originRisks.map(r => r.score)) : 0;
-        const destMax     = destRisks.length   ? Math.max(...destRisks.map(r => r.score))   : 0;
+        const destRisks = computeDiseaseRisk(dest.aqiData, profile);
+        const originMax = originRisks.length ? Math.max(...originRisks.map(r => r.score)) : 0;
+        const destMax = destRisks.length ? Math.max(...destRisks.map(r => r.score)) : 0;
 
-        const destAqi     = dest.aqiData.aqi;
-        const destTheme   = getTheme(destAqi);
-        const destLevel   = getLevel(destAqi);
+        const destAqi = dest.aqiData.aqi;
+        const destTheme = getTheme(destAqi);
+        const destLevel = getLevel(destAqi);
 
         // Purpose modifiers
         const purposeRiskMultiplier = { leisure: 1, work: 1.1, exercise: 1.35, medical: 0.9 };
@@ -1184,7 +1184,7 @@
         // Precautions for the trip
         const allPrecs = destRisks.flatMap(r => r.precautions).slice(0, 5);
         if (purpose === 'exercise') allPrecs.unshift('Outdoor exercise at destination — wear N95 mask and check hourly forecast before going out.');
-        if (purpose === 'medical')  allPrecs.unshift('Medical travel — ensure treatment facility has clean air filtration. Carry rescue medication.');
+        if (purpose === 'medical') allPrecs.unshift('Medical travel — ensure treatment facility has clean air filtration. Carry rescue medication.');
         if (duration >= 7) allPrecs.push(`Extended stay (${duration} days) — consider portable HEPA air purifier for accommodation.`);
 
         el.innerHTML = `
@@ -1635,7 +1635,7 @@
     // ===== Forecast Chart =====
     async function buildForecastChartData(baseAqi, data) {
         // Re-use hourly pm2_5 already fetched by fetchAQI (same URL, hits cache) instead of a separate request
-        const hourlyPm25  = data._hourlyPm25;
+        const hourlyPm25 = data._hourlyPm25;
         const hourlyTimes = data._hourlyTimes;
 
         if (hourlyPm25 && hourlyPm25.length > 0 && hourlyTimes) {
@@ -2224,15 +2224,15 @@
     let _lastNotifTime = 0;   // epoch ms of last AQI-level notification
     let _lastPollNotif = {};  // key: pollutant name → epoch ms of last alert
     const NOTIF_COOLDOWN_MS = 30 * 60 * 1000; // 30-min cooldown per category
-    const POLL_COOLDOWN_MS  = 60 * 60 * 1000; // 60-min cooldown per pollutant
+    const POLL_COOLDOWN_MS = 60 * 60 * 1000; // 60-min cooldown per pollutant
 
     // WHO / health threshold limits (raw concentrations)
     const POLL_THRESHOLDS = [
-        { key: 'pm25', label: 'PM2.5', unit: 'µg/m³', limit: 55,  icon: '🌫️', msg: (v) => `PM2.5 at ${v} µg/m³ exceeds WHO safe limit (55 µg/m³). Use N95 mask outdoors.` },
-        { key: 'pm10', label: 'PM10',  unit: 'µg/m³', limit: 100, icon: '💨', msg: (v) => `PM10 elevated at ${v} µg/m³. Sensitive groups should stay indoors.` },
-        { key: 'no2',  label: 'NO₂',   unit: 'µg/m³', limit: 200, icon: '🏭', msg: (v) => `NO₂ spike: ${v} µg/m³. Ventilate indoor spaces and avoid roadside exposure.` },
-        { key: 'o3',   label: 'O₃',    unit: 'µg/m³', limit: 100, icon: '☀️', msg: (v) => `Ozone alert: ${v} µg/m³. Avoid strenuous outdoor exercise mid-day.` },
-        { key: 'so2',  label: 'SO₂',   unit: 'µg/m³', limit: 80,  icon: '🔥', msg: (v) => `SO₂ at ${v} µg/m³. Avoid outdoor activity near industrial zones.` },
+        { key: 'pm25', label: 'PM2.5', unit: 'µg/m³', limit: 55, icon: '🌫️', msg: (v) => `PM2.5 at ${v} µg/m³ exceeds WHO safe limit (55 µg/m³). Use N95 mask outdoors.` },
+        { key: 'pm10', label: 'PM10', unit: 'µg/m³', limit: 100, icon: '💨', msg: (v) => `PM10 elevated at ${v} µg/m³. Sensitive groups should stay indoors.` },
+        { key: 'no2', label: 'NO₂', unit: 'µg/m³', limit: 200, icon: '🏭', msg: (v) => `NO₂ spike: ${v} µg/m³. Ventilate indoor spaces and avoid roadside exposure.` },
+        { key: 'o3', label: 'O₃', unit: 'µg/m³', limit: 100, icon: '☀️', msg: (v) => `Ozone alert: ${v} µg/m³. Avoid strenuous outdoor exercise mid-day.` },
+        { key: 'so2', label: 'SO₂', unit: 'µg/m³', limit: 80, icon: '🔥', msg: (v) => `SO₂ at ${v} µg/m³. Avoid outdoor activity near industrial zones.` },
     ];
 
     function _canNotify() {
@@ -2251,7 +2251,7 @@
                 silent: false,
             });
             n.onclick = () => { window.focus(); n.close(); };
-        } catch(e) { console.warn('Notification send failed:', e); }
+        } catch (e) { console.warn('Notification send failed:', e); }
     }
 
     function _updateBellState(perm) {
@@ -2304,11 +2304,11 @@
 
     function triggerAQINotification(data) {
         if (!('Notification' in window)) return;
-        const now   = Date.now();
-        const aqi   = data.aqi;
+        const now = Date.now();
+        const aqi = data.aqi;
         const level = getLevel(aqi);
         const theme = getTheme(aqi);
-        const city  = currentCity.name;
+        const city = currentCity.name;
         const profile = userHealthProfile || {};
         const conds = profile.conditions || {};
         const userName = profile.name ? profile.name.split(' ')[0] : null;
@@ -2340,30 +2340,30 @@
             if (conds.immuno) {
                 reasons.push(`Immunocompromised individuals face heightened infection risk`);
             }
-            const reasonStr = reasons.length > 0 ? ' Reason: ' + reasons.slice(0,2).join('; ') + '.' : '';
+            const reasonStr = reasons.length > 0 ? ' Reason: ' + reasons.slice(0, 2).join('; ') + '.' : '';
             return baseText + reasonStr;
         }
 
         // ── 1. AQI level-change notification (30-min cooldown) ──
-        const levelChanged    = level !== _lastNotifLevel;
+        const levelChanged = level !== _lastNotifLevel;
         const cooldownExpired = (now - _lastNotifTime) > NOTIF_COOLDOWN_MS;
-        const isHighRisk      = ['unhealthySG','unhealthy','veryUnhealthy','hazardous'].includes(level);
-        const isMediumRisk    = level === 'moderate';
+        const isHighRisk = ['unhealthySG', 'unhealthy', 'veryUnhealthy', 'hazardous'].includes(level);
+        const isMediumRisk = level === 'moderate';
 
         if ((levelChanged || (cooldownExpired && isHighRisk)) && Notification.permission === 'granted') {
-            const adv   = HEALTH_ADVISORIES[level];
+            const adv = HEALTH_ADVISORIES[level];
             const greeting = userName ? `${userName}, ` : '';
             let title = `${greeting}AQI ${theme.status} in ${city} (${aqi})`;
-            let body  = _buildPersonalizedReason(adv.text);
+            let body = _buildPersonalizedReason(adv.text);
 
             // Add precaution hint based on profile
             if (profile.activity === 'high' && isHighRisk) body += ' 🏃 Avoid outdoor workouts today.';
-            if ((conds.asthma || conds.copd) && isHighRisk)  body += ' Use your inhaler if needed.';
-            if (conds.heart && isHighRisk)                    body += ' Take extra rest indoors.';
+            if ((conds.asthma || conds.copd) && isHighRisk) body += ' Use your inhaler if needed.';
+            if (conds.heart && isHighRisk) body += ' Take extra rest indoors.';
 
             _sendOSNotification(title, body);
             _lastNotifLevel = level;
-            _lastNotifTime  = now;
+            _lastNotifTime = now;
         }
 
         // ── 2. Personalized pollutant threshold alerts ──
@@ -2375,15 +2375,15 @@
 
                 // Lower threshold for high-risk groups
                 let effectiveLimit = limit;
-                if (key === 'pm25'  && (conds.asthma || conds.copd || conds.heart)) effectiveLimit = Math.floor(limit * 0.6);
-                if (key === 'no2'   && (conds.heart  || conds.hypertension))         effectiveLimit = Math.floor(limit * 0.65);
-                if (key === 'o3'    && (conds.asthma || profile.activity === 'high')) effectiveLimit = Math.floor(limit * 0.7);
+                if (key === 'pm25' && (conds.asthma || conds.copd || conds.heart)) effectiveLimit = Math.floor(limit * 0.6);
+                if (key === 'no2' && (conds.heart || conds.hypertension)) effectiveLimit = Math.floor(limit * 0.65);
+                if (key === 'o3' && (conds.asthma || profile.activity === 'high')) effectiveLimit = Math.floor(limit * 0.7);
 
                 if (raw > effectiveLimit && (now - lastT) > POLL_COOLDOWN_MS) {
                     const greeting = userName ? `${userName} — ` : '';
-                    const baseMsg  = msg(typeof raw === 'number' ? raw.toFixed(1) : raw);
-                    const extra    = (key === 'pm25' && conds.asthma) ? ' Keep inhaler accessible.' :
-                                    (key === 'no2'  && conds.heart)   ? ' Limit roadside exposure.' : '';
+                    const baseMsg = msg(typeof raw === 'number' ? raw.toFixed(1) : raw);
+                    const extra = (key === 'pm25' && conds.asthma) ? ' Keep inhaler accessible.' :
+                        (key === 'no2' && conds.heart) ? ' Limit roadside exposure.' : '';
                     _sendOSNotification(`${icon} ${greeting}${label} Alert — ${city}`, baseMsg + extra);
                     _lastPollNotif[key] = now;
                 }
@@ -2391,12 +2391,12 @@
         }
 
         // ── 3. In-app banner for very unhealthy / hazardous ──
-        const banner      = document.getElementById('eventAlertBanner');
+        const banner = document.getElementById('eventAlertBanner');
         const bannerTitle = document.getElementById('eventAlertTitle');
-        const bannerDesc  = document.getElementById('eventAlertDesc');
+        const bannerDesc = document.getElementById('eventAlertDesc');
         if (banner && (isHighRisk || isMediumRisk) && levelChanged) {
             if (bannerTitle) bannerTitle.textContent = `AQI ${theme.status} — ${city}: ${aqi}`;
-            if (bannerDesc)  bannerDesc.textContent  = _buildPersonalizedReason(HEALTH_ADVISORIES[level].text);
+            if (bannerDesc) bannerDesc.textContent = _buildPersonalizedReason(HEALTH_ADVISORIES[level].text);
             if (isHighRisk) {
                 banner.style.display = 'block';
                 if (level !== 'hazardous') setTimeout(() => { if (banner) banner.style.display = 'none'; }, 15000);
@@ -2420,9 +2420,9 @@
             setTimeout(() => { permBanner.style.display = 'block'; }, 3000);
         }
 
-        const allowBtn   = document.getElementById('notifPermAllow');
+        const allowBtn = document.getElementById('notifPermAllow');
         const dismissBtn = document.getElementById('notifPermDismiss');
-        if (allowBtn)   allowBtn.addEventListener('click', () => _requestNotifPermission());
+        if (allowBtn) allowBtn.addEventListener('click', () => _requestNotifPermission());
         if (dismissBtn) dismissBtn.addEventListener('click', () => {
             if (permBanner) permBanner.style.display = 'none';
             // Remember they dismissed so we don't nag again this session
@@ -2527,7 +2527,7 @@
                                 locName = data.address.city || data.address.town || data.address.village || data.address.county || 'My Location';
                                 regionName = data.address.state || data.address.country || regionName;
                             }
-                        } catch(e) {
+                        } catch (e) {
                             try {
                                 const res2 = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
                                 const data2 = await res2.json();
@@ -2535,7 +2535,7 @@
                                     locName = data2.city || data2.locality || 'My Location';
                                     regionName = data2.principalSubdivision || data2.countryName || regionName;
                                 }
-                            } catch(err) { console.warn("Reverse geocoding failed"); }
+                            } catch (err) { console.warn("Reverse geocoding failed"); }
                         }
 
                         if (icon) icon.className = 'fas fa-location-crosshairs';
@@ -2740,7 +2740,7 @@
                                 fetched = JSON.parse(localRaw);
                                 console.log('✅ Profile loaded from localStorage');
                             }
-                        } catch (_) {}
+                        } catch (_) { }
                     }
 
                     // Attempt 3: IndexedDB
@@ -2751,36 +2751,36 @@
                                 fetched = idbData;
                                 console.log('✅ Profile loaded from IndexedDB');
                             }
-                        } catch (_) {}
+                        } catch (_) { }
                     }
 
                     if (fetched) {
                         userHealthProfile = fetched;
                         // ─── Populate form fields ───
-                        if ($('profileAge'))          $('profileAge').value          = fetched.age || '';
-                        if ($('profileGender'))       $('profileGender').value       = fetched.gender || '';
-                        if ($('profileWeight'))       $('profileWeight').value       = fetched.weight || '';
-                        if ($('profileHeight'))       $('profileHeight').value       = fetched.height || '';
-                        if ($('profileSmoking'))      $('profileSmoking').value      = fetched.smoking || 'never';
+                        if ($('profileAge')) $('profileAge').value = fetched.age || '';
+                        if ($('profileGender')) $('profileGender').value = fetched.gender || '';
+                        if ($('profileWeight')) $('profileWeight').value = fetched.weight || '';
+                        if ($('profileHeight')) $('profileHeight').value = fetched.height || '';
+                        if ($('profileSmoking')) $('profileSmoking').value = fetched.smoking || 'never';
                         if ($('profileOutdoorHours')) $('profileOutdoorHours').value = fetched.outdoorHours || '3';
-                        if ($('profileActivity'))     $('profileActivity').value     = fetched.activity || 'moderate';
+                        if ($('profileActivity')) $('profileActivity').value = fetched.activity || 'moderate';
                         applyPillConditions(fetched.conditions);
                         updateBMIDisplay();
                     }
 
                     // ─── Name banner / input logic ───
-                    const banner     = $('profileNameBanner');
-                    const inputWrap  = $('profileNameInputWrap');
+                    const banner = $('profileNameBanner');
+                    const inputWrap = $('profileNameInputWrap');
                     const nameDisplay = $('profileNameDisplay');
-                    const savedName  = fetched && fetched.name ? fetched.name : null;
+                    const savedName = fetched && fetched.name ? fetched.name : null;
                     if (savedName) {
-                        if (banner)      { banner.style.display = 'flex'; }
-                        if (inputWrap)   { inputWrap.style.display = 'none'; }
+                        if (banner) { banner.style.display = 'flex'; }
+                        if (inputWrap) { inputWrap.style.display = 'none'; }
                         if (nameDisplay) { nameDisplay.textContent = savedName; }
-                        if (profileBtn)  { profileBtn.title = 'Health Profile — ' + savedName; }
+                        if (profileBtn) { profileBtn.title = 'Health Profile — ' + savedName; }
                     } else {
-                        if (banner)     { banner.style.display = 'none'; }
-                        if (inputWrap)  { inputWrap.style.display = 'block'; }
+                        if (banner) { banner.style.display = 'none'; }
+                        if (inputWrap) { inputWrap.style.display = 'block'; }
                     }
 
                     // ─── Show login success banner & smooth reveal ───
@@ -2809,9 +2809,9 @@
                                     riskSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                 }, 400);
                             }
-                        } catch(_) {}
+                        } catch (_) { }
                     }
-                    
+
                     // Show profile form automatically if new user (no profile fetched)
                     if (!fetched) {
                         const overlay = $('profileModalOverlay');
@@ -2824,14 +2824,14 @@
                     // Reset name UI
                     const banner = $('profileNameBanner');
                     const inputWrap = $('profileNameInputWrap');
-                    if (banner)   banner.style.display = 'none';
+                    if (banner) banner.style.display = 'none';
                     if (inputWrap) inputWrap.style.display = 'none';
                     // Hide login banner
                     const loginBanner = $('loginSuccessBanner');
                     if (loginBanner) loginBanner.style.display = 'none';
                     // Update auth-gated UI immediately (show guest prompt)
                     _updateAuthGatedUI();
-                    if (lastAQIData) { try { updateDisplay(lastAQIData); } catch(_) {} }
+                    if (lastAQIData) { try { updateDisplay(lastAQIData); } catch (_) { } }
                 }
             }); // end onAuthStateChange
 
@@ -2863,29 +2863,75 @@
                 });
             }
 
+            // Map Supabase error codes/messages to user-friendly text
+            function _sbAuthError(err) {
+                const msg = (err.message || '').toLowerCase();
+                const code = (err.code || err.status || '').toString().toLowerCase();
+                if (msg.includes('rate') || msg.includes('too many') || code === '429') {
+                    return `<i class="fas fa-clock"></i> Email rate limit reached — Supabase limits free-tier email sends.
+                        <br><small>✅ <strong>Use "Sign in with Google"</strong> to bypass this, or wait a few minutes and try again.</small>`;
+                }
+                if (msg.includes('email not confirmed') || msg.includes('confirm')) {
+                    return `<i class="fas fa-envelope"></i> Please verify your email first — check your inbox for a confirmation link.
+                        <br><small>Didn't get it? Try signing in with Google instead.</small>`;
+                }
+                if (msg.includes('invalid login') || msg.includes('invalid credentials') || msg.includes('wrong password')) {
+                    return `<i class="fas fa-circle-exclamation"></i> Incorrect email or password. Please try again.`;
+                }
+                if (msg.includes('user already registered') || msg.includes('already exists')) {
+                    return `<i class="fas fa-circle-exclamation"></i> An account with this email already exists. Switch to Login tab.`;
+                }
+                if (msg.includes('password') && msg.includes('characters')) {
+                    return `<i class="fas fa-circle-exclamation"></i> Password must be at least 6 characters.`;
+                }
+                return `<i class="fas fa-circle-exclamation"></i> ${err.message || 'Authentication failed. Try Google sign-in instead.'}`;
+            }
+
             // Email/Password Form Submit
             if ($('authForm')) {
                 $('authForm').addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    const email = $('authEmail').value;
+                    const email = $('authEmail').value.trim();
                     const pass  = $('authPassword').value;
                     const errorMsg = $('authErrorMsg');
+                    const submitBtn = $('authSubmitBtn');
                     errorMsg.classList.add('hidden');
+
+                    if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Please wait...'; }
+
                     try {
-                        let sbErr;
+                        let sbErr, data;
                         if (isLoginMode) {
-                            const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-                            sbErr = error;
+                            ({ data, error: sbErr } = await sb.auth.signInWithPassword({ email, password: pass }));
                         } else {
-                            const { error } = await sb.auth.signUp({ email, password: pass });
-                            sbErr = error;
+                            ({ data, error: sbErr } = await sb.auth.signUp({ email, password: pass }));
                         }
+
                         if (sbErr) throw sbErr;
-                        authOverlay.classList.remove('active');
-                        $('authForm').reset();
+
+                        // If signUp returns a user but session is null, email confirmation is required
+                        if (!isLoginMode && data?.user && !data?.session) {
+                            errorMsg.innerHTML = `<i class="fas fa-envelope-open-text"></i> Registration successful!
+                                Check your inbox and click the confirmation link to activate your account.
+                                <br><small>Or use <strong>Google sign-in</strong> to skip email verification.</small>`;
+                            errorMsg.style.color = '#00e676';
+                            errorMsg.classList.remove('hidden');
+                            $('authForm').reset();
+                        } else {
+                            authOverlay.classList.remove('active');
+                            $('authForm').reset();
+                        }
                     } catch (err) {
-                        errorMsg.innerHTML = '<i class="fas fa-circle-exclamation"></i> ' + (err.message || 'Authentication failed.');
+                        errorMsg.innerHTML = _sbAuthError(err);
+                        errorMsg.style.color = '';
                         errorMsg.classList.remove('hidden');
+                    } finally {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = isLoginMode
+                                ? '<i class="fas fa-envelope"></i> Continue with Email'
+                                : '<i class="fas fa-user-plus"></i> Register with Email';
+                        }
                     }
                 });
             }
@@ -2941,18 +2987,18 @@
                     // Get name — from input (first time) or from existing locked profile
                     const existingName = userHealthProfile && userHealthProfile.name ? userHealthProfile.name : null;
                     const nameInputVal = $('profileName') ? $('profileName').value.trim() : '';
-                    const finalName    = existingName || nameInputVal;
+                    const finalName = existingName || nameInputVal;
 
                     const profileData = {
-                        name:         finalName,
-                        age:          parseInt($('profileAge')?.value) || 25,
-                        gender:       $('profileGender')?.value || '',
-                        weight:       parseFloat($('profileWeight')?.value) || null,
-                        height:       parseFloat($('profileHeight')?.value) || null,
-                        smoking:      $('profileSmoking')?.value || 'never',
+                        name: finalName,
+                        age: parseInt($('profileAge')?.value) || 25,
+                        gender: $('profileGender')?.value || '',
+                        weight: parseFloat($('profileWeight')?.value) || null,
+                        height: parseFloat($('profileHeight')?.value) || null,
+                        smoking: $('profileSmoking')?.value || 'never',
                         outdoorHours: $('profileOutdoorHours')?.value || '3',
-                        activity:     $('profileActivity')?.value || 'moderate',
-                        conditions:   readPillConditions()
+                        activity: $('profileActivity')?.value || 'moderate',
+                        conditions: readPillConditions()
                     };
 
                     // ① Save to localStorage immediately (offline-safe)
@@ -2961,27 +3007,27 @@
                     } catch (_) { console.warn('localStorage write failed'); }
 
                     // ② Save to IndexedDB (reliable offline storage)
-                    try { await saveToIDB(currentUser.id, profileData); } catch(_) {}
+                    try { await saveToIDB(currentUser.id, profileData); } catch (_) { }
 
                     // ③ Optimistic UI Update: update profile immediately
                     userHealthProfile = profileData;
 
-                    const banner     = $('profileNameBanner');
-                    const inputWrap  = $('profileNameInputWrap');
+                    const banner = $('profileNameBanner');
+                    const inputWrap = $('profileNameInputWrap');
                     const nameDisplay = $('profileNameDisplay');
                     if (finalName) {
-                        if (banner)      { banner.style.display = 'flex'; }
-                        if (inputWrap)   { inputWrap.style.display = 'none'; }
+                        if (banner) { banner.style.display = 'flex'; }
+                        if (inputWrap) { inputWrap.style.display = 'none'; }
                         if (nameDisplay) { nameDisplay.textContent = finalName; }
                         const profileBtn = $('profileBtn');
-                        if (profileBtn)  { profileBtn.title = 'Health Profile — ' + finalName; }
+                        if (profileBtn) { profileBtn.title = 'Health Profile — ' + finalName; }
                     }
 
                     if (overlay) overlay.classList.remove('active');
                     if (window._showToast) window._showToast('✅ Profile saved locally! Syncing...', 'success');
 
                     // ④ Re-render dashboard with new profile immediately
-                    if (lastAQIData) { try { updateDisplay(lastAQIData); } catch (_) {} }
+                    if (lastAQIData) { try { updateDisplay(lastAQIData); } catch (_) { } }
 
                     if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-check"></i> Save &amp; Analyse'; }
 
