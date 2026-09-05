@@ -630,12 +630,8 @@
         if (els.aqiDescription) els.aqiDescription.textContent = theme.desc;
 
         const refreshTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-        const sourceLabel = data._source === 'multi-source' ? 'Multi-Source'
-            : data._source === 'open-meteo' ? 'Open-Meteo'
-                : data._source === 'fallback' ? 'Estimate'
-                    : 'WAQI+OpenAQ';
         if (els.updateTime) {
-            els.updateTime.textContent = `Last refreshed: ${refreshTime} · ${sourceLabel}`;
+            els.updateTime.textContent = `Last refreshed: ${refreshTime}`;
         }
 
 
