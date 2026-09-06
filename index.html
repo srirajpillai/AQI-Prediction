@@ -304,6 +304,70 @@
             </div>
         </section>
 
+        <!-- ===== Modal Inhalation Dose Engine (Novel Feature) ===== -->
+        <section class="section-block" id="commuteExposureSection" style="display:none;">
+            <div class="section-head">
+                <div class="head-icon" style="background:rgba(0,230,118,0.12);border-color:rgba(0,230,118,0.25);"><i class="fas fa-route" style="color:var(--aqi-accent);"></i></div>
+                <div>
+                    <h2>Commute Mode Exposure Calculator</h2>
+                    <p>Same trip, different lungs-worth of pollutant. Compare the personalized dose you'd actually inhale by mode of transport.</p>
+                </div>
+            </div>
+
+            <div class="cme-panel glass-card">
+                <div class="cme-tabs" id="commuteTripTabs">
+                    <button type="button" class="cme-tab active" id="cmeTabLocal" data-trip="local"><i class="fas fa-location-dot"></i> Within City</button>
+                    <button type="button" class="cme-tab" id="cmeTabIntercity" data-trip="intercity"><i class="fas fa-route"></i> City to City</button>
+                </div>
+
+                <!-- Within-city controls -->
+                <div class="cme-controls" id="cmeLocalControls">
+                    <div class="cme-control-item">
+                        <label for="commuteDistanceInput">Trip distance</label>
+                        <div class="cme-input-wrap">
+                            <input type="number" id="commuteDistanceInput" min="0.5" max="200" step="0.5" value="5">
+                            <span>km</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- City-to-city controls -->
+                <div class="cme-controls cme-intercity-controls hidden" id="cmeIntercityControls">
+                    <div class="cme-control-item cme-control-wide">
+                        <label>Origin (current city)</label>
+                        <div class="cme-input-wrap cme-origin-display" id="cmeOriginDisplay"><i class="fas fa-tower-broadcast"></i> <span id="cmeOriginName">Search a city on the dashboard first…</span></div>
+                    </div>
+                    <div class="cme-control-item cme-control-wide cme-dest-wrap">
+                        <label for="commuteDestInput">Destination city / state</label>
+                        <div class="cme-input-wrap">
+                            <i class="fas fa-magnifying-glass" style="color:var(--text3);font-size:12px;"></i>
+                            <input type="text" id="commuteDestInput" placeholder="e.g. Mumbai, Maharashtra" autocomplete="off">
+                        </div>
+                        <div class="cme-dest-dropdown" id="cmeDestDropdown"></div>
+                    </div>
+                </div>
+
+                <div class="cme-control-item cme-toggle-item cme-mask-row">
+                    <label class="cme-switch">
+                        <input type="checkbox" id="commuteMaskToggle">
+                        <span class="cme-slider"></span>
+                    </label>
+                    <label for="commuteMaskToggle" class="cme-toggle-label">Wearing a mask / respirator outdoors</label>
+                </div>
+
+                <div class="cme-route-summary hidden" id="cmeRouteSummary"></div>
+
+                <p class="cme-meta" id="commuteMeta">Waiting for live AQI data…</p>
+                <div class="cme-mode-grid" id="commuteModeGrid"><!-- Populated by commute-exposure.js --></div>
+                <details class="cme-methodology">
+                    <summary><i class="fas fa-flask"></i> Methodology &amp; formula</summary>
+                    <p><strong>Within-city:</strong> Inhaled Dose (µg) = Ambient PM2.5 &times; Microenvironment Ratio &times; Mask Factor &times; Minute Ventilation &times; Trip Duration &times; Personal Health Multiplier.</p>
+                    <p><strong>City-to-city:</strong> each mode is modelled as up to three exposure segments — ground exposure at the origin city (boarding/waiting, using origin PM2.5), in-transit cabin exposure (using the mean of origin &amp; destination PM2.5 as a regional en-route estimate), and ground exposure on arrival (using destination PM2.5). The total dose is the sum of the per-segment doses, each computed with the same formula above. This captures the fact that a traveller inhales real pollutant twice at ground level — once in each city — in addition to whatever the transit vehicle's cabin lets through.</p>
+                    <p>Microenvironment ratio captures near-road/in-plume enrichment for exposed modes versus cabin/HVAC filtration attenuation for sealed modes. Minute ventilation scales with physical exertion. The personal health multiplier reuses this session's Disease Risk Engine profile, so vulnerable users see a dose ranking personalized to their own sensitivity. Route distance is estimated via great-circle distance between city coordinates with a road/air routing correction factor — treat it as an order-of-magnitude estimate, not a substitute for real routing data.</p>
+                </details>
+            </div>
+        </section>
+
         <!-- Hourly Forecast Section -->
         <section class="section-block" id="hourlySection">
             <div class="section-head">
@@ -656,5 +720,6 @@
     <!-- External Dependencies & Main Logic -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="app.js?v=19"></script>
+    <script src="commute-exposure.js?v=1"></script>
 </body>
 </html>

@@ -108,13 +108,20 @@ version1/
 │   └── manifest.json                # Progressive Web App (PWA) manifest configuration
 │
 ├── 🤖 MACHINE LEARNING PIPELINE & MODEL ASSETS (PYTHON)
-│   ├── train_model.py               # Consolidated Python training pipeline (XGBoost & Ridge)
+│   ├── unified_master_pipeline.py   # ALL-IN-ONE master Python script: dataset compilation, training, and export
+│   ├── compile_comprehensive_datasets.py # Cleans & harmonizes 6 global datasets into master corpus
+│   ├── train_comprehensive_ml.py    # Trains XGBoost Multi-Class & Regressor on master corpus
+│   ├── train_expanded_multi_dataset.py   # High-resolution multi-city reanalysis dataset trainer
+│   ├── train_latest_dataset.py      # 2020-2026 ground-truth continuous archive trainer
+│   ├── train_version1_ml.py         # Initial CPCB baseline trainer & linear weight exporter
 │   ├── ml_model.json                # Lightweight serialized model weights used by worker.js in browser
 │   ├── ml_model.pkl                 # Trained Scikit-Learn / XGBoost binary model (Python Joblib)
 │   └── datasets/                    # Directory holding raw & compiled air quality data (CSVs)
-│       ├── latest_aqi_hourly_2020_2026.csv # Continuous hourly observation dataset
-│       ├── latest_aqi_daily_2020_2026.csv  # Aggregated daily multi-city dataset
+│       ├── comprehensive_aqi_master_dataset.csv # 1.245M+ row unified training corpus
 │       ├── city_day.csv             # CPCB India official historical dataset (2015–2020)
+│       ├── latest_aqi_hourly_2020_2026.csv # Copernicus & ERA5 continuous hourly dataset
+│       ├── latest_aqi_daily_2020_2026.csv  # Aggregated daily multi-city dataset
+│       ├── master_air_quality_daily_2020_2026.csv # Master daily multi-city reanalysis
 │       ├── stations.csv             # CPCB ground monitoring station registry
 │       └── dataset_metadata.json    # JSON catalog describing dataset schemas & provenance
 │
@@ -128,7 +135,8 @@ version1/
 └── 📋 DOCUMENTATION & SPECIFICATIONS
     ├── PROJECT_REPORT.md                 # Complete Academic Major Project Report (B.Tech Submission)
     ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.md # Markdown Master Reference Guide
-    ├── PROJECT_VIVA_AND_PRESENTATION_PREP.txt # Master viva voce presentation guide
+    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.txt # Plaintext Master Reference Guide
+    ├── unified_master_pipeline.txt       # Plaintext consolidated Python master script
     ├── PROJECT_GUIDE_AND_WORKFLOW.md     # Architecture workflow & operating guide
     ├── SRS_DOCUMENT.md                    # Formal IEEE Software Requirements Specification
     ├── DATASETS_CATALOG.md                # Comprehensive catalog of all dataset files
@@ -291,7 +299,7 @@ Here is the complete context of the project:
    - app.js: Main thread controller, multi-API fetcher, disease risk engine, Supabase auth & sync, Page Visibility optimizations.
    - worker.js: Background thread for ML inference, diurnal trajectories, Haversine spatial transfer math, and SHAP factor attribution.
    - styles.css: Glassmorphic design system, light mode default, yellow text stroke.
-   - unified_master_pipeline.py: Consolidated Python pipeline for dataset compilation and XGBoost and BiLSTM models training.
+   - unified_master_pipeline.py: Consolidated Python pipeline for dataset compilation and XGBoost model training.
    - ml_model.json: Serialized ML model weights and CPCB breakpoints.
    - PROJECT_REPORT.md: Academic Major Project Report for university evaluation.
 6. When answering questions or proposing modifications, ensure you preserve the zero-server client-side execution model, maintain triple-layer storage fallbacks, and adhere to official CPCB breakpoint formulas.

@@ -11,19 +11,6 @@
  */
 'use strict';
 
-importScripts('https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js');
-
-let onnxSession = null;
-async function initBiLSTM() {
-    try {
-        onnxSession = await ort.InferenceSession.create('/bilstm.onnx');
-        console.log('[Worker] BiLSTM ONNX Model loaded successfully.');
-    } catch (err) {
-        console.warn('[Worker] Failed to load BiLSTM ONNX model:', err);
-    }
-}
-initBiLSTM();
-
 // ===== Trained ML Model Parameters (v4.0.0 — 1.25M Multi-Source Master Corpus) =====
 const ML_MODEL = {
     version: '4.0.0',
@@ -181,7 +168,7 @@ function runMLInference(pollutants, weather, dateObj) {
 }
 
 // ===== 2. Machine Learning 24-Hour Diurnal Forecast Engine =====
-async function generateHourlyForecastWithML(baseAqi, hourlyData, hourlyTimes, currentHourIndex, timezone, weatherData, basePollutants) {
+function generateHourlyForecastWithML(baseAqi, hourlyData, hourlyTimes, currentHourIndex, timezone, weatherData, basePollutants) {
     const forecasts = [];
     const now = new Date();
     const currentMonth = now.getMonth() + 1;
@@ -221,40 +208,18 @@ async function generateHourlyForecastWithML(baseAqi, hourlyData, hourlyTimes, cu
             hourAqi = baseAqi;
         } else {
             // Apply ML regression response curve
-            let predictedAqi = Math.max(1, Math.round(baseAqi + (netDiurnalEffect * 0.12)));
-            
-            // Integrate BiLSTM if available
-            if (onnxSession && i === 23) {
-                // Approximate 24-hour ahead using BiLSTM
-                try {
-                    const features = new Float32Array(20).fill(0); // 20 features from FEATURE_COLS
-                    // Map basic known features (temperature, humidity, wind) and normalize them roughly
-                    features[15] = (simTemp - means.Temperature_C) / ML_MODEL.scalingStds.Temperature_C; 
-                    features[16] = (simHumidity - means.Humidity_Pct) / ML_MODEL.scalingStds.Humidity_Pct;
-                    features[17] = (simWind - means.Wind_Speed_kmh) / ML_MODEL.scalingStds.Wind_Speed_kmh;
-                    
-                    const tensor = new ort.Tensor('float32', features, [1, 1, 20]);
-                    const results = await onnxSession.run({ 'input': tensor });
-                    const bilstmPred = results.output.data[0];
-                    if (!isNaN(bilstmPred) && bilstmPred > 0) {
-                        predictedAqi = Math.round((predictedAqi + bilstmPred) / 2);
-                    }
-                } catch(e) {
-                    console.error("BiLSTM Inference error:", e);
-                }
-            }
-            hourAqi = predictedAqi;
+            hourAqi = Math.max(1, Math.round(baseAqi + (netDiurnalEffect * 0.12)));
         }
 
         const level = getLevel(hourAqi);
         const color = aqiColor(hourAqi);
 
-        // Factor attribution for this hour
-        let factor = 'Stable Weather Conditions';
-        if (forecastHour >= 5 && forecastHour <= 9) factor = 'Morning Traffic & Cooler Air';
-        else if (forecastHour >= 12 && forecastHour <= 15) factor = 'Afternoon Sunlight & Good Airflow';
-        else if (forecastHour >= 17 && forecastHour <= 21) factor = 'Evening Rush Hour & Commute';
-        else if (forecastHour >= 22 || forecastHour <= 4) factor = 'Nighttime Cooling & Particle Settling';
+        // ML Factor attribution for this hour
+        let factor = 'Atmospheric Equilibrium';
+        if (forecastHour >= 5 && forecastHour <= 9) factor = 'Morning Boundary Layer Stagnation';
+        else if (forecastHour >= 12 && forecastHour <= 15) factor = 'Solar Convective Dispersion';
+        else if (forecastHour >= 17 && forecastHour <= 21) factor = 'Peak Vehicular & Industrial Advection';
+        else if (forecastHour >= 22 || forecastHour <= 4) factor = 'Nocturnal Thermal Inversion';
 
         forecasts.push({ i, hourAqi, level, color, factor });
     }
@@ -463,7 +428,7 @@ function computeScalePercent(aqi) {
 }
 
 // ===== Web Worker Message Router =====
-self.onmessage = async function(e) {
+self.onmessage = function(e) {
     const { type, id, payload } = e.data;
 
     try {
@@ -475,7 +440,7 @@ self.onmessage = async function(e) {
             }
 
             case 'GENERATE_FORECAST': {
-                const forecasts = await generateHourlyForecastWithML(
+                const forecasts = generateHourlyForecastWithML(
                     payload.baseAqi,
                     payload.hourlyAqi,
                     payload.hourlyTimes,

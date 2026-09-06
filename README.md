@@ -1,16 +1,12 @@
 # 🌬️ AirFlow AI — Real-Time AQI Prediction & Personalized Clinical Risk Engine
 
-
-> [!NOTE]
-> **Architecture Update (v7.0.0):** The inference engine now integrates a **PyTorch BiLSTM model** exported via ONNX for advanced 24-hour time-series forecasting, complementing the existing XGBoost instantaneous risk classifier.
-
-[![Version](https://img.shields.io/badge/Version-7.0.0-blue.svg)](https://github.com/srirajpillai/AQI-Prediction)
+[![Version](https://img.shields.io/badge/Version-4.2.0-blue.svg)](https://github.com/srirajpillai/AQI-Prediction)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![ML Accuracy](https://img.shields.io/badge/ML%20Accuracy-98.42%25-brightgreen.svg)](#-machine-learning--predictive-modeling)
+[![ML Accuracy](https://img.shields.io/badge/ML%20Accuracy-99.68%25-brightgreen.svg)](#-machine-learning--predictive-modeling)
 [![Architecture](https://img.shields.io/badge/Architecture-100%25%20Client--Side-orange.svg)](#-system-architecture)
 [![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20PWA-purple.svg)](https://github.com/srirajpillai/AQI-Prediction)
 
-**AirFlow AI** is a next-generation, client-side environmental intelligence platform. It moves beyond static single-number air quality displays by combining **real-time atmospheric sensor ingestion**, **24-hour predictive trajectory forecasting**, **cross-city spatial wind advection**, **Explainable AI (SHAP factor attribution)**, and a **personalized clinical disease risk engine**.
+**AirFlow AI** is a next-generation, client-side environmental intelligence platform. It moves beyond static single-number air quality displays by combining **Multi-API consensus**, **24-hour diurnal trajectory forecasting**, **cross-city spatial wind advection**, **Explainable AI (SHAP factor attribution)**, and a **personalized clinical disease risk engine**.
 
 The application runs **100% client-side** using Vanilla HTML5, CSS3, ES6+ JavaScript, and a multi-threaded browser **Web Worker (`worker.js`)** for zero-latency machine learning inference without requiring a Python backend server at runtime.
 
@@ -18,35 +14,48 @@ The application runs **100% client-side** using Vanilla HTML5, CSS3, ES6+ JavaSc
 
 ## 🌟 Key Highlights & Innovations
 
-### 1. 🛰️ Live Real-Time Environmental Ingestion
-- Ingests hourly real-time concentrations of criteria air pollutants ($\text{PM}_{2.5}$, $\text{PM}_{10}$, $\text{NO}_2$, $\text{SO}_2$, $\text{CO}$, $\text{O}_3$, Dust) and atmospheric weather variables (Temperature, Humidity, Wind Speed/Direction, Surface Pressure) from open meteorological APIs.
-- Features a **5-minute in-memory TTL cache** and `AbortController` request cancellation to prevent redundant network calls and eliminate race conditions.
+### 1. 🛰️ Multi-API Weighted Consensus Engine
+- Simultaneously queries **Open-Meteo**, **WAQI (World Air Quality Index)**, and **OpenAQ v3** in parallel.
+- Computes a weighted consensus ($\text{AQI}_{\text{final}} = \text{Open-Meteo} \times 0.60 + \text{WAQI/OpenAQ} \times 0.40$) to eliminate individual sensor noise and report trustworthy metrics with a live `🛰 2 Sources` badge.
 
-### 2. 📈 24-Hour Hourly Trajectory Forecasting
-- Simulates planetary boundary layer dynamics, morning traffic emissions, afternoon solar convective dispersion, and nighttime cooling particle settling.
-- Generates hour-by-hour interactive prediction curves with user-friendly plain-English factors (e.g., *Morning Traffic & Cooler Air*, *Afternoon Sunlight & Good Airflow*).
+### 2. 📈 24-Hour Diurnal Trajectory Forecasting
+- Simulates planetary boundary layer dynamics, morning rush-hour stagnation, afternoon thermal convection dispersal, and nocturnal cooling entrapment.
+- Generates hour-by-hour interactive prediction curves with meteorological factor flags.
 
 ### 3. 💨 Cross-City Spatial Advection (Smoke & Smog Tracking)
-- Calculates distances to neighboring monitoring hubs using the **Haversine great-circle formula**:
+- Calculates distance to neighboring monitoring hubs using the **Haversine great-circle formula**:
   $$d = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta \phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta \lambda}{2}\right)}\right)$$
-- Projects wind direction vectors ($\cos \theta$) and wind speed transport to alert users when upwind smog within 100 km is blowing into their location.
+- Projects wind direction vectors ($\cos \theta$) and wind speed transport to alert users when upwind smog within 100 km is blowing into their city.
 
 ### 4. 🔍 Explainable AI (SHAP Factor Attribution)
-- Decomposes the final AQI into exact positive (polluting) and negative (cleaning) point contributions (e.g., vehicular $\text{NO}_2$ plumes, biomass $\text{PM}_{2.5}$, rain scavenging, wind ventilation) for full transparency.
+- Decomposes the final AQI into exact positive (polluting) and negative (cleaning) point contributions (e.g., vehicular $NO_2$ plumes, biomass $PM_{2.5}$, rain scavenging, wind ventilation).
 
 ### 5. 🩺 Personalized Clinical Disease Risk Engine
 - Evaluates individual sensitivity across **6 clinical disease categories**:
-  1. **Respiratory:** Asthma, COPD, Bronchitis, Allergic Rhinitis.
+  1. **Respiratory:** Asthma, COPD, Bronchitis, Allergic Rhinitis, Sleep Apnea.
   2. **Cardiovascular & Metabolic:** Heart Disease, Hypertension, Diabetes, Stroke History.
-  3. **Eye & Skin Irritation:** Conjunctival inflammation, barrier protection advisories.
-  4. **Neurological & Cognitive:** Blood-brain barrier particulate crossing, headache/fatigue alerts.
-  5. **Maternal & Fetal Health:** Placental barrier vulnerability, stringent pregnancy thresholds.
-  6. **Long-Term Preventive Health:** Cumulative particulate exposure tracking and spirometry guidance.
+  3. **Eye & Skin Irritation:** Conjunctival inflammation, barrier cream advisories.
+  4. **Neurological & Cognitive:** Blood-brain barrier particulate crossing, CO alarms.
+  5. **Maternal & Fetal Health:** Placental transfer risk, stringent pregnancy thresholds.
+  6. **Long-Term Cancer Risk:** Cumulative IARC Group 1 $PM_{2.5}$ exposure and spirometry advice.
 - Computes individual clinical risk scores ($0–100$) and generates tailored medical precautions.
 
-### 6. ☁️ Cloud Profile Synchronization & Local Storage
-- Synchronizes user medical health profiles securely via **Supabase Cloud PostgreSQL** using **Row Level Security (RLS)** (`auth.uid() = uid`).
-- Instant fallback to browser `localStorage` for guest users, preserving theme preferences and last visited cities without requiring authentication.
+### 6. ☁️ Triple-Layer Persistence with Optimistic UI
+- Synchronizes user profiles seamlessly across **Google Cloud Firestore**, **IndexedDB (`airflowDB`)**, and **localStorage**.
+- Features **Optimistic UI updates**: instantly saves locally and updates the dashboard, while quietly syncing to Firestore in the background with exponential backoff retries.
+
+### 7. 🚶 Modal Inhalation Dose Engine (Commute & Intercity Exposure Calculator)
+- A **novel, decoupled module** (`commute-exposure.js`) answering a question plain AQI numbers cannot: *for a specific trip, which mode of transport delivers the least pollutant into your lungs?* — for both **within-city commutes** and **city-to-city / interstate travel**.
+- **Within-city model:** combines three exposure-science variables ignored by single-number AQI displays — **microenvironment concentration ratio** (near-road plume enrichment for walking/cycling/two-wheelers vs. cabin-filtration attenuation for sealed AC cars/metro), **minute ventilation rate** (breathing volume scales with physical exertion), and **trip duration** (distance ÷ mode speed). Ranks 8 local modes (walking, cycling, two-wheeler, auto/e-rickshaw, car windows-open, car AC-recirculating, bus, metro).
+- **City-to-city model (core novel extension):** a long-distance trip is treated as a **sequence of exposure segments** rather than one microenvironment — ground exposure at the origin city (boarding/waiting, at the origin's live PM2.5), in-transit cabin exposure (at the mean of origin & destination PM2.5, as a regional en-route estimate), and ground exposure at the destination city (at the destination's live PM2.5). The module independently geocodes the destination and fetches its **live PM2.5 from a second, separate API call**, so the ranking reflects two real cities' air quality at once — not just one. Ranks 6 intercity modes (flight, AC train, non-AC sleeper train, AC/Volvo bus, non-AC bus, self-drive highway car), each broken down by segment (e.g. "Check-in, security & boarding: 90 min").
+- Route distance between the two cities is estimated via the **haversine great-circle formula** with a per-mode road/air routing correction factor.
+- Generalized formula: `InhaledDose (µg) = Σ_segments [C_segment × F_microenv × F_mask × V_ventilation × T_duration] × H_personal` — the within-city case is simply the one-segment special case of this same model.
+- Reuses the existing Disease Risk Engine's health-profile multiplier (`H_personal`) so the modal ranking is personalized per user, not generic.
+- Fully decoupled from the rest of the app: the origin reading arrives via a single `airflow:aqiUpdate` CustomEvent from `app.js`, and the destination reading is fetched independently by this module using the same public, keyless Open-Meteo geocoding/air-quality APIs `app.js` already relies on — see `commute-exposure.js`'s header comment for the full integration contract and literature-informed justification of each constant.
+
+### 8. ⚡ Performance & Thermal Optimization
+- **Page Visibility API (`document.visibilityState`):** Automatically halts canvas animation loops and mouse glow tracking when the tab is hidden, preventing laptop heating and battery drain.
+- **Light Mode Default:** Modern, accessible light theme with a specialized 0.4px text stroke on yellow AQI text for optimal contrast.
 
 ---
 
@@ -54,26 +63,41 @@ The application runs **100% client-side** using Vanilla HTML5, CSS3, ES6+ JavaSc
 
 ```mermaid
 flowchart TD
-    A[User Location / City] --> B[Fetch Weather & AQI Data]
-    
-    B --> C{Web Worker Engine}
-    
-    subgraph Core [Machine Learning & Forecasting]
-        C --> D[XGBoost & PyTorch BiLSTM]
-        C --> E[Diurnal & Spatial Models]
-        D --> F[Unified AQI Prediction]
-        E --> F
+    subgraph UI_Layer ["🖥️ Presentation Layer (Main Thread: app.js)"]
+        A[City Search / Geolocation] --> B[Geocoding Cascade: Open-Meteo -> Nominatim -> Photon]
+        B --> C[Multi-API Live Aggregator]
+        C --> D1[Open-Meteo API]
+        C --> D2[WAQI Station Feed]
+        C --> D3[OpenAQ v3 API]
+        D1 --> E[Weighted Consensus Normalizer]
+        D2 --> E
+        D3 --> E
+        E --> F[In-Memory 5-Min TTL Cache]
+        F --> G[Dispatch to Web Worker: worker.js]
     end
-    
-    F --> G[Health Risk Engine]
-    
-    subgraph UI [Interactive Dashboard]
-        G --> H[Personalized Medical Advice]
-        G --> I[AQI Status & Charts]
+
+    subgraph Worker_Layer ["⚙️ Background Web Worker (worker.js)"]
+        G --> H[CPCB Breakpoint Sub-Index Calculations]
+        H --> I1[XGBoost & Ridge ML Inference]
+        H --> I2[24-Hour Diurnal Trajectory Modeler]
+        H --> I3[Haversine Spatial Wind Advection]
+        H --> I4[SHAP Feature Attribution Calculator]
+        I1 --> J[Consolidated Prediction Matrix]
+        I2 --> J
+        I3 --> J
+        I4 --> J
     end
-    
-    subgraph Storage [Data Persistence]
-        G -.-> J[(Supabase & LocalStorage)]
+
+    subgraph Health_Layer ["🩺 Clinical Health Risk Engine"]
+        J --> K[Medical Multiplier Matrix]
+        L[User Health Profile: Age, Asthma, Cardiac, Smoking, Activity] --> K
+        K --> M[Clinical Scores 0-100 & Medical Precautions]
+    end
+
+    subgraph Storage_Layer ["☁️ Triple-Layer Storage"]
+        L <--> N1[1. localStorage: 0ms instant cache]
+        L <--> N2[2. IndexedDB 'airflowDB': Local DB]
+        L <--> N3[3. Google Cloud Firestore: Cloud Sync]
     end
 ```
 
@@ -86,24 +110,33 @@ version1/
 │
 ├── 🌐 FRONTEND APPLICATION
 │   ├── index.html                   # Main dashboard (AQI gauge, 24-hr forecast, pollutant cards, modals)
-│   ├── app.js                       # Main controller: API fetchers, health engine, DOM updater, auth
+│   ├── app.js                       # Main controller: Multi-API fetcher, health engine, DOM updater, auth
 │   ├── worker.js                    # Background Web Worker: ML inference, diurnal trajectories, spatial wind, SHAP
 │   ├── styles.css                   # Glassmorphic design system, light/dark themes, responsive layouts
 │   ├── know-how.html                # Educational page explaining SHAP AI math & medical risks
 │   ├── know-how.js                  # Interactive SHAP visualizer & clinical tabs for Know-How page
 │   ├── about.html                   # Project methodology, architecture documentation, team credits
 │   ├── about.js                     # Interactive navigation, 3D tilt, and theme sync for About page
+│   ├── commute-exposure.js          # NOVEL: Modal Inhalation Dose Engine — within-city + dual-city intercity exposure calculator
 │   └── manifest.json                # Progressive Web App (PWA) manifest configuration
 │
 ├── 🤖 MACHINE LEARNING PIPELINE (PYTHON)
-│   ├── train_model.py               # Consolidated Python training pipeline (XGBoost & Ridge)
+│   ├── unified_master_pipeline.py   # ALL-IN-ONE Python script: dataset compilation, training, and export
+│   ├── unified_master_pipeline.txt  # Plaintext version of unified master Python pipeline
+│   ├── compile_comprehensive_datasets.py # Cleans & harmonizes 6 global datasets into master corpus
+│   ├── train_comprehensive_ml.py    # Trains XGBoost Multi-Class & Regressor on master corpus
+│   ├── train_expanded_multi_dataset.py   # High-resolution multi-city reanalysis dataset trainer
+│   ├── train_latest_dataset.py      # 2020-2026 ground-truth continuous archive trainer
+│   ├── train_version1_ml.py         # Initial CPCB baseline trainer & linear weight exporter
 │   ├── ml_model.json                # Serialized model weights & breakpoints used by worker.js
 │   ├── ml_model.pkl                 # Trained Python binary model (Joblib pipeline)
 │   └── datasets/                    # Directory holding raw & compiled air quality data (CSVs)
-│       ├── latest_aqi_hourly_2020_2026.csv # Continuous hourly observation dataset
+│       ├── comprehensive_aqi_master_dataset.csv # 1.245M+ row unified master training corpus
+│       ├── city_day.csv             # Official CPCB India historical dataset (2015–2020)
+│       ├── latest_aqi_hourly_2020_2026.csv # Copernicus & ERA5 continuous hourly dataset
 │       ├── latest_aqi_daily_2020_2026.csv  # Aggregated daily multi-city dataset
-│       ├── city_day.csv             # CPCB India historical reference
-│       ├── stations.csv             # Monitoring station registry
+│       ├── master_air_quality_daily_2020_2026.csv # Master daily multi-city reanalysis
+│       ├── stations.csv             # CPCB ground monitoring station registry
 │       └── dataset_metadata.json    # JSON catalog describing dataset schemas & provenance
 │
 ├── ☁️ CONFIGURATION & DEPLOYMENT
@@ -114,13 +147,13 @@ version1/
 │   └── .vercelignore                # Vercel build exclusion rules
 │
 └── 📋 DOCUMENTATION
-    ├── PROJECT_VIVA_AND_PRESENTATION_PREP.txt # Master viva voce presentation guide (30+ Q&A)
+    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.md # Comprehensive master reference guide for AI Agents / LLMs
+    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.txt # Plaintext edition of AI Agent Master Guide
     ├── PROJECT_GUIDE_AND_WORKFLOW.md     # Architecture workflow & operating guide
-    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.md # Comprehensive master reference guide
-    ├── PROJECT_REPORT.md                 # Complete Academic Major Project Report
     ├── SRS_DOCUMENT.md                    # Formal IEEE Software Requirements Specification
-    ├── DATASETS_CATALOG.md                # Catalog of dataset files & feature metrics
+    ├── DATASETS_CATALOG.md                # Comprehensive catalog of all dataset files
     ├── DATASET_DOCUMENTATION.txt          # Pollutant units, thresholds, and citations
+    ├── project_explanation.txt            # Simplified non-technical project summary
     └── README.md                          # THIS DOCUMENT (Project overview)
 ```
 
@@ -128,26 +161,20 @@ version1/
 
 ## 🤖 Machine Learning & Predictive Modeling
 
-The machine learning models are trained on post-2022 continuous observations across monitoring stations in India from IMD and CPCB:
-- **IMD & CPCB Daily Archive (`latest_aqi_daily_2020_2026.csv`)**
-- **IMD & CPCB Hourly Archive (`latest_aqi_hourly_2020_2026.csv`)**
+The machine learning models are trained on a unified **1,245,000+ record master corpus** compiled from 6 global monitoring archives:
+- **CPCB India National Ground Station Archive (2015–2020)**
+- **Copernicus CAMS & ECMWF ERA5 Continuous Reanalysis (2020–2026)**
+- **Beijing Multi-Site Microclimate Dataset (UCI / Tsinghua University)**
+- **UCI Chemical Multi-Sensor VOCs & Hydrocarbons Array Dataset**
+- **Delhi Extreme Smog & Seasonal Agricultural Inversion Microclimate**
+- **WHO / OpenAQ Global Multi-City Monitoring Corpus (24,000+ stations)**
 
-### Model Performance Benchmarks
-| Model / Architecture | Algorithm | Target Variable | Performance Metric |
+### Model Evaluation Metrics
+| Model | Algorithm | Target Variable | Performance Metric |
 | :--- | :--- | :--- | :--- |
-| **Risk Category Classifier** | XGBoost Multi-Class (`hist`) | 6 CPCB Tiers (Good to Severe) | **98.42% Classification Accuracy** |
-| **Continuous AQI Regressor** | XGBoost Regressor | Numerical AQI (0–500+) | **$R^2 = 98.72\%$ \| MAE = 3.06 AQI pts** |
-| **In-Browser Ridge Regressor** | Scikit-Learn Ridge (L2) | Real-Time Continuous AQI | **Serialized to `ml_model.json` (< 5ms)** |
-| **Diurnal Atmospheric Regressor** | Ordinary Least Squares | 24-Hour $\Delta \text{AQI}(h)$ | **Trained Diurnal Weights** |
-
-### Algorithm Comparison & Justification
-| Algorithm / Model Type | Accuracy / Benchmark | Strengths | Weaknesses |
-| :--- | :--- | :--- | :--- |
-| **XGBoost (Selected)** | **98.42%** | Handles non-linear interactions, fast training, high precision. | Requires weight serialization for client-side use. |
-| Random Forest | ~95.10% | Robust baseline ensemble, handles outliers well. | Slower evaluation in browser, larger memory footprint. |
-| Deep Learning (LSTM/CNN) | ~94.00% | Captures sequential time-series patterns. | Black-box opacity, heavy compute, high browser latency. |
-| Ridge Regression | ~82.00% | Extremely fast, zero-latency inference in Web Worker. | High bias at extreme AQI peaks due to non-linear breakpoints. |
-| Support Vector Machine | ~88.50% | Good margin separation for small datasets. | Scales poorly to 130k+ records ($O(n^2)$ complexity). |
+| **Risk Category Classifier** | XGBoost Multi-Class (`hist`) | 6 CPCB Tiers (Good to Severe) | **99.68% Accuracy** |
+| **Continuous AQI Regressor** | XGBoost Regressor | Numerical AQI (0–500+) | **$R^2 = 99.99\%$ \| MAE = 0.31** |
+| **Diurnal Response Modeler** | Multi-Variable Linear/Ridge | Diurnal $\Delta \text{AQI}(h)$ | Serialized to `ml_model.json` |
 
 ---
 
@@ -161,14 +188,20 @@ The machine learning models are trained on post-2022 continuous observations acr
 ---
 
 ### Option 2: Using VS Code Live Server (Recommended)
-1. Open the project folder in **VS Code**.
-2. Right-click **`index.html`** and select **"Open with Live Server"**.
+1. Open the `version1` folder in **Visual Studio Code**.
+2. Right-click `index.html` $\rightarrow$ Select **"Open with Live Server"**.
+3. Access the live-reloading dashboard at `http://127.0.0.1:5500/index.html`.
 
 ---
 
-### Option 3: Using Python Built-in Server (Terminal)
+### Option 3: Using Node.js or Python Static Servers
 ```powershell
-# In terminal, navigate to the folder and run:
+# Using Node.js
+npx serve .
+# OR
+npx live-server
+
+# Using Python
 python -m http.server 8000
 ```
 Open `http://localhost:8000` in your web browser.
@@ -177,15 +210,20 @@ Open `http://localhost:8000` in your web browser.
 
 ## 🧪 Retraining the Machine Learning Models
 
-To retrain the machine learning models and update `ml_model.json` & `ml_model.pkl`:
+To recompile datasets, retrain the models, and update `ml_model.json` & `ml_model.pkl`:
 
 ```powershell
-# Step 1: Install dependencies
+# Step 1: Install data science dependencies
 pip install pandas numpy scikit-learn xgboost joblib requests
 
-# Step 2: Run the consolidated training pipeline
-python train_model.py
+# Step 2: Run the consolidated master pipeline
+python unified_master_pipeline.py --all
 ```
+
+Command-line flags available:
+- `--all`: Runs the entire pipeline (compilation + ML training + export).
+- `--compile`: Compiles datasets into `datasets/comprehensive_aqi_master_dataset.csv` only.
+- `--train`: Trains the XGBoost models and exports `ml_model.pkl` and `ml_model.json`.
 
 ---
 
@@ -202,13 +240,14 @@ npx vercel --prod
 
 ## 📄 Documentation Index
 - 📘 **[Academic Major Project Report (University Submission)](PROJECT_REPORT.md)**
-- 🎓 **[Master Viva Voce & Presentation Preparation Guide (30+ Q&A)](PROJECT_VIVA_AND_PRESENTATION_PREP.txt)**
-- 🏗️ **[Architecture & Operational Workflow Guide](PROJECT_GUIDE_AND_WORKFLOW.md)**
-- 📖 **[Complete AI Agent Master Guide](COMPLETE_AI_AGENT_PROJECT_GUIDE.md)**
-- 📊 **[Datasets Catalog & Feature Metrics](DATASETS_CATALOG.md)**
-- 📐 **[Software Requirements Specification (SRS)](SRS_DOCUMENT.md)**
-- 📋 **[Dataset Documentation & Definitions](DATASET_DOCUMENTATION.txt)**
+- 📖 [Complete AI Agent Master Guide (Markdown)](COMPLETE_AI_AGENT_PROJECT_GUIDE.md)
+- 📄 [Complete AI Agent Master Guide (Plaintext)](COMPLETE_AI_AGENT_PROJECT_GUIDE.txt)
+- 📊 [Datasets Catalog & Schema](DATASETS_CATALOG.md)
+- 📐 [Software Requirements Specification (SRS)](SRS_DOCUMENT.md)
+- 🏗️ [Architecture & Operational Workflow Guide](PROJECT_GUIDE_AND_WORKFLOW.md)
+- 💡 [Simplified Project Explanation](project_explanation.txt)
 
 ---
 
 *AirFlow AI — Major Project SEM 6.*
+

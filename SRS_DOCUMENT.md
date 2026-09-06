@@ -1,8 +1,4 @@
 # Software Requirements Specification (SRS)
-
-
-> [!NOTE]
-> **Architecture Update (v7.0.0):** The inference engine now integrates a **PyTorch BiLSTM model** exported via ONNX for advanced 24-hour time-series forecasting, complementing the existing XGBoost instantaneous risk classifier.
 ## Project Name: AirFlow AI — Real-Time AQI Prediction, Spatial Dispersion & Clinical Risk Engine
 **Academic Context:** B.Tech Major Project (Semester 6)  
 **Author / Lead:** Sriraj Pillai (`spsriraj2004@gmail.com`)  
