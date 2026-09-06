@@ -78,7 +78,7 @@ flowchart TD
     subgraph Data_Storage ["☁️ Hybrid Storage & Persistence"]
         J <--> L1[1. Supabase Cloud PostgreSQL: RLS Auth & DB]
         J <--> L2[2. Browser localStorage: Guest Offline Mode]
-        G1 <--> L3[3. ml_model.json: In-Memory Embedded Model DB]
+        G1 <--> L3[3. ml_model.json & bilstm.onnx: Embedded Models]
     end
 
     subgraph UI_Render ["📊 Interactive Dashboard Output"]

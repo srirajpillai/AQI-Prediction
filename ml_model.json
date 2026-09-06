@@ -7,7 +7,7 @@
     "mae": 3.06,
     "samples_trained": 137125,
     "features_count": 20,
-    "timestamp": "2026-09-05 20:27:16"
+    "timestamp": "2026-09-06 20:02:33"
   },
   "feature_cols": [
     "PM2.5",

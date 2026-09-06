@@ -21,6 +21,9 @@ from sklearn.metrics import classification_report, accuracy_score, r2_score, mea
 from sklearn.linear_model import Ridge, LinearRegression
 import xgboost as xgb
 import joblib
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DAILY_DATASET_PATH = os.path.join(SCRIPT_DIR, 'datasets', 'latest_aqi_daily_2020_2026.csv')
@@ -56,6 +59,19 @@ def calc_sub_index(val, pollutant):
             return ilo + (val - clo) * (ihi - ilo) / (chi - clo)
     if bps and val > bps[-1][1]: return bps[-1][3]
     return 0.0
+
+class AQIBiLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size=32, num_layers=1, output_size=1):
+        super(AQIBiLSTM, self).__init__()
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
+        self.fc = nn.Linear(hidden_size * 2, output_size)
+        
+    def forward(self, x):
+        # x shape: (batch, seq_len, input_size)
+        out, _ = self.lstm(x)
+        out = out[:, -1, :] # Take the last time step
+        out = self.fc(out)
+        return out
 
 def process_dataset(filepath, date_col):
     if not os.path.exists(filepath):
@@ -165,6 +181,47 @@ def train_models():
     diurnal_weights = {feat: round(float(c), 5) for feat, c in zip(diurnal_features, diurnal_reg.coef_)}
     
     importances = dict(zip(FEATURE_COLS, [float(v) for v in clf.feature_importances_]))
+    
+    print("\n[*] Training PyTorch BiLSTM...")
+    # Normalize data for neural network
+    X_train_mean = X_train.mean()
+    X_train_std = X_train.std().replace(0, 1.0)
+    X_train_norm = (X_train - X_train_mean) / X_train_std
+    X_test_norm = (X_test - X_train_mean) / X_train_std
+    
+    # Reshape for LSTM (batch, seq_len=1, features)
+    X_tensor_train = torch.tensor(X_train_norm.values, dtype=torch.float32).unsqueeze(1)
+    y_tensor_train = torch.tensor(y_train_reg, dtype=torch.float32).unsqueeze(1)
+    
+    train_dataset = TensorDataset(X_tensor_train, y_tensor_train)
+    train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+    
+    bilstm = AQIBiLSTM(input_size=len(FEATURE_COLS))
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.Adam(bilstm.parameters(), lr=0.01)
+    
+    bilstm.train()
+    for epoch in range(5): # 5 epochs for demonstration
+        for batch_x, batch_y in train_loader:
+            optimizer.zero_grad()
+            outputs = bilstm(batch_x)
+            loss = criterion(outputs, batch_y)
+            loss.backward()
+            optimizer.step()
+    
+    bilstm.eval()
+    X_tensor_test = torch.tensor(X_test_norm.values, dtype=torch.float32).unsqueeze(1)
+    with torch.no_grad():
+        preds_bilstm = bilstm(X_tensor_test).squeeze().numpy()
+    
+    r2_bilstm = r2_score(y_test_reg, preds_bilstm)
+    print(f"[✔] BiLSTM R2: {r2_bilstm*100:.2f}%")
+    
+    # Export to ONNX
+    onnx_path = os.path.join(SCRIPT_DIR, 'bilstm.onnx')
+    dummy_input = torch.randn(1, 1, len(FEATURE_COLS))
+    torch.onnx.export(bilstm, dummy_input, onnx_path, input_names=['input'], output_names=['output'])
+    print(f"[✔] Exported BiLSTM to ONNX: {onnx_path}")
     
     web_model = {
         'version': '7.0.0-all-india-post2022',

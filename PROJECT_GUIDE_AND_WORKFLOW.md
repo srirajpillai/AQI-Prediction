@@ -54,7 +54,7 @@ flowchart TD
 
     subgraph AI_Engine ["⚙️ Background Web Worker Engine (worker.js)"]
         E --> F[Feature Extraction & Normalization]
-        F --> G[1. Machine Learning Inference Engine]
+        F --> G[1. Machine Learning Inference Engine (XGBoost + PyTorch BiLSTM)]
         F --> H[2. Spatial Transfer Learning: Haversine Wind Dispersion]
         F --> I[3. 24-Hour Diurnal Trajectory Modeler]
         F --> J[4. SHAP Feature Attribution Calculator]
