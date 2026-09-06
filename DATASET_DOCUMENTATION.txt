@@ -1,3 +1,5 @@
+NOTE: Architecture updated to include PyTorch BiLSTM (ONNX) for time-series forecasting alongside XGBoost.
+
 ================================================================================
 AIRFLOW AI — AQI PREDICTION MODEL TRAINING DATASETS DOCUMENTATION
 ================================================================================

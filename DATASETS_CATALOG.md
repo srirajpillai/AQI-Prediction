@@ -1,5 +1,9 @@
 # 📊 AirFlow AI — Dataset Catalog & Feature Documentation
 
+
+> [!NOTE]
+> **Architecture Update (v7.0.0):** The inference engine now integrates a **PyTorch BiLSTM model** exported via ONNX for advanced 24-hour time-series forecasting, complementing the existing XGBoost instantaneous risk classifier.
+
 > **Project:** AirFlow AI — Real-Time & Predictive Multi-Pollutant Intelligence  
 > **Model Training Pipeline:** Unified Post-2022 All-India IMD & CPCB Data  
 > **Total Records Trained:** 137,125+ Continuous Post-2022 Observations across India  

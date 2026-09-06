@@ -1,5 +1,9 @@
 # 🌬️ AirFlow AI — Real-Time AQI Prediction & Personalized Clinical Risk Engine
 
+
+> [!NOTE]
+> **Architecture Update (v7.0.0):** The inference engine now integrates a **PyTorch BiLSTM model** exported via ONNX for advanced 24-hour time-series forecasting, complementing the existing XGBoost instantaneous risk classifier.
+
 [![Version](https://img.shields.io/badge/Version-7.0.0-blue.svg)](https://github.com/srirajpillai/AQI-Prediction)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![ML Accuracy](https://img.shields.io/badge/ML%20Accuracy-98.42%25-brightgreen.svg)](#-machine-learning--predictive-modeling)

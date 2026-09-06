@@ -291,7 +291,7 @@ Here is the complete context of the project:
    - app.js: Main thread controller, multi-API fetcher, disease risk engine, Supabase auth & sync, Page Visibility optimizations.
    - worker.js: Background thread for ML inference, diurnal trajectories, Haversine spatial transfer math, and SHAP factor attribution.
    - styles.css: Glassmorphic design system, light mode default, yellow text stroke.
-   - unified_master_pipeline.py: Consolidated Python pipeline for dataset compilation and XGBoost model training.
+   - unified_master_pipeline.py: Consolidated Python pipeline for dataset compilation and XGBoost and BiLSTM models training.
    - ml_model.json: Serialized ML model weights and CPCB breakpoints.
    - PROJECT_REPORT.md: Academic Major Project Report for university evaluation.
 6. When answering questions or proposing modifications, ensure you preserve the zero-server client-side execution model, maintain triple-layer storage fallbacks, and adhere to official CPCB breakpoint formulas.
