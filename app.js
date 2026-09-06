@@ -630,12 +630,8 @@
         if (els.aqiDescription) els.aqiDescription.textContent = theme.desc;
 
         const refreshTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-        const sourceLabel = data._source === 'multi-source' ? 'Multi-Source'
-            : data._source === 'open-meteo' ? 'Open-Meteo'
-                : data._source === 'fallback' ? 'Estimate'
-                    : 'WAQI+OpenAQ';
         if (els.updateTime) {
-            els.updateTime.textContent = `Last refreshed: ${refreshTime} · ${sourceLabel}`;
+            els.updateTime.textContent = `Last refreshed: ${refreshTime}`;
         }
 
 
@@ -657,7 +653,6 @@
         pTags.unshift(`Dominant: ${dominant.name}`);
         pTags.unshift('ML Inference Active');
 
-        let _personalMultiplierForCommute = 1.0; // captured for the Commute Exposure module dispatch below
         if (userHealthProfile) {
             // Apply clinical multipliers based on health profile
             let multiplier = 1.0;
@@ -693,7 +688,6 @@
 
             pTags.push('Personalized Profile');
             if (multiplier > 1.25) pTags.push('High Sensitivity');
-            _personalMultiplierForCommute = multiplier;
         }
 
         if (els.healthAdvisoryText) els.healthAdvisoryText.innerHTML = pText;
@@ -711,34 +705,20 @@
 
         // Update personal disease risk panel if profile exists
         if (userHealthProfile) renderDiseaseRiskPanel(data, userHealthProfile);
-
-        // Notify decoupled feature modules (e.g. commute-exposure.js) of the latest reading
-        window.dispatchEvent(new CustomEvent('airflow:aqiUpdate', {
-            detail: {
-                pm25: data.iaqi?.pm25?.v ?? null,
-                cityName: currentCity?.name || null,
-                cityLat: currentCity?.lat ?? null,
-                cityLon: currentCity?.lon ?? null,
-                healthMultiplier: _personalMultiplierForCommute
-            }
-        }));
     }
 
     // Auth-gated UI: shows/hides personalized sections based on login state
     function _updateAuthGatedUI() {
         const guestPrompt = $('guestAuthPrompt');
         const diseaseSection = $('diseaseRiskSection');
-        const commuteSection = $('commuteExposureSection');
         if (currentUser) {
             // Logged in
             if (guestPrompt) guestPrompt.style.display = 'none';
-            if (commuteSection) commuteSection.style.display = '';
             // diseaseRiskSection is controlled by renderDiseaseRiskPanel
         } else {
             // Guest — show sign-in prompt, hide personalized sections
             if (guestPrompt) guestPrompt.style.display = '';
             if (diseaseSection) diseaseSection.style.display = 'none';
-            if (commuteSection) commuteSection.style.display = 'none';
         }
     }
 
@@ -949,14 +929,6 @@
         return           { label: 'Critical',       color: '#f44336', grade: 'D' };
     }
 
-    // Picks readable text (near-black or white) for a given hex background,
-    // using relative luminance so the grade letter is always legible.
-    function _readableTextOn(hex) {
-        const [r, g, b] = hexToRgb(hex).split(',').map(Number);
-        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        return luminance > 0.6 ? '#0b0f1a' : '#ffffff';
-    }
-
     function computeDiseaseRisk(aqiData, healthProfile) {
         const p = {
             pm25: aqiData.iaqi?.pm25?.v || 0,
@@ -995,7 +967,7 @@
                     <div class="risk-meta">
                         <div class="risk-title">${r.label}</div>
                         <div class="risk-badge" style="background:${r.risk.color}22;color:${r.risk.color};border-color:${r.risk.color};">
-                            ${r.risk.label} <span class="risk-grade" style="background:${r.risk.color};color:${_readableTextOn(r.risk.color)};box-shadow:0 0 6px ${r.risk.color}88;">${r.risk.grade}</span>
+                            ${r.risk.label} <span class="risk-grade">${r.risk.grade}</span>
                         </div>
                     </div>
                 </div>
@@ -1530,8 +1502,8 @@
             const hourTime = new Date(now.getTime() + i * 3600000);
             const timeStr = hourTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             const domPollutant = data.dominantPollutant || ['PM2.5', 'PM10', 'Ozone (O₃)', 'NO₂'][Math.floor((i * 3 + baseAqi) % 4)];
-            const windImpact = lastWeatherData?.windSpeed >= 15 ? 'High' : lastWeatherData?.windSpeed >= 8 ? 'Moderate' : 'Low';
-            const justification = `<b>ML Diurnal Model:</b> Predicting ${factor} with an expected AQI of <b>${hourAqi}</b> (${level.toUpperCase()}).`;
+            const windImpact = lastWeatherData?.windSpeed >= 15 ? 'Good' : lastWeatherData?.windSpeed >= 8 ? 'Moderate' : 'Low';
+            const justification = `Expected air quality is around <b>${hourAqi}</b> (${level.toUpperCase()}) influenced by <b>${factor}</b>.`;
             const levelLabel = level === 'unhealthySG' ? 'USG' : level.charAt(0).toUpperCase() + level.slice(1);
 
             const card = document.createElement('div');
@@ -1548,20 +1520,19 @@
         container.appendChild(fragment);
     }
 
-    // generateForecastFallback removed — worker already has this logic; if worker fails,
-    // we use a minimal diurnal fallback inline in buildHourlyForecast catch block.
+    // generateForecastFallback inline fallback
     function generateForecastFallback(baseAqi) {
         const now = new Date(), currentHour = now.getHours();
         return Array.from({ length: 24 }, (_, i) => {
             const fh = (currentHour + i) % 24;
             const rad = (fh - 14) * Math.PI / 12;
-            const delta = -12 * Math.cos(rad); // simple diurnal AQI swing
+            const delta = -12 * Math.cos(rad);
             const hourAqi = Math.max(1, Math.round(baseAqi + (i === 0 ? 0 : delta * 0.4)));
-            let factor = 'Atmospheric Equilibrium';
-            if (fh >= 5 && fh <= 9) factor = 'Morning Boundary Layer Stagnation';
-            else if (fh >= 12 && fh <= 15) factor = 'Solar Convective Dispersion';
-            else if (fh >= 17 && fh <= 21) factor = 'Peak Vehicular & Industrial Advection';
-            else if (fh >= 22 || fh <= 4) factor = 'Nocturnal Thermal Inversion';
+            let factor = 'Stable Weather Conditions';
+            if (fh >= 5 && fh <= 9) factor = 'Morning Traffic & Cooler Air';
+            else if (fh >= 12 && fh <= 15) factor = 'Afternoon Sunlight & Good Airflow';
+            else if (fh >= 17 && fh <= 21) factor = 'Evening Rush Hour & Commute';
+            else if (fh >= 22 || fh <= 4) factor = 'Nighttime Cooling & Particle Settling';
             return { i, hourAqi, level: getLevel(hourAqi), color: aqiColor(hourAqi), factor };
         });
     }
@@ -1580,12 +1551,12 @@
                     <div class="pt-flip-hint">Flipping automatically... <i class="fas fa-arrow-right"></i></div>
                 </div>
                 <div class="popout-back" style="border-color:${color}">
-                    <h3><i class="fas fa-satellite-dish" style="color:${color}"></i> Atmospheric Insights</h3>
+                    <h3><i class="fas fa-clock" style="color:${color}"></i> Hourly Air Insight</h3>
                     <p>${justification}</p>
                     <div class="factor-list">
-                        <div class="f-item"><i class="fas fa-smog" style="color:${color}"></i> <span>Dominant Pollutant: <b>${domPollutant}</b></span></div>
-                        <div class="f-item"><i class="fas fa-wind" style="color:${color}"></i> <span>Wind Dispersion: <b>${windImpact}</b></span></div>
-                        <div class="f-item"><i class="fas fa-temperature-half" style="color:${color}"></i> <span>Local thermodynamic profiling factored</span></div>
+                        <div class="f-item"><i class="fas fa-smog" style="color:${color}"></i> <span>Main Pollutant: <b>${domPollutant}</b></span></div>
+                        <div class="f-item"><i class="fas fa-wind" style="color:${color}"></i> <span>Wind Impact: <b>${windImpact}</b></span></div>
+                        <div class="f-item"><i class="fas fa-temperature-half" style="color:${color}"></i> <span>Temperature & humidity factored</span></div>
                     </div>
                 </div>
             </div>`;

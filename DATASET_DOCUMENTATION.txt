@@ -1,64 +1,75 @@
+NOTE: Architecture updated to include PyTorch BiLSTM (ONNX) for time-series forecasting alongside XGBoost.
+
 ================================================================================
 AIRFLOW AI — AQI PREDICTION MODEL TRAINING DATASETS DOCUMENTATION
 ================================================================================
 
-This document outlines the datasets utilized (both historically and newly added) 
-for training the AirFlow AI predictive models, including the ML inference engine, 
-sub-index weighting, and the cross-city transfer learning spatial kernel.
+This document outlines the official datasets and sources used to train the 
+AirFlow AI machine learning models, calculate pollutant sub-indices, and power 
+real-time hourly forecasts.
 
 --------------------------------------------------------------------------------
-PART 1: DATASETS USED SO FAR (BASELINE & API INTEGRATION)
+PART 1: REAL-TIME APIS USED IN THE WEB APPLICATION
 --------------------------------------------------------------------------------
 
-1. Open-Meteo Historical Air Quality & Weather Archive
-   - Description: A comprehensive historical dataset of 10km-resolution air quality and meteorological variables across the globe.
-   - Reason Used: Essential for establishing the baseline correlations between atmospheric conditions (temperature, wind, humidity, pressure) and real-time pollutant concentration (PM2.5, PM10, O3, NO2).
-   - Parameter(s): Temperature, Humidity, Wind Speed, Wind Direction, PM2.5, PM10
-   - Link: https://open-meteo.com/en/docs/historical-weather-api
+1. Open-Meteo Air Quality API
+   - Purpose: Fetches live concentrations of key air pollutants (PM2.5, PM10, 
+     NO2, SO2, CO, O3, Dust) for any searched city or GPS coordinates.
+   - Endpoint: https://air-quality-api.open-meteo.com/v1/air-quality
 
-2. WAQI (World Air Quality Index) Real-Time & Historical Data
-   - Description: Ground-level station data from over 130 countries.
-   - Reason Used: Used to calibrate our "Unhealthy for Sensitive Groups" thresholds and validate the ML model's dominant pollutant logic against actual government EPA sensors.
-   - Parameter(s): US-EPA AQI standard, Dominant Pollutants
-   - Link: https://aqicn.org/data-platform/register/
+2. Open-Meteo Weather Forecast API
+   - Purpose: Fetches real-time weather drivers including temperature, 
+     humidity, wind speed, wind direction, and surface pressure.
+   - Endpoint: https://api.open-meteo.com/v1/forecast
 
 --------------------------------------------------------------------------------
-PART 2: NEW KAGGLE DATASETS ADDED FOR ENHANCED TRAINING
+PART 2: MODEL TRAINING DATASETS (POST-2022 ALL-INDIA)
 --------------------------------------------------------------------------------
 
-To further optimize our model's accuracy, reduce overhead, and accurately predict 
-complex real-world factors (like thermal inversions and geopolitical events), the 
-following datasets have been added to our training pipeline:
+The machine learning models (XGBoost Classifier, Regressor, and Ridge baseline) 
+are trained using post-2022 data covering monitoring stations across India:
 
-3. Air Quality Data in India (2015 - 2020) (Kaggle)
-   - Description: Hourly and daily city-level air quality data for major Indian cities.
-   - Reason Used: Crucial for training the model on extreme pollution events, particularly the winter smog and crop-burning (agricultural) impacts in North India (Delhi, Gurugram). It improves the "Meteorological" and "Agricultural" event detection in our worker node.
-   - Parameter(s): PM2.5, PM10, SO2, NOx, CO, Benzene, Toluene
-   - Link: https://www.kaggle.com/datasets/rohanrao/air-quality-data-in-india
+1. IMD & CPCB Air Quality Daily Dataset (Post-2022)
+   - File: `datasets/latest_aqi_daily_2020_2026.csv`
+   - Description: Daily aggregated air quality and weather measurements across 
+     Indian cities from official CAAQMS stations and IMD records.
+   - Features Used: PM2.5, PM10, NO2, SO2, CO, O3, Temperature, Humidity, 
+     Wind Speed, Month.
 
-4. Global Air Pollution Dataset (Kaggle)
-   - Description: Comprehensive dataset mapping AQI values globally alongside lat/lon coordinates.
-   - Reason Used: Used specifically to train the "Cross-City Transfer Learning" weights. It helps the model understand spatial decay—how much pollution from City A transfers to City B based on distance.
-   - Parameter(s): AQI, Latitude, Longitude, Country
-   - Link: https://www.kaggle.com/datasets/hasibalmuzdadid/global-air-pollution-dataset
+2. IMD & CPCB Air Quality Hourly Dataset (Post-2022)
+   - File: `datasets/latest_aqi_hourly_2020_2026.csv`
+   - Description: High-resolution continuous hourly observations capturing 
+     morning traffic peaks, midday dispersion, and evening stagnation.
+   - Features Used: Hourly pollutant levels, diurnal atmospheric cycles, hour of day.
 
-5. Delhi Weather and Air Quality (Continuous) (Kaggle)
-   - Description: A highly granular dataset combining continuous weather metrics with air pollution levels in New Delhi.
-   - Reason Used: Used to train our "Atmospheric Insights" (Hourly AI Forecast) engine. It teaches the model how Nocturnal Thermal Inversions and Morning Boundary Layer Stagnation cause severe PM2.5 spikes.
-   - Parameter(s): Wind Speed, Wind Direction, Temperature, PM2.5 (Hourly)
-   - Link: https://www.kaggle.com/datasets/mahirkukreja/delhi-weather-data
+--------------------------------------------------------------------------------
+PART 3: SUMMARY OF FEATURES USED IN MODEL TRAINING (20 TOTAL)
+--------------------------------------------------------------------------------
 
-6. Wildfire & Air Quality Index Dataset (Kaggle)
-   - Description: Datasets correlating historical wildfire locations/intensities with downwind AQI degradation.
-   - Reason Used: Integrated to train the `DETECT_FACTORS` ML logic for "Natural Events". It allows the application to dynamically predict severe AQI multipliers when the model detects extreme dry winds coupled with sudden PM10/PM2.5 spikes (hallmarks of smoke advection).
-   - Parameter(s): Fire Radiative Power (FRP), Aerosol Optical Depth, PM2.5, AQI
-   - Link: https://www.kaggle.com/datasets/tunguz/us-wildfires
+1. Base Pollutant Concentrations (6):
+   - PM2.5, PM10, NO2, SO2, CO, O3
 
-================================================================================
-HOW TO USE FOR OFFLINE TRAINING:
-If retraining the JavaScript worker.js ML weights offline via Python:
-1. Download the CSVs from the Kaggle links above.
-2. Run a regression/random forest model against the target variables (AQI).
-3. Export the resulting feature importances (e.g., Wind=0.65, Temp=0.35) into 
-   the `worker.js` script to update the real-time inference multipliers.
+2. Derived Sub-Indices & Domain Ratios (9):
+   - PM2.5 Sub-Index (Individual CPCB air quality score for PM2.5)
+   - PM10 Sub-Index (Individual CPCB air quality score for PM10)
+   - NO2 Sub-Index (Individual CPCB air quality score for NO2)
+   - SO2 Sub-Index (Individual CPCB air quality score for SO2)
+   - CO Sub-Index (Individual CPCB air quality score for CO)
+   - O3 Sub-Index (Individual CPCB air quality score for Ozone)
+   - Maximum Sub-Index (Highest sub-index value, determining overall AQI)
+   - PM Ratio (PM2.5 / PM10 ratio, indicating combustion vs dust)
+   - Oxidant Sum (NO2 + O3 combined photochemical intensity)
+
+3. Meteorological & Temporal Drivers (5):
+   - Temperature (°C), Humidity (%), Wind Speed (km/h)
+   - Month of year, Hour of day
+
+--------------------------------------------------------------------------------
+HOW TO RETRAIN THE MODEL:
+--------------------------------------------------------------------------------
+To retrain the model and export updated weights:
+1. Ensure Python with pandas, scikit-learn, xgboost, and joblib is installed.
+2. Run the unified training script:
+   `python train_model.py`
+3. This automatically updates `ml_model.json` (for browser Web Worker) and `ml_model.pkl`.
 ================================================================================
