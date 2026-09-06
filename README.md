@@ -54,43 +54,26 @@ The application runs **100% client-side** using Vanilla HTML5, CSS3, ES6+ JavaSc
 
 ```mermaid
 flowchart TD
-    subgraph Client_Presentation ["🖥️ Presentation Layer (Main Thread: app.js)"]
-        A[User Enters City / Geolocation] --> B[Geocoding Cascade: Open-Meteo -> Nominatim -> Photon]
-        B --> C[Live Environmental Ingestion: Open-Meteo Air Quality & Weather]
-        C --> D[In-Memory 5-Min TTL Cache & State Manager]
-        D -->|postMessage| E[Web Worker Background Thread: worker.js]
+    A[User Location / City] --> B[Fetch Weather & AQI Data]
+    
+    B --> C{Web Worker Engine}
+    
+    subgraph Core [Machine Learning & Forecasting]
+        C --> D[XGBoost & PyTorch BiLSTM]
+        C --> E[Diurnal & Spatial Models]
+        D --> F[Unified AQI Prediction]
+        E --> F
     end
-
-    subgraph Worker_Engine ["⚙️ Background Web Worker Engine (worker.js)"]
-        E --> F[Feature Extraction & CPCB Breakpoints]
-        F --> G1[1. Machine Learning Inference Engine]
-        F --> G2[2. 24-Hour Diurnal Trajectory Modeler]
-        F --> G3[3. Haversine Spatial Wind Dispersion]
-        F --> G4[4. SHAP Factor Attribution Calculator]
-        G1 --> H[Unified Prediction Matrix]
-        G2 --> H
-        G3 --> H
-        G4 --> H
+    
+    F --> G[Health Risk Engine]
+    
+    subgraph UI [Interactive Dashboard]
+        G --> H[Personalized Medical Advice]
+        G --> I[AQI Status & Charts]
     end
-
-    subgraph Clinical_Engine ["🩺 Personalized Health Risk Engine"]
-        H --> I[Medical Multiplier Matrix]
-        J[User Health Profile: Age, Asthma, Cardiac, Activity] --> I
-        I --> K[Personalized Risk Scores 0-100 & Clinical Advice]
-    end
-
-    subgraph Data_Storage ["☁️ Hybrid Storage & Persistence"]
-        J <--> L1[1. Supabase Cloud PostgreSQL: RLS Auth & DB]
-        J <--> L2[2. Browser localStorage: Guest Offline Mode]
-        G1 <--> L3[3. ml_model.json & bilstm.onnx: Embedded Models]
-    end
-
-    subgraph UI_Render ["📊 Interactive Dashboard Output"]
-        K --> M1[3D Animated AQI Canvas Gauge]
-        K --> M2[24-Hour Trajectory Forecast Chart]
-        K --> M3[SHAP Positive/Negative Factor Breakdown]
-        K --> M4[Neighboring City Spatial Smog Warning]
-        K --> M5[Tailored Medical & Activity Advisories]
+    
+    subgraph Storage [Data Persistence]
+        G -.-> J[(Supabase & LocalStorage)]
     end
 ```
 
