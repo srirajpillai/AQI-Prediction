@@ -623,14 +623,12 @@ Answer:
 Q24: If an external examiner asks: "Can you retrain your model with new data?", 
      what is the command and process?
 Answer:
-"Yes, absolutely. The retraining process is fully automated in two scripts:
-1. `python compile_comprehensive_datasets.py`: Ingests and harmonizes the 6 raw 
-   datasets, performs missing value imputation, calculates sub-indices, and outputs 
-   the master dataset `comprehensive_aqi_master_dataset.csv`.
-2. `python train_comprehensive_ml.py`: Loads the master dataset, trains the XGBoost 
-   Classifier and Regressor, evaluates metrics on test splits, and automatically 
-   exports both `ml_model.pkl` (Python Joblib) and `ml_model.json` (Web Worker 
-   client-side model)."
+"Yes, absolutely. The retraining process is fully consolidated into a single script:
+1. `python train_model.py`: Ingests the latest post-2022 IMD & CPCB daily and hourly 
+   datasets across all monitoring stations in India, calculates the 20 important features 
+   (base pollutants, sub-indices, PM ratio, weather drivers), trains the XGBoost 
+   Classifier & Regressor, evaluates metrics on a test split, and automatically exports 
+   both `ml_model.pkl` (Python Joblib) and `ml_model.json` (for zero-latency browser Web Worker inference)."
 
 ================================================================================
 END OF VIVA & PRESENTATION PREPARATION GUIDE

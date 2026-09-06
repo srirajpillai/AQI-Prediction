@@ -214,12 +214,12 @@ function generateHourlyForecastWithML(baseAqi, hourlyData, hourlyTimes, currentH
         const level = getLevel(hourAqi);
         const color = aqiColor(hourAqi);
 
-        // ML Factor attribution for this hour
-        let factor = 'Atmospheric Equilibrium';
-        if (forecastHour >= 5 && forecastHour <= 9) factor = 'Morning Boundary Layer Stagnation';
-        else if (forecastHour >= 12 && forecastHour <= 15) factor = 'Solar Convective Dispersion';
-        else if (forecastHour >= 17 && forecastHour <= 21) factor = 'Peak Vehicular & Industrial Advection';
-        else if (forecastHour >= 22 || forecastHour <= 4) factor = 'Nocturnal Thermal Inversion';
+        // Factor attribution for this hour
+        let factor = 'Stable Weather Conditions';
+        if (forecastHour >= 5 && forecastHour <= 9) factor = 'Morning Traffic & Cooler Air';
+        else if (forecastHour >= 12 && forecastHour <= 15) factor = 'Afternoon Sunlight & Good Airflow';
+        else if (forecastHour >= 17 && forecastHour <= 21) factor = 'Evening Rush Hour & Commute';
+        else if (forecastHour >= 22 || forecastHour <= 4) factor = 'Nighttime Cooling & Particle Settling';
 
         forecasts.push({ i, hourAqi, level, color, factor });
     }

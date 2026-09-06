@@ -108,20 +108,13 @@ version1/
 │   └── manifest.json                # Progressive Web App (PWA) manifest configuration
 │
 ├── 🤖 MACHINE LEARNING PIPELINE & MODEL ASSETS (PYTHON)
-│   ├── unified_master_pipeline.py   # ALL-IN-ONE master Python script: dataset compilation, training, and export
-│   ├── compile_comprehensive_datasets.py # Cleans & harmonizes 6 global datasets into master corpus
-│   ├── train_comprehensive_ml.py    # Trains XGBoost Multi-Class & Regressor on master corpus
-│   ├── train_expanded_multi_dataset.py   # High-resolution multi-city reanalysis dataset trainer
-│   ├── train_latest_dataset.py      # 2020-2026 ground-truth continuous archive trainer
-│   ├── train_version1_ml.py         # Initial CPCB baseline trainer & linear weight exporter
+│   ├── train_model.py               # Consolidated Python training pipeline (XGBoost & Ridge)
 │   ├── ml_model.json                # Lightweight serialized model weights used by worker.js in browser
 │   ├── ml_model.pkl                 # Trained Scikit-Learn / XGBoost binary model (Python Joblib)
 │   └── datasets/                    # Directory holding raw & compiled air quality data (CSVs)
-│       ├── comprehensive_aqi_master_dataset.csv # 1.245M+ row unified training corpus
-│       ├── city_day.csv             # CPCB India official historical dataset (2015–2020)
-│       ├── latest_aqi_hourly_2020_2026.csv # Copernicus & ERA5 continuous hourly dataset
+│       ├── latest_aqi_hourly_2020_2026.csv # Continuous hourly observation dataset
 │       ├── latest_aqi_daily_2020_2026.csv  # Aggregated daily multi-city dataset
-│       ├── master_air_quality_daily_2020_2026.csv # Master daily multi-city reanalysis
+│       ├── city_day.csv             # CPCB India official historical dataset (2015–2020)
 │       ├── stations.csv             # CPCB ground monitoring station registry
 │       └── dataset_metadata.json    # JSON catalog describing dataset schemas & provenance
 │
@@ -135,8 +128,7 @@ version1/
 └── 📋 DOCUMENTATION & SPECIFICATIONS
     ├── PROJECT_REPORT.md                 # Complete Academic Major Project Report (B.Tech Submission)
     ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.md # Markdown Master Reference Guide
-    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.txt # Plaintext Master Reference Guide
-    ├── unified_master_pipeline.txt       # Plaintext consolidated Python master script
+    ├── PROJECT_VIVA_AND_PRESENTATION_PREP.txt # Master viva voce presentation guide
     ├── PROJECT_GUIDE_AND_WORKFLOW.md     # Architecture workflow & operating guide
     ├── SRS_DOCUMENT.md                    # Formal IEEE Software Requirements Specification
     ├── DATASETS_CATALOG.md                # Comprehensive catalog of all dataset files

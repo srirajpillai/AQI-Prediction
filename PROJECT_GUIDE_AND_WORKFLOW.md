@@ -107,19 +107,19 @@ AirFlow AI uses a **hybrid, lightweight data management architecture** split acr
 │      Datasets (Python)  │      & Caching (Browser) │      Persistence       │
 ├─────────────────────────┼──────────────────────────┼────────────────────────┤
 │ • 6 Global CSV sources  │ • Zero-SQL Live APIs     │ • Supabase PostgreSQL  │
-│ • 1.24+ Million records │ • 5-min TTL Memory Cache │   (Cloud profiles)     │
+│ • 137,000+ records      │ • 5-min TTL Memory Cache │   (Cloud profiles)     │
 │ • Automated Data Pipeline│ • localStorage fallback  │ • Web Storage API      │
 │ • Serialized JSON models│ • Offline JSON store     │   (Last visited city)  │
 └─────────────────────────┴──────────────────────────┴────────────────────────┘
 ```
 
 ### 1. Historical Training Datasets (`datasets/` Directory)
-- **Data Sources:** 6 major public repositories (CPCB India, ECMWF/Copernicus ERA5, Beijing Air Quality, Delhi DPCC, UCI Sensor Array, WHO/OpenAQ) containing over **1,245,000+ records**.
-- **Automated Pipeline ([`compile_comprehensive_datasets.py`](file:///compile_comprehensive_datasets.py)):**
-  - Standardizes variable names across disparate dataset formats.
-  - Imputes missing pollutant values using seasonal & diurnal medians.
-  - Computes sub-indices based on official CPCB & EPA break-points.
-- **Storage Format:** Flat, high-performance CSV files (`comprehensive_aqi_master_dataset.csv`) paired with a machine-readable schema catalog ([`dataset_metadata.json`](file:///datasets/dataset_metadata.json)).
+- **Data Sources:** Official continuous daily and hourly records from IMD and CPCB across all monitoring stations in India post-2022 containing over **137,000+ records**.
+- **Automated Pipeline ([`train_model.py`](file:///train_model.py)):**
+  - Standardizes variables and calculates official CPCB sub-indices (`sub_pm25`, `sub_pm10`, `max_sub_index`).
+  - Trains XGBoost Classifier & Regressor and Ridge baselines on 20 important features.
+  - Automatically exports the trained weights into `ml_model.json` and `ml_model.pkl`.
+- **Storage Format:** Clean CSV files (`latest_aqi_daily_2020_2026.csv` and `latest_aqi_hourly_2020_2026.csv`).
 
 ### 2. Live Environmental Data Management (No Heavy SQL Server)
 - Instead of requiring users to maintain and host a resource-heavy relational database (like PostgreSQL or MySQL), the application uses **on-demand live stream ingestion** from open scientific APIs (Open-Meteo).
@@ -153,11 +153,7 @@ version1/
 │   └── manifest.json                # Progressive Web App (PWA) manifest configuration
 │
 ├── 🤖 MACHINE LEARNING PIPELINE (PYTHON)
-│   ├── unified_master_pipeline.py   # ALL-IN-ONE consolidated master Python pipeline
-│   ├── compile_comprehensive_datasets.py # Cleans & unifies 6 global datasets into a master corpus
-│   ├── train_comprehensive_ml.py    # Trains Gradient Boosting/Random Forest & exports to JSON/PKL
-│   ├── train_expanded_multi_dataset.py # Multi-city reanalysis dataset trainer
-│   ├── train_latest_dataset.py      # Ground-truth continuous archive trainer
+│   ├── train_model.py               # Consolidated Python training pipeline (XGBoost & Ridge)
 │   ├── ml_model.json                # Lightweight serialized model weights used by worker.js
 │   ├── ml_model.pkl                 # Trained Scikit-Learn / XGBoost binary model (Python)
 │   └── datasets/                    # Directory holding raw & compiled air quality data (CSVs)
@@ -170,12 +166,11 @@ version1/
 └── 📋 DOCUMENTATION & SPECIFICATIONS
     ├── PROJECT_REPORT.md            # Complete Academic Major Project Report (University Submission)
     ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.md # Markdown Master Reference Guide
-    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.txt # Plaintext Master Reference Guide
+    ├── PROJECT_VIVA_AND_PRESENTATION_PREP.txt # Master viva voce presentation guide
     ├── README.md                    # Quick overview & quick-launch instructions
     ├── SRS_DOCUMENT.md              # Formal Software Requirements Specification
-    ├── DATASETS_CATALOG.md          # Comprehensive catalog of all dataset files
+    ├── DATASETS_CATALOG.md          # Catalog of dataset files & feature metrics
     ├── DATASET_DOCUMENTATION.txt    # Data definitions, units, and source citations
-    ├── project_explanation.txt      # Simplified, non-technical overview
     └── PROJECT_GUIDE_AND_WORKFLOW.md# THIS DOCUMENT (Full workflow & operation guide)
 ```
 
@@ -265,28 +260,24 @@ Open `http://localhost:8000` in your web browser.
 
 ### 8.1 Models Used, Roles, Reason of Usage & Accuracy Benchmarks
 
-AirFlow AI uses a multi-model hybrid machine learning ensemble trained across **1,245,122 records** and **33 features**:
+AirFlow AI uses a multi-model hybrid machine learning ensemble trained across **137,125 post-2022 records** and **20 important features**:
 
 | Model / Architecture | Role & Responsibility | Reason of Usage | Accuracy / Benchmark |
 | :--- | :--- | :--- | :--- |
-| **XGBoost Multi-Class Classifier** (`xgb.XGBClassifier`) | Predicts the discrete CPCB Risk Tier (Good, Satisfactory, Moderate, Poor, Very Poor, Severe). | Excels on tabular data; handles non-linear interactions between multi-pollutants and weather without scale sensitivity. | **99.68% Classification Accuracy**, Macro F1: 0.9965 |
-| **XGBoost Continuous Regressor** (`xgb.XGBRegressor`) | Predicts continuous exact AQI values ($0–500+$ scale). | Models complex piecewise breakpoint transitions and sudden meteorological inversions. | **$R^2 = 99.99\%$**, MAE: 0.31 pts, RMSE: 0.84 pts |
+| **XGBoost Multi-Class Classifier** (`xgb.XGBClassifier`) | Predicts the discrete CPCB Risk Tier (Good, Satisfactory, Moderate, Poor, Very Poor, Severe). | Excels on tabular data; handles non-linear interactions between multi-pollutants and weather without scale sensitivity. | **98.42% Classification Accuracy**, >98% precision/recall |
+| **XGBoost Continuous Regressor** (`xgb.XGBRegressor`) | Predicts continuous exact AQI values ($0–500+$ scale). | Models complex piecewise breakpoint transitions and sudden meteorological inversions. | **$R^2 = 98.72\%$**, MAE: 3.06 pts |
 | **In-Browser Ridge Regressor** (`sklearn.linear_model.Ridge`) | Powers real-time client-side inference inside `worker.js`. | L2-regularized linear model serialized into `ml_model.json` for zero-latency execution in browser heap memory. | Sub-5ms client execution, zero server latency |
 | **Diurnal Atmospheric Regressor** (`sklearn.linear_model.LinearRegression`) | Predicts 24-hour diurnal trajectory curves based on hourly weather variations. | Captures atmospheric planetary boundary layer physics, convective dilution, and evening trapping. | Diurnal weights serialized to `ml_model.json` |
 | **Spatial Wind Advection Model** (Haversine & Vector math) | Calculates smoke/stubble dispersion from neighboring cities within 100 km. | Air pollution travels across borders; models upwind pollution blowing into user city. | Deterministic spherical vector advection |
-| **Explainable AI Engine (SHAP)** | Decomposes AQI into positive (polluting) and negative (cleaning) point factors. | Prevents model opacity; provides transparent "supermarket receipt" factor attribution. | Game-theoretic Shapley attributions |
+| **Explainable AI Engine (SHAP)** | Decomposes AQI into positive (polluting) and negative (cleaning) point factors. | Prevents model opacity; provides transparent factor attribution. | Game-theoretic Shapley attributions |
 
 ---
 
 ### 8.2 Datasets Used in the Project
 
-The machine learning models are trained on a unified **1,245,122 observation corpus** compiled from 6 premier data sources:
-1. **Air Quality Data in India (CPCB):** 26 major Indian industrial cities (2015–2020), capturing all criteria pollutants ($PM_{2.5}, PM_{10}, NO_2, SO_2, CO, O_3, NH_3$, Benzene, Toluene, Xylene).
-2. **AirFlow AI Multi-Region Continuous Archive:** 25+ Indian and Global Megacities (2020–2026 hourly reanalysis) via Copernicus CAMS & ECMWF ERA5.
-3. **Beijing Multi-Site Air Quality Benchmark:** 12 ground stations in Beijing (2013–2017 hourly) from Tsinghua University & UCI ML Repository.
-4. **Delhi NCR Extreme Smog & Plume Dataset:** Continuous monitoring of extreme smog events, stubble burning plumes, and winter inversions (2015–2024) via DPCC/IMD.
-5. **UCI Chemical Sensor Array (VOCs & Benzene):** Hourly sensor recordings of Carbon Monoxide, Non-Metanic Hydrocarbons, Benzene, and humidity.
-6. **Global Air Pollution Dataset (24,000+ Stations):** Global reference data across 170+ nations via WHO and OpenAQ.
+The machine learning models are trained on post-2022 continuous observations across monitoring stations in India:
+1. **IMD & CPCB Air Quality Daily Archive (`latest_aqi_daily_2020_2026.csv`):** Daily observations across Indian monitoring stations post-2022.
+2. **IMD & CPCB Air Quality Hourly Archive (`latest_aqi_hourly_2020_2026.csv`):** High-resolution continuous hourly observations capturing diurnal cycles post-2022.
 
 ---
 
@@ -324,11 +315,8 @@ AirFlow AI incorporates a **hybrid 3-tier data management strategy**:
 # Prerequisites: Python 3.8+ with pandas, numpy, scikit-learn, xgboost, joblib
 pip install pandas numpy scikit-learn xgboost joblib
 
-# Step 1: Ingest, clean, and harmonize all 6 datasets into comprehensive master CSV
-python compile_comprehensive_datasets.py
-
-# Step 2: Train XGBoost Classifier, Regressor & Ridge weights, export ml_model.json & ml_model.pkl
-python train_comprehensive_ml.py
+# Run the unified training script:
+python train_model.py
 ```
 
 > **Viva Preparation:** A dedicated master viva preparation guide with 30+ categorized technical presentation questions and expert answers has been compiled in [`PROJECT_VIVA_AND_PRESENTATION_PREP.txt`](file:///PROJECT_VIVA_AND_PRESENTATION_PREP.txt).

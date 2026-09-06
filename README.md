@@ -111,22 +111,14 @@ version1/
 │   └── manifest.json                # Progressive Web App (PWA) manifest configuration
 │
 ├── 🤖 MACHINE LEARNING PIPELINE (PYTHON)
-│   ├── unified_master_pipeline.py   # ALL-IN-ONE Python script: dataset compilation, training, and export
-│   ├── unified_master_pipeline.txt  # Plaintext version of unified master Python pipeline
-│   ├── compile_comprehensive_datasets.py # Cleans & harmonizes 6 global datasets into master corpus
-│   ├── train_comprehensive_ml.py    # Trains XGBoost Multi-Class & Regressor on master corpus
-│   ├── train_expanded_multi_dataset.py   # High-resolution multi-city reanalysis dataset trainer
-│   ├── train_latest_dataset.py      # 2020-2026 ground-truth continuous archive trainer
-│   ├── train_version1_ml.py         # Initial CPCB baseline trainer & linear weight exporter
+│   ├── train_model.py               # Consolidated Python training pipeline (XGBoost & Ridge)
 │   ├── ml_model.json                # Serialized model weights & breakpoints used by worker.js
 │   ├── ml_model.pkl                 # Trained Python binary model (Joblib pipeline)
 │   └── datasets/                    # Directory holding raw & compiled air quality data (CSVs)
-│       ├── comprehensive_aqi_master_dataset.csv # 1.245M+ row unified master training corpus
-│       ├── city_day.csv             # Official CPCB India historical dataset (2015–2020)
-│       ├── latest_aqi_hourly_2020_2026.csv # Copernicus & ERA5 continuous hourly dataset
+│       ├── latest_aqi_hourly_2020_2026.csv # Continuous hourly observation dataset
 │       ├── latest_aqi_daily_2020_2026.csv  # Aggregated daily multi-city dataset
-│       ├── master_air_quality_daily_2020_2026.csv # Master daily multi-city reanalysis
-│       ├── stations.csv             # CPCB ground monitoring station registry
+│       ├── city_day.csv             # CPCB India historical reference
+│       ├── stations.csv             # Monitoring station registry
 │       └── dataset_metadata.json    # JSON catalog describing dataset schemas & provenance
 │
 ├── ☁️ CONFIGURATION & DEPLOYMENT
@@ -137,13 +129,12 @@ version1/
 │   └── .vercelignore                # Vercel build exclusion rules
 │
 └── 📋 DOCUMENTATION
-    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.md # Comprehensive master reference guide for AI Agents / LLMs
-    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.txt # Plaintext edition of AI Agent Master Guide
+    ├── COMPLETE_AI_AGENT_PROJECT_GUIDE.md # Comprehensive master reference guide
+    ├── PROJECT_VIVA_AND_PRESENTATION_PREP.txt # Master viva voce presentation guide
     ├── PROJECT_GUIDE_AND_WORKFLOW.md     # Architecture workflow & operating guide
     ├── SRS_DOCUMENT.md                    # Formal IEEE Software Requirements Specification
     ├── DATASETS_CATALOG.md                # Comprehensive catalog of all dataset files
     ├── DATASET_DOCUMENTATION.txt          # Pollutant units, thresholds, and citations
-    ├── project_explanation.txt            # Simplified non-technical project summary
     └── README.md                          # THIS DOCUMENT (Project overview)
 ```
 
@@ -151,19 +142,15 @@ version1/
 
 ## 🤖 Machine Learning & Predictive Modeling
 
-The machine learning models are trained on a unified **1,245,000+ record master corpus** compiled from 6 global monitoring archives:
-- **CPCB India National Ground Station Archive (2015–2020)**
-- **Copernicus CAMS & ECMWF ERA5 Continuous Reanalysis (2020–2026)**
-- **Beijing Multi-Site Microclimate Dataset (UCI / Tsinghua University)**
-- **UCI Chemical Multi-Sensor VOCs & Hydrocarbons Array Dataset**
-- **Delhi Extreme Smog & Seasonal Agricultural Inversion Microclimate**
-- **WHO / OpenAQ Global Multi-City Monitoring Corpus (24,000+ stations)**
+The machine learning models are trained on post-2022 continuous observations across monitoring stations in India from IMD and CPCB:
+- **IMD & CPCB Daily Archive (`latest_aqi_daily_2020_2026.csv`)**
+- **IMD & CPCB Hourly Archive (`latest_aqi_hourly_2020_2026.csv`)**
 
 ### Model Evaluation Metrics
 | Model | Algorithm | Target Variable | Performance Metric |
 | :--- | :--- | :--- | :--- |
-| **Risk Category Classifier** | XGBoost Multi-Class (`hist`) | 6 CPCB Tiers (Good to Severe) | **99.68% Accuracy** |
-| **Continuous AQI Regressor** | XGBoost Regressor | Numerical AQI (0–500+) | **$R^2 = 99.99\%$ \| MAE = 0.31** |
+| **Risk Category Classifier** | XGBoost Multi-Class (`hist`) | 6 CPCB Tiers (Good to Severe) | **98.42% Accuracy** |
+| **Continuous AQI Regressor** | XGBoost Regressor | Numerical AQI (0–500+) | **$R^2 = 98.72\%$ \| MAE = 3.06** |
 | **Diurnal Response Modeler** | Multi-Variable Linear/Ridge | Diurnal $\Delta \text{AQI}(h)$ | Serialized to `ml_model.json` |
 
 ---
