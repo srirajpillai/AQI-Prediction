@@ -184,7 +184,7 @@ SECTION 2: COMPREHENSIVE DATASET CATALOG
 
 AirFlow AI trains on a unified dataset compiled strictly from Indian Meteorological Department (IMD) & CPCB data collected after 2022 (i.e. > 2022-12-31), focusing on both daily and hourly temporal resolutions across ALL available cities in India.
 
-1. IMD & CPCB AIR QUALITY DAILY & HOURLY ARCHIVE (POST-2022 ALL-INDIA)
+1. CPCB AIR QUALITY DAILY & HOURLY ARCHIVE (POST-2022 ALL-INDIA)
    - Scope: Complete India (All States and available monitoring stations)
    - Timeframe: Post-2022
    - Datasets Used: `latest_aqi_daily_2020_2026.csv` and `latest_aqi_hourly_2020_2026.csv`
