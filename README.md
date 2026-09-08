@@ -54,43 +54,43 @@ The application runs **100% client-side** using Vanilla HTML5, CSS3, ES6+ JavaSc
 
 ```mermaid
 flowchart TD
-    %% Stage 1: Ingestion
-    subgraph Stage1 ["1️⃣ Data Ingestion & Input"]
-        A["📍 User City Search / GPS Location"] --> B["🌐 Real-Time Environmental APIs<br/>(Open-Meteo Air Quality & Weather)"]
-        B --> C["📥 Live Telemetry Data Stream<br/>(PM2.5, PM10, NO2, SO2, CO, O3, Wind, Temp, Humidity)"]
+    %% Step 1: Input & Data
+    subgraph Step1 ["1. Input & Live Data"]
+        A["User Location / City"] --> B["Live Weather & Air APIs"]
+        B --> C["Real-Time Air Data"]
     end
 
-    %% Stage 2: Web Worker AI Engine
-    subgraph Stage2 ["2️⃣ Client-Side AI Engine (Web Worker: worker.js)"]
-        C --> D["⚡ Multi-Threaded Web Worker<br/>(Runs inference in background — zero UI lag)"]
-        D --> M1["🌲 XGBoost Classifier & Regressor<br/>(Instantaneous AQI & 6 CPCB Tiers — 98.42% Accuracy)"]
-        D --> M2["🧠 PyTorch BiLSTM (ONNX Runtime)<br/>(24-Hour Temporal Sequence Forecast)"]
-        D --> M3["💨 Spatial Wind Dispersion Model<br/>(Haversine Distance + Wind Vector Advection)"]
-        D --> M4["🔍 Explainable AI (SHAP Attribution)<br/>(Root-Cause Factor Contribution Breakdown)"]
+    %% Step 2: Smart AI Engine
+    subgraph Step2 ["2. Smart Prediction Engine"]
+        C --> D["Background AI Processor"]
+        D --> M1["Current AQI Predictor"]
+        D --> M2["24-Hour Future Forecast"]
+        D --> M3["Wind & Neighbor Smog Tracker"]
+        D --> M4["Pollution Root-Cause Finder"]
     end
 
-    %% Stage 3: Health Engine
-    subgraph Stage3 ["3️⃣ Personalized Clinical Risk Engine"]
-        M1 & M2 & M3 & M4 --> H1["⚙️ Clinical Vulnerability Scoring Algorithm"]
-        Profile["👤 User Health Profile<br/>(Asthma, Heart Disease, Elderly, Pregnancy, Activity)"] --> H1
-        H1 --> H2["🩺 Personalized Disease Risk Assessment<br/>(0–100 Health Risk Score + Medical Precautions)"]
+    %% Step 3: Health Engine
+    subgraph Step3 ["3. Personalized Health Check"]
+        M1 & M2 & M3 & M4 --> H1["Health Risk Analyzer"]
+        UserHealth["User Health Conditions<br/>(Asthma, Heart, Age, etc.)"] --> H1
+        H1 --> H2["Personalized Health Score<br/>& Safety Precautions"]
     end
 
-    %% Stage 4: Dashboard & Storage
-    subgraph Stage4 ["4️⃣ Interactive UI & Data Persistence"]
-        H2 --> UI["🖥️ Glassmorphic Dashboard (index.html / app.js)<br/>• 3D Animated AQI Gauge & CPCB Category<br/>• 24-Hour Hourly Trajectory Chart<br/>• Plain-English Contributing Factors<br/>• Cross-City Upwind Smoke Alerts"]
-        UI <--> DB[("💾 Cloud & Local Persistence<br/>• Supabase Cloud PostgreSQL (User Profiles & Auth)<br/>• Browser LocalStorage (Offline Cache & Guest Mode)")]
+    %% Step 4: Dashboard & Storage
+    subgraph Step4 ["4. User Dashboard & Storage"]
+        H2 --> UI["Interactive Dashboard<br/>(Gauge, Forecast & Alerts)"]
+        UI <--> Storage["Cloud & Offline Storage"]
     end
 ```
 
 ### 🎙️ How to Explain This Architecture in Your Presentation (4 Simple Steps)
 
-| Presentation Phase | Key Points to Explain to the Evaluators |
+| Step | What It Does (Simple Explanation) |
 | :--- | :--- |
-| **1. Data Ingestion** | The app captures the user's city or GPS coordinates and fetches real-time concentrations for 6 major criteria pollutants ($\text{PM}_{2.5}, \text{PM}_{10}, \text{NO}_2, \text{SO}_2, \text{CO}, \text{O}_3$) alongside meteorological variables (wind speed, wind direction, temperature, humidity) via Open-Meteo REST APIs. |
-| **2. Client-Side AI Engine** | Instead of depending on an expensive Python cloud backend, all machine learning runs **100% inside the user's browser** via a multi-threaded **Web Worker (`worker.js`)**. This keeps the interface running at 60 FPS. The engine combines **XGBoost** (98.42% accuracy for current AQI), **PyTorch BiLSTM (ONNX)** (for 24-hour time-series forecasting), **Spatial Haversine Wind Modeling** (tracking upwind smoke from neighbor cities), and **SHAP** (explaining why AQI changed). |
-| **3. Clinical Risk Engine** | Raw AQI alone is insufficient for healthcare. The engine maps the predicted air quality against the user's personal health profile (e.g., asthma, heart disease, pregnancy, activity level) to calculate an individual clinical risk score ($0–100$) with tailored medical advisories. |
-| **4. UI & Persistence** | The main thread renders an intuitive glassmorphic dashboard with an animated gauge, 24-hour forecast curve, plain-English factor badges, and neighboring city transfer warnings. User profiles sync securely with **Supabase PostgreSQL (Cloud)** with instant fallback to **LocalStorage** for guest/offline users. |
+| **1. Live Data Ingestion** | The user selects a city or uses GPS. The system fetches live weather and air quality measurements (dust, smoke, gases, temperature, and wind) from open environmental services. |
+| **2. Smart Prediction Engine** | All AI calculations run directly inside the browser so the app stays fast and smooth. It calculates the current air quality level, predicts the next 24 hours hour-by-hour, checks if wind is blowing smog from neighboring cities, and highlights the primary cause of pollution. |
+| **3. Personalized Health Engine** | Different people have different health needs. The engine checks the pollution levels against the user's health profile (such as asthma, heart conditions, elderly status, or pregnancy) to give a personalized risk score (0 to 100) and practical safety precautions. |
+| **4. User Dashboard & Storage** | Results are displayed on a clean visual dashboard with an animated gauge, 24-hour forecast curve, and clear advice. Settings and profiles are saved securely in the cloud and stored locally for instant offline loading. |
 
 ---
 
