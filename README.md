@@ -62,7 +62,7 @@ flowchart TD
 
     %% Step 2: Smart AI Engine
     subgraph Step2 ["2. Smart Prediction Engine"]
-        C --> D["Background AI Processor"]
+        C --> D["Background Data Processor"]
         D --> M1["Current AQI Predictor"]
         D --> M2["24-Hour Future Forecast"]
         D --> M3["Wind & Neighbor Smog Tracker"]
@@ -72,13 +72,13 @@ flowchart TD
     %% Step 3: Health Engine
     subgraph Step3 ["3. Personalized Health Check"]
         M1 & M2 & M3 & M4 --> H1["Health Risk Analyzer"]
-        UserHealth["User Health Conditions<br/>(Asthma, Heart, Age, etc.)"] --> H1
-        H1 --> H2["Personalized Health Score<br/>& Safety Precautions"]
+        UserHealth["User Health Conditions<br/>(Disease, Heart, Age, etc.)"] --> H1
+        H1 --> H2["Personalized Health Safety Precautions"]
     end
 
     %% Step 4: Dashboard & Storage
     subgraph Step4 ["4. User Dashboard & Storage"]
-        H2 --> UI["Interactive Dashboard<br/>(Gauge, Forecast & Alerts)"]
+        H2 --> UI["Interactive Dashboard<br/>(Advice, Forecast & Alerts)"]
         UI <--> Storage["Cloud & Offline Storage"]
     end
 ```
