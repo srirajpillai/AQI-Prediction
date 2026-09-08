@@ -151,21 +151,21 @@
 
     // ===== AQI Themes =====
     const AQI_THEMES = {
-        good: { accent: '#00e676', rgb: '0,230,118', bg: 'linear-gradient(135deg,#041f12 0%,#050810 50%,#0a1a0a 100%)', status: 'Good', desc: 'Air quality is satisfactory. No health risk.' },
-        moderate: { accent: '#ffeb3b', rgb: '255,235,59', bg: 'linear-gradient(135deg,#1f1a04 0%,#0d0c05 50%,#1a1808 100%)', status: 'Moderate', desc: 'Air quality is acceptable. Sensitive individuals may notice mild effects.' },
-        unhealthySG: { accent: '#ff9800', rgb: '255,152,0', bg: 'linear-gradient(135deg,#1f1005 0%,#100a04 50%,#1a1208 100%)', status: 'Unhealthy for Sensitive Groups', desc: 'Sensitive groups may experience health effects. General public is less affected.' },
-        unhealthy: { accent: '#f44336', rgb: '244,67,54', bg: 'linear-gradient(135deg,#1f0808 0%,#100505 50%,#1a0808 100%)', status: 'Unhealthy', desc: 'Everyone may begin to experience health effects. Sensitive groups face serious effects.' },
-        veryUnhealthy: { accent: '#9c27b0', rgb: '156,39,176', bg: 'linear-gradient(135deg,#140820 0%,#0a0510 50%,#12081a 100%)', status: 'Very Unhealthy', desc: 'Health warnings of emergency conditions. Entire population affected.' },
-        hazardous: { accent: '#880e4f', rgb: '136,14,79', bg: 'linear-gradient(135deg,#1a040f 0%,#0d0208 50%,#150410 100%)', status: 'Hazardous', desc: 'Health emergency: everyone may experience serious health effects.' }
+        good: { accent: '#00e676', rgb: '0,230,118', bg: 'linear-gradient(135deg,#041f12 0%,#050810 50%,#0a1a0a 100%)', status: 'Good', desc: 'The air is clean and fresh. Great day to be outside!' },
+        moderate: { accent: '#ffeb3b', rgb: '255,235,59', bg: 'linear-gradient(135deg,#1f1a04 0%,#0d0c05 50%,#1a1808 100%)', status: 'Moderate', desc: 'Air quality is okay for most people. If you have asthma or allergies, take it easy outside.' },
+        unhealthySG: { accent: '#ff9800', rgb: '255,152,0', bg: 'linear-gradient(135deg,#1f1005 0%,#100a04 50%,#1a1208 100%)', status: 'Unhealthy for Sensitive Groups', desc: 'People with asthma, heart conditions, children, and the elderly should limit time outdoors.' },
+        unhealthy: { accent: '#f44336', rgb: '244,67,54', bg: 'linear-gradient(135deg,#1f0808 0%,#100505 50%,#1a0808 100%)', status: 'Unhealthy', desc: 'Most people may feel discomfort. Try to stay indoors and avoid strenuous outdoor activity.' },
+        veryUnhealthy: { accent: '#9c27b0', rgb: '156,39,176', bg: 'linear-gradient(135deg,#140820 0%,#0a0510 50%,#12081a 100%)', status: 'Very Unhealthy', desc: 'Everyone should avoid going outside. Keep windows closed and stay in a clean indoor space.' },
+        hazardous: { accent: '#880e4f', rgb: '136,14,79', bg: 'linear-gradient(135deg,#1a040f 0%,#0d0208 50%,#150410 100%)', status: 'Hazardous', desc: 'Dangerous air quality. Do not go outside. This is a health emergency for everyone.' }
     };
 
     const HEALTH_ADVISORIES = {
-        good: { text: 'Air quality is excellent. Enjoy outdoor activities freely.', tags: ['Safe for All', 'Outdoor OK', 'No Mask Needed'] },
-        moderate: { text: 'Unusually sensitive individuals should consider limiting prolonged outdoor exertion.', tags: ['Mostly Safe', 'Monitor Symptoms', 'Sensitive Caution'] },
-        unhealthySG: { text: 'People with respiratory/heart conditions, children, and elderly should reduce outdoor exertion. Use N95 masks if outside.', tags: ['N95 Advised', 'Limit Exercise', 'Close Windows', 'Air Purifier'] },
-        unhealthy: { text: 'Everyone should reduce outdoor activities. People with lung/heart disease, elderly, children should avoid outdoor exertion.', tags: ['Stay Indoors', 'N95 Required', 'Air Purifier Essential', 'Close Windows'] },
-        veryUnhealthy: { text: 'HEALTH WARNING: Avoid all outdoor activity. Everyone may experience health effects.', tags: ['Health Emergency', 'Stay Indoors', 'N95 Essential', 'Medical Alert'] },
-        hazardous: { text: 'HEALTH EMERGENCY: Everyone should avoid all outdoor activity. Sealed indoor environments with HEPA filtration critical.', tags: ['Emergency', 'Do Not Go Outside', 'HEPA Required', 'Medical Emergency'] }
+        good: { text: 'The air is clean today. Go outside and enjoy your day!', tags: ['Safe for All', 'Great Outdoors', 'No Precautions'] },
+        moderate: { text: 'Air quality is fine for most people. If you have asthma or allergies, avoid long outdoor activity.', tags: ['Generally Safe', 'Watch Symptoms', 'Sensitive Groups Take Care'] },
+        unhealthySG: { text: 'Limit outdoor time if you have asthma, a heart condition, or are elderly/a child. Wear an N95 mask if you need to go out.', tags: ['Wear Mask Outdoors', 'Limit Exercise', 'Close Windows', 'Use Air Purifier'] },
+        unhealthy: { text: 'Try to stay indoors today. Everyone — especially children, elderly and those with health conditions — should avoid outdoor physical activity.', tags: ['Stay Indoors', 'N95 Mask', 'Air Purifier Needed', 'Close Windows'] },
+        veryUnhealthy: { text: 'Health alert — avoid going outside. Even healthy people may feel the effects. Stay in a clean, ventilated room.', tags: ['Health Alert', 'Stay Indoors', 'Wear N95', 'See a Doctor If Unwell'] },
+        hazardous: { text: 'Dangerous air quality. Do NOT go outside. Keep all windows sealed and run an air purifier. Seek medical help if you feel unwell.', tags: ['Emergency', 'Stay Indoors', 'Air Purifier Essential', 'Call Doctor If Needed'] }
     };
 
     // ===== Neighboring Cities Database =====
@@ -674,16 +674,16 @@
 
             let conditionAdvice = '';
             if (c.asthma || c.copd) {
-                conditionAdvice = ` Bronchodilator inhalers should be readily accessible. Fine particulate (${dominant.name}) penetrates deeply into bronchial airways — strictly avoid outdoor cardio workouts.`;
+                conditionAdvice = ` Keep your inhaler nearby and avoid outdoor exercise today.`;
             } else if (c.heart) {
-                conditionAdvice = ` Elevated particulates increase cardiovascular strain. Maintain indoor resting environments with active HEPA air purification.`;
+                conditionAdvice = ` Rest indoors and take your medications on time — pollution can raise blood pressure.`;
             } else if (c.pregnant || c.elderly || c.immuno) {
-                conditionAdvice = ` Vulnerable population protocol: Keep residential windows sealed and use certified N95 respirators if transit is necessary.`;
+                conditionAdvice = ` Keep windows closed and wear an N95 mask if you need to step out.`;
             } else {
-                conditionAdvice = ` Outdoor physical exertion should be tailored to personalized sensitivity limits.`;
+                conditionAdvice = ` Adjust how much time you spend outdoors based on how you feel.`;
             }
 
-            pText = `<strong><i class="fas fa-user-shield" style="color:var(--aqi-accent)"></i> Personalized Risk (${personalLevel.toUpperCase()} — Adjusted AQI: ${personalAqi}):</strong> ` +
+            pText = `<strong><i class="fas fa-user-shield" style="color:var(--aqi-accent)"></i> Your Personal Risk (${personalLevel.toUpperCase()} — Adjusted AQI: ${personalAqi}):</strong> ` +
                 HEALTH_ADVISORIES[personalLevel].text + conditionAdvice;
 
             pTags.push('Personalized Profile');
@@ -729,7 +729,7 @@
             label: 'Respiratory Disease',
             icon: 'fa-lungs',
             color: '#e53935',
-            description: 'Risk of airway inflammation, exacerbated asthma, bronchitis and COPD flare-ups.',
+            description: 'Today\'s air may irritate your airways and lungs.',
             compute(p, h) {
                 const c = h.conditions || {};
                 let score = 0;
@@ -752,18 +752,15 @@
             precautions(score, p, h) {
                 const c = h.conditions || {};
                 const tips = [];
-                if (score >= 70) tips.push('<i class="fas fa-house-lock tip-icon"></i> Stay indoors — seal windows and run a HEPA air purifier continuously.');
-                else if (score >= 40) tips.push('<i class="fas fa-mask tip-icon"></i> Wear an N95 mask outdoors — surgical masks do not filter fine particles.');
-                if (c.asthma) tips.push('<i class="fas fa-lungs tip-icon"></i> Carry your rescue inhaler and use your preventive inhaler before going outside.');
-                if (c.copd) tips.push('<i class="fas fa-wind tip-icon"></i> Contact your doctor immediately if breathing worsens — your lung reserve is reduced.');
-                if (c.bronchitis) tips.push('<i class="fas fa-droplet tip-icon"></i> Stay hydrated and use a steam inhaler to ease mucus buildup.');
-                if (c.rhinitis) tips.push('<i class="fas fa-leaf tip-icon"></i> Take antihistamines before going out and rinse nose with saline after returning.');
-                if (c.child) tips.push('<i class="fas fa-child tip-icon"></i> Keep children indoors — avoid outdoor recess and physical play today.');
-                if (c.elderly) tips.push('<i class="fas fa-person-cane tip-icon"></i> Elderly are vulnerable — take extra caution and stay hydrated.');
-                if (h.activity === 'high') tips.push('<i class="fas fa-person-running tip-icon"></i> Switch workouts indoors — intense outdoor exercise multiplies pollutant intake.');
-                if (p.pm25 > 35) tips.push(`<i class="fas fa-smog tip-icon"></i> PM2.5 is ${p.pm25.toFixed(0)} µg/m³ — minimize all time spent outdoors.`);
-                if (p.o3 > 70) tips.push('<i class="fas fa-sun tip-icon"></i> High ozone — avoid strenuous outdoor activity between 10am and 6pm.');
-                if (h.smoking === 'active') tips.push('<i class="fas fa-ban tip-icon"></i> Smoking now compounds lung damage — consider cessation immediately.');
+                if (score >= 70) tips.push('<i class="fas fa-house-lock tip-icon"></i> Stay indoors and keep windows closed.');
+                else if (score >= 40) tips.push('<i class="fas fa-mask tip-icon"></i> Wear an N95 mask if you go outside.');
+                if (c.asthma) tips.push('<i class="fas fa-lungs tip-icon"></i> Keep your inhaler handy and use it before stepping out.');
+                if (c.copd) tips.push('<i class="fas fa-wind tip-icon"></i> Call your doctor if you notice any change in your breathing.');
+                if (c.child) tips.push('<i class="fas fa-child tip-icon"></i> Children are more sensitive — skip outdoor play for now.');
+                if (c.elderly) tips.push('<i class="fas fa-person-cane tip-icon"></i> Drink plenty of water and avoid going out in peak hours.');
+                if (h.activity === 'high') tips.push('<i class="fas fa-person-running tip-icon"></i> Move your workout indoors today.');
+                if (p.pm25 > 35) tips.push('<i class="fas fa-smog tip-icon"></i> Fine dust (PM2.5) is high — limit your time outside.');
+                if (!tips.length) tips.push('<i class="fas fa-check-circle tip-icon"></i> Air quality is manageable — normal outdoor activity is fine.');
                 return tips;
             }
         },
@@ -772,7 +769,7 @@
             label: 'Cardiovascular Stress',
             icon: 'fa-heart-pulse',
             color: '#e91e63',
-            description: 'Risk of heart rate irregularities, elevated blood pressure, and cardiovascular events.',
+            description: 'Pollution can raise blood pressure and strain the heart.',
             compute(p, h) {
                 const c = h.conditions || {};
                 let score = 0;
@@ -791,16 +788,12 @@
             precautions(score, p, h) {
                 const c = h.conditions || {};
                 const tips = [];
-                if (score >= 70) tips.push('<i class="fas fa-bed tip-icon"></i> Avoid all physical exertion — rest in a clean, cool indoor space.');
-                else if (score >= 50) tips.push('<i class="fas fa-heart-pulse tip-icon"></i> Monitor your heart rate or blood pressure every few hours today.');
-                if (c.heart || c.hypertension) {
-                    tips.push('<i class="fas fa-pills tip-icon"></i> Take your heart/BP medications on time — air pollution raises blood pressure.');
-                    tips.push('<i class="fas fa-stethoscope tip-icon"></i> Call your cardiologist if you feel chest tightness, palpitations, or breathlessness.');
-                }
-                if (c.stroke) tips.push('<i class="fas fa-brain tip-icon"></i> PM2.5 raises stroke recurrence risk — stay strictly indoors on poor AQI days.');
-                if (c.diabetes) tips.push('<i class="fas fa-syringe tip-icon"></i> Pollution-induced inflammation raises blood glucose — check levels more frequently.');
-                if (p.no2 > 50) tips.push('<i class="fas fa-car tip-icon"></i> NO₂ elevated — avoid roadside and heavy-traffic areas.');
-                if (h.smoking === 'active') tips.push('<i class="fas fa-ban tip-icon"></i> Smoking + polluted air drastically raises heart attack risk — seek cessation support.');
+                if (score >= 70) tips.push('<i class="fas fa-bed tip-icon"></i> Avoid physical effort — rest in a cool, ventilated room.');
+                else if (score >= 50) tips.push('<i class="fas fa-heart-pulse tip-icon"></i> Check your blood pressure a couple of times today.');
+                if (c.heart || c.hypertension) tips.push('<i class="fas fa-pills tip-icon"></i> Take your medications on time — pollution can push BP higher.');
+                if (c.heart) tips.push('<i class="fas fa-stethoscope tip-icon"></i> See your doctor if you feel chest discomfort or shortness of breath.');
+                if (c.diabetes) tips.push('<i class="fas fa-syringe tip-icon"></i> Monitor your blood sugar — inflammation from pollutants can raise glucose.');
+                if (!tips.length) tips.push('<i class="fas fa-check-circle tip-icon"></i> Risk is low today — light indoor activity is perfectly safe.');
                 return tips;
             }
         },
@@ -809,7 +802,7 @@
             label: 'Eye & Skin Irritation',
             icon: 'fa-eye',
             color: '#ff9800',
-            description: 'Risk of eye redness, skin irritation, and mucous membrane inflammation.',
+            description: 'Pollutants in the air can cause itchy eyes and dry, irritated skin.',
             compute(p, h) {
                 const c = h.conditions || {};
                 let score = 0;
@@ -823,12 +816,11 @@
             precautions(score, p, h) {
                 const c = h.conditions || {};
                 const tips = [];
-                if (score >= 50) tips.push('<i class="fas fa-glasses tip-icon"></i> Wear UV-blocking sunglasses outdoors — ozone irritates the cornea.');
-                tips.push('<i class="fas fa-droplet tip-icon"></i> Rinse eyes with clean water and moisturise skin after returning indoors.');
-                tips.push('<i class="fas fa-shield-halved tip-icon"></i> Apply SPF moisturiser — pollution accelerates skin oxidative damage.');
-                if (p.so2 > 20) tips.push(`<i class="fas fa-industry tip-icon"></i> SO₂ elevated — causes eye and throat burning. Limit outdoor time.`);
-                if (p.no2 > 50) tips.push('<i class="fas fa-eye-slash tip-icon"></i> NO₂ elevated — rinse eyes with saline if redness or irritation occurs.');
-                if (c.rhinitis) tips.push('<i class="fas fa-leaf tip-icon"></i> Rinse nasal passages with saline twice daily to flush trapped particulates.');
+                if (score >= 50) tips.push('<i class="fas fa-glasses tip-icon"></i> Wear sunglasses outdoors — ozone irritates the eyes.');
+                tips.push('<i class="fas fa-droplet tip-icon"></i> Wash your face and rinse your eyes after coming indoors.');
+                if (p.so2 > 20) tips.push('<i class="fas fa-industry tip-icon"></i> SO₂ is elevated — cut short any outdoor time if your eyes start to sting.');
+                if (c.rhinitis) tips.push('<i class="fas fa-leaf tip-icon"></i> Rinse your nose with saline spray — it helps flush out trapped particles.');
+                if (!tips.length) tips.push('<i class="fas fa-check-circle tip-icon"></i> No significant irritation risk today.');
                 return tips;
             }
         },
@@ -837,7 +829,7 @@
             label: 'Neurological Impact',
             icon: 'fa-brain',
             color: '#9c27b0',
-            description: 'Cognitive function, headaches and neurological risk from CO and fine particulates.',
+            description: 'High CO and fine dust can cause headaches and affect concentration.',
             compute(p, h) {
                 const c = h.conditions || {};
                 let score = 0;
@@ -852,12 +844,11 @@
             precautions(score, p, h) {
                 const c = h.conditions || {};
                 const tips = [];
-                if (score >= 60) tips.push('<i class="fas fa-brain tip-icon"></i> High CO/PM2.5 impairs cognition — avoid demanding mental tasks during peak exposure.');
-                tips.push('<i class="fas fa-bell tip-icon"></i> Install CO detectors in every sleeping area — CO is colorless and odorless.');
-                if (p.co > 0.5) tips.push('<i class="fas fa-fire-flame-simple tip-icon"></i> CO elevated — never use gas stoves or heaters in enclosed spaces without ventilation.');
-                if (p.pm25 > 35) tips.push('<i class="fas fa-smog tip-icon"></i> Fine particles can cross the blood-brain barrier — reduce total outdoor exposure time.');
-                if (c.stroke) tips.push('<i class="fas fa-stethoscope tip-icon"></i> PM2.5 can trigger a repeat ischemic event — avoid outdoor exposure on hazardous days.');
-                if (c.child) tips.push('<i class="fas fa-child tip-icon"></i> Children\'s developing brains are most vulnerable — keep them strictly indoors today.');
+                if (score >= 60) tips.push('<i class="fas fa-brain tip-icon"></i> You may feel foggy or get headaches today — take breaks and rest indoors.');
+                tips.push('<i class="fas fa-bell tip-icon"></i> Make sure your room has good ventilation — CO builds up in closed spaces.');
+                if (p.co > 0.5) tips.push('<i class="fas fa-fire-flame-simple tip-icon"></i> Avoid using gas stoves or heaters without ventilation right now.');
+                if (c.child) tips.push('<i class="fas fa-child tip-icon"></i> Kids are especially sensitive — keep them indoors with clean air today.');
+                if (!tips.length) tips.push('<i class="fas fa-check-circle tip-icon"></i> Cognitive risk is low today — no special precautions needed.');
                 return tips;
             }
         },
@@ -866,7 +857,7 @@
             label: 'Maternal / Fetal Risk',
             icon: 'fa-baby',
             color: '#ec407a',
-            description: 'Risk to maternal health and fetal development from prolonged pollutant exposure.',
+            description: 'Certain pollutants can reach the baby — it\'s worth taking extra care.',
             compute(p, h) {
                 const c = h.conditions || {};
                 if (!c.pregnant) return 0;
@@ -880,13 +871,10 @@
             },
             precautions(score, p, h) {
                 const tips = [];
-                if (score >= 70) tips.push('<i class="fas fa-triangle-exclamation tip-icon"></i> Do not go outdoors today — fine particles cross the placenta and reduce fetal oxygen.');
-                tips.push('<i class="fas fa-mask tip-icon"></i> Wear N95/FFP2 mask whenever outdoors — surgical masks do not filter PM2.5.');
-                tips.push('<i class="fas fa-fan tip-icon"></i> Run a HEPA air purifier in your bedroom continuously, including during sleep.');
-                if (p.no2 > 40) tips.push('<i class="fas fa-car tip-icon"></i> NO₂ elevated — linked to low birth weight. Avoid roadside and traffic areas entirely.');
-                if (p.co > 0.5) tips.push('<i class="fas fa-fire-flame-simple tip-icon"></i> CO reduces fetal oxygen — ensure no combustion sources are used indoors.');
-                if (h.smoking === 'active') tips.push('<i class="fas fa-ban tip-icon"></i> Smoking with poor AQI raises miscarriage and birth defect risk — cessation is urgent.');
-                tips.push('<i class="fas fa-stethoscope tip-icon"></i> Mention current AQI levels to your OB-GYN at your next antenatal visit.');
+                if (score >= 70) tips.push('<i class="fas fa-triangle-exclamation tip-icon"></i> Try to stay indoors today — fine particles can pass through the placenta.');
+                tips.push('<i class="fas fa-mask tip-icon"></i> Wear an N95 mask if you need to go outside — a regular mask won\'t help.');
+                if (p.no2 > 40) tips.push('<i class="fas fa-car tip-icon"></i> Traffic fumes are higher than normal — avoid busy roads today.');
+                tips.push('<i class="fas fa-stethoscope tip-icon"></i> Mention today\'s air quality to your doctor at your next visit.');
                 return tips;
             }
         },
@@ -895,7 +883,7 @@
             label: 'Long-term Cancer Risk',
             icon: 'fa-radiation',
             color: '#607d8b',
-            description: 'Cumulative risk from chronic exposure to carcinogenic pollutants (IARC Group 1).',
+            description: 'Regular exposure to polluted air slowly increases long-term health risk.',
             compute(p, h) {
                 const c = h.conditions || {};
                 let score = 0;
@@ -910,13 +898,11 @@
             precautions(score, p, h) {
                 const c = h.conditions || {};
                 const tips = [];
-                tips.push('<i class="fas fa-fan tip-icon"></i> Use a HEPA + activated carbon air purifier indoors to capture carcinogenic particles and VOCs.');
-                tips.push('<i class="fas fa-stethoscope tip-icon"></i> Schedule annual spirometry (lung function) tests if you spend 3+ hours/day outdoors.');
-                if (score >= 60) tips.push('<i class="fas fa-smog tip-icon"></i> PM2.5 is IARC Group 1 carcinogen — reduce cumulative daily outdoor exposure to the minimum.');
-                if (p.no2 > 40) tips.push('<i class="fas fa-car tip-icon"></i> NO₂ is a benzene/VOC proxy — linked to blood cancers. Avoid high-traffic areas.');
-                if (c.immuno) tips.push('<i class="fas fa-shield-halved tip-icon"></i> Your body cannot repair pollution-induced DNA damage as effectively — extra protection is critical.');
-                if (h.smoking === 'active') tips.push('<i class="fas fa-ban tip-icon"></i> Smoking + PM2.5 multiplies lung cancer risk up to 30× — cessation is the single most impactful step.');
-                if (parseInt(h.outdoorHours || 3) >= 6) tips.push('<i class="fas fa-hard-hat tip-icon"></i> Outdoor workers: request dust controls at your site and wear a P100 respirator when possible.');
+                tips.push('<i class="fas fa-fan tip-icon"></i> A good air purifier indoors makes a real difference over time.');
+                if (score >= 60) tips.push('<i class="fas fa-smog tip-icon"></i> Try to limit how much time you spend outside on high-pollution days.');
+                if (h.smoking === 'active') tips.push('<i class="fas fa-ban tip-icon"></i> Quitting smoking is the single biggest step you can take for your long-term health.');
+                if (parseInt(h.outdoorHours || 3) >= 6) tips.push('<i class="fas fa-hard-hat tip-icon"></i> If you work outdoors, ask about dust controls and use a proper mask.');
+                if (!tips.length) tips.push('<i class="fas fa-check-circle tip-icon"></i> Low cumulative exposure today — keep up healthy habits.');
                 return tips;
             }
         }
@@ -957,7 +943,7 @@
 
         section.style.display = '';
         grid.innerHTML = results.map(r => {
-            const precs = r.precautions.slice(0, 3);
+            const precs = r.precautions.slice(0, 2);
             return `
             <div class="risk-card glass-card hover-3d">
                 <div class="risk-card-header">
@@ -967,7 +953,7 @@
                     <div class="risk-meta">
                         <div class="risk-title">${r.label}</div>
                         <div class="risk-badge" style="background:${r.risk.color}22;color:${r.risk.color};border-color:${r.risk.color};">
-                            ${r.risk.label} <span class="risk-grade">${r.risk.grade}</span>
+                            ${r.risk.label}
                         </div>
                     </div>
                 </div>
@@ -1122,9 +1108,9 @@
 
         // Precautions for the trip
         const allPrecs = destRisks.flatMap(r => r.precautions).slice(0, 5);
-        if (purpose === 'exercise') allPrecs.unshift('Outdoor exercise at destination — wear N95 mask and check hourly forecast before going out.');
-        if (purpose === 'medical') allPrecs.unshift('Medical travel — ensure treatment facility has clean air filtration. Carry rescue medication.');
-        if (duration >= 7) allPrecs.push(`Extended stay (${duration} days) — consider portable HEPA air purifier for accommodation.`);
+        if (purpose === 'exercise') allPrecs.unshift('Planning to exercise outdoors? Wear an N95 mask and check the hourly forecast before heading out.');
+        if (purpose === 'medical') allPrecs.unshift('Travelling for medical care? Make sure the facility has good air quality. Carry your medications with you.');
+        if (duration >= 7) allPrecs.push(`Staying ${duration} days? Consider bringing a small air purifier for your room.`);
 
         el.innerHTML = `
             <div class="travel-verdict ${verdictClass}">
@@ -1280,7 +1266,7 @@
             if (els.eventAlertDesc) {
                 els.eventAlertDesc.textContent = primaryFactor
                     ? primaryFactor.description
-                    : `Current AQI of ${aqiData.aqi} exceeds safe levels. Multiple environmental factors are contributing.`;
+                    : `The AQI is ${aqiData.aqi} right now — that's above safe levels. A few things are affecting the air quality here.`;
             }
             els.eventAlertBanner.style.display = 'block';
         }
@@ -1290,7 +1276,7 @@
             grid.innerHTML = `
                 <div class="factor-none">
                     <i class="fas fa-check-circle"></i>
-                    Air quality conditions are within normal parameters. No major impact factors detected.
+                    No unusual factors today. The air is behaving normally.
                 </div>`;
             return;
         }
@@ -1692,6 +1678,7 @@
             node.dataset.lat = n.lat; node.dataset.lon = n.lon;
             node.dataset.name = n.name; node.dataset.region = n.country || '';
             node.dataset.tz = 'UTC';
+            node.dataset.cachedAqi = nAqi;  // store pre-fetched AQI so click shows same value
             node.title = `Click to switch to ${n.name}`;
             node.addEventListener('click', () => selectCity(node));
             node.innerHTML = `
@@ -1758,7 +1745,7 @@
                 <p><strong style="color:${predColor}">${predTheme.status}</strong> — ${predTheme.desc}</p>
                 <div class="transfer-breakdown">
                     ${breakdown.map(b => `
-                        <div class="tb-item clickable" data-lat="${neighborData.find(n => n.name === b.name)?.lat || 0}" data-lon="${neighborData.find(n => n.name === b.name)?.lon || 0}" data-name="${b.name}" data-region="${neighborData.find(n => n.name === b.name)?.country || ''}" data-tz="UTC" title="Click to view ${b.name}" style="cursor:pointer;">
+                        <div class="tb-item clickable" data-lat="${neighborData.find(n => n.name === b.name)?.lat || 0}" data-lon="${neighborData.find(n => n.name === b.name)?.lon || 0}" data-name="${b.name}" data-region="${neighborData.find(n => n.name === b.name)?.country || ''}" data-tz="UTC" data-cached-aqi="${b.aqi}" title="Click to view ${b.name}" style="cursor:pointer;">
                             <div class="tb-city">${b.name}</div>
                             <div class="tb-aqi" style="color:${aqiColor(b.aqi)}">${b.aqi}</div>
                             <div class="tb-meta">${b.dist}km away</div>
@@ -1905,6 +1892,15 @@
         localStorage.setItem('airflowLastCity', JSON.stringify(currentCity));
         if (els.citySearch) els.citySearch.value = currentCity.name;
         if (els.searchDropdown) els.searchDropdown.classList.remove('active');
+
+        // If we have a cached AQI from the transfer/neighbor display, pre-populate
+        // lastAQIData immediately so the main display shows the same value the user
+        // just clicked on — before the fresh API fetch completes.
+        const cachedAqi = el.dataset.cachedAqi ? parseInt(el.dataset.cachedAqi, 10) : null;
+        if (cachedAqi && !isNaN(cachedAqi)) {
+            lastAQIData = { aqi: cachedAqi, iaqi: {}, dominantPollutant: 'PM2.5' };
+        }
+
         loadCity();
     }
 
@@ -2734,18 +2730,24 @@
                     // Update auth-gated UI immediately
                     _updateAuthGatedUI();
 
-                    // ─── Immediately render personalized sections ───
+                    // ─── Smooth reveal + scroll only on genuine new login ───
                     if (lastAQIData) {
                         try {
                             updateDisplay(lastAQIData);
-                            // Smooth reveal animation on disease risk section
+                            // Only scroll the first time the user actually logs in this session
+                            // (NOT on every tab-switch or page reload auth restore)
                             const riskSec = $('diseaseRiskSection');
-                            if (riskSec && userHealthProfile) {
+                            if (riskSec && userHealthProfile && !sessionStorage.getItem('_riskScrolled')) {
+                                sessionStorage.setItem('_riskScrolled', '1');
                                 riskSec.classList.add('login-reveal-animate');
-                                // Scroll to personalized section after a brief delay
-                                setTimeout(() => {
-                                    riskSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                }, 400);
+                                // Only scroll when the user actively signs in — skip on page reload
+                                // We detect a real login vs restore by checking if the page was loaded fresh
+                                const pageWasJustLoaded = performance.now() < 3000;
+                                if (!pageWasJustLoaded) {
+                                    setTimeout(() => {
+                                        riskSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }, 400);
+                                }
                             }
                         } catch (_) { }
                     }

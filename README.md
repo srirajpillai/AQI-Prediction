@@ -54,28 +54,43 @@ The application runs **100% client-side** using Vanilla HTML5, CSS3, ES6+ JavaSc
 
 ```mermaid
 flowchart TD
-    A[User Location / City] --> B[Fetch Weather & AQI Data]
-    
-    B --> C{Web Worker Engine}
-    
-    subgraph Core [Machine Learning & Forecasting]
-        C --> D[XGBoost & PyTorch BiLSTM]
-        C --> E[Diurnal & Spatial Models]
-        D --> F[Unified AQI Prediction]
-        E --> F
+    %% Stage 1: Ingestion
+    subgraph Stage1 ["1️⃣ Data Ingestion & Input"]
+        A["📍 User City Search / GPS Location"] --> B["🌐 Real-Time Environmental APIs<br/>(Open-Meteo Air Quality & Weather)"]
+        B --> C["📥 Live Telemetry Data Stream<br/>(PM2.5, PM10, NO2, SO2, CO, O3, Wind, Temp, Humidity)"]
     end
-    
-    F --> G[Health Risk Engine]
-    
-    subgraph UI [Interactive Dashboard]
-        G --> H[Personalized Medical Advice]
-        G --> I[AQI Status & Charts]
+
+    %% Stage 2: Web Worker AI Engine
+    subgraph Stage2 ["2️⃣ Client-Side AI Engine (Web Worker: worker.js)"]
+        C --> D["⚡ Multi-Threaded Web Worker<br/>(Runs inference in background — zero UI lag)"]
+        D --> M1["🌲 XGBoost Classifier & Regressor<br/>(Instantaneous AQI & 6 CPCB Tiers — 98.42% Accuracy)"]
+        D --> M2["🧠 PyTorch BiLSTM (ONNX Runtime)<br/>(24-Hour Temporal Sequence Forecast)"]
+        D --> M3["💨 Spatial Wind Dispersion Model<br/>(Haversine Distance + Wind Vector Advection)"]
+        D --> M4["🔍 Explainable AI (SHAP Attribution)<br/>(Root-Cause Factor Contribution Breakdown)"]
     end
-    
-    subgraph Storage [Data Persistence]
-        G -.-> J[(Supabase & LocalStorage)]
+
+    %% Stage 3: Health Engine
+    subgraph Stage3 ["3️⃣ Personalized Clinical Risk Engine"]
+        M1 & M2 & M3 & M4 --> H1["⚙️ Clinical Vulnerability Scoring Algorithm"]
+        Profile["👤 User Health Profile<br/>(Asthma, Heart Disease, Elderly, Pregnancy, Activity)"] --> H1
+        H1 --> H2["🩺 Personalized Disease Risk Assessment<br/>(0–100 Health Risk Score + Medical Precautions)"]
+    end
+
+    %% Stage 4: Dashboard & Storage
+    subgraph Stage4 ["4️⃣ Interactive UI & Data Persistence"]
+        H2 --> UI["🖥️ Glassmorphic Dashboard (index.html / app.js)<br/>• 3D Animated AQI Gauge & CPCB Category<br/>• 24-Hour Hourly Trajectory Chart<br/>• Plain-English Contributing Factors<br/>• Cross-City Upwind Smoke Alerts"]
+        UI <--> DB[("💾 Cloud & Local Persistence<br/>• Supabase Cloud PostgreSQL (User Profiles & Auth)<br/>• Browser LocalStorage (Offline Cache & Guest Mode)")]
     end
 ```
+
+### 🎙️ How to Explain This Architecture in Your Presentation (4 Simple Steps)
+
+| Presentation Phase | Key Points to Explain to the Evaluators |
+| :--- | :--- |
+| **1. Data Ingestion** | The app captures the user's city or GPS coordinates and fetches real-time concentrations for 6 major criteria pollutants ($\text{PM}_{2.5}, \text{PM}_{10}, \text{NO}_2, \text{SO}_2, \text{CO}, \text{O}_3$) alongside meteorological variables (wind speed, wind direction, temperature, humidity) via Open-Meteo REST APIs. |
+| **2. Client-Side AI Engine** | Instead of depending on an expensive Python cloud backend, all machine learning runs **100% inside the user's browser** via a multi-threaded **Web Worker (`worker.js`)**. This keeps the interface running at 60 FPS. The engine combines **XGBoost** (98.42% accuracy for current AQI), **PyTorch BiLSTM (ONNX)** (for 24-hour time-series forecasting), **Spatial Haversine Wind Modeling** (tracking upwind smoke from neighbor cities), and **SHAP** (explaining why AQI changed). |
+| **3. Clinical Risk Engine** | Raw AQI alone is insufficient for healthcare. The engine maps the predicted air quality against the user's personal health profile (e.g., asthma, heart disease, pregnancy, activity level) to calculate an individual clinical risk score ($0–100$) with tailored medical advisories. |
+| **4. UI & Persistence** | The main thread renders an intuitive glassmorphic dashboard with an animated gauge, 24-hour forecast curve, plain-English factor badges, and neighboring city transfer warnings. User profiles sync securely with **Supabase PostgreSQL (Cloud)** with instant fallback to **LocalStorage** for guest/offline users. |
 
 ---
 

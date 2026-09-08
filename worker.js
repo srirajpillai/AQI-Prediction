@@ -342,11 +342,11 @@ function detectActiveFactorsWithML(weatherData, pollutantData) {
         const severity = Math.min(100, Math.round((pm25 / 150) * 100));
         active.push({
             id: 'pm25_combustion',
-            label: 'Fine Particle Combustion / Biomass Smoke',
+            label: 'Smoke & Fine Dust in the Air',
             icon: 'fa-smog',
             category: 'agricultural',
             color: '#ff7043',
-            description: `ML Feature Attribution: PM2.5 (${pm25} µg/m³) is contributing ${Math.round(ML_MODEL.featureImportances['PM2.5'] * 1000) / 10}% variance to the elevated AQI.`,
+            description: `Fine particle levels (PM2.5) are high at ${pm25} µg/m³ — likely from burning, traffic or nearby industry. This is the biggest contributor to today's poor air.`,
             aqiMultiplier: 1.85,
             severity
         });
@@ -355,11 +355,11 @@ function detectActiveFactorsWithML(weatherData, pollutantData) {
     if (pres >= 1016 && wind <= 6) {
         active.push({
             id: 'thermal_inversion',
-            label: 'Atmospheric Inversion & Stagnation Layer',
+            label: 'Still Air — Pollution Stuck Near Ground',
             icon: 'fa-layer-group',
             category: 'meteorological',
             color: '#ff9800',
-            description: `High surface barometric pressure (${pres} hPa) combined with stagnant winds (${wind} km/h) prevents vertical convective dispersal.`,
+            description: `High pressure (${pres} hPa) and very slow wind (${wind} km/h) means the air is not moving. Pollutants are building up close to ground level instead of dispersing.`,
             aqiMultiplier: 1.35,
             severity: 75
         });
@@ -368,11 +368,11 @@ function detectActiveFactorsWithML(weatherData, pollutantData) {
     if (no2 >= 45 || (co >= 1.5)) {
         active.push({
             id: 'traffic_emissions',
-            label: 'Vehicular Traffic & Combustion Plume',
+            label: 'Heavy Traffic & Vehicle Fumes',
             icon: 'fa-car',
             category: 'urban',
             color: '#ef5350',
-            description: `Elevated Nitrogen Dioxide (${no2} ppb) and CO (${co} ppm) signature detected from intensive urban vehicle corridors.`,
+            description: `High levels of Nitrogen Dioxide (NO₂: ${no2} ppb) and Carbon Monoxide (CO: ${co} ppm) detected — likely from heavy vehicle traffic nearby.`,
             aqiMultiplier: 1.30,
             severity: 65
         });
@@ -381,11 +381,11 @@ function detectActiveFactorsWithML(weatherData, pollutantData) {
     if (o3 >= 65 && temp >= 28) {
         active.push({
             id: 'photochemical_ozone',
-            label: 'Photochemical Ozone Surge',
+            label: 'Ozone Build-up from Sunlight & Heat',
             icon: 'fa-sun',
             category: 'meteorological',
             color: '#e040fb',
-            description: `Solar radiation and ambient warmth (${temp}°C) catalyzing secondary photochemical ground-level ozone (${o3} ppb).`,
+            description: `It's hot (${temp}°C) and sunny, which is causing ozone to form near ground level. Ozone levels (${o3} ppb) are high and can irritate the lungs.`,
             aqiMultiplier: 1.25,
             severity: 60
         });
@@ -394,11 +394,11 @@ function detectActiveFactorsWithML(weatherData, pollutantData) {
     if (pm10 >= 100 && wind >= 16) {
         active.push({
             id: 'dust_storm',
-            label: 'Aeolian Soil & Dust Dispersion',
+            label: 'Dust Blown In by Wind',
             icon: 'fa-wind',
             category: 'natural_event',
             color: '#ffb74d',
-            description: `Coarse particulate loading (${pm10} µg/m³) driven by elevated ground wind velocity (${wind} km/h).`,
+            description: `Strong wind (${wind} km/h) is kicking up a lot of coarse dust (${pm10} µg/m³) from the ground and carrying it through the air.`,
             aqiMultiplier: 1.40,
             severity: 55
         });
@@ -407,11 +407,11 @@ function detectActiveFactorsWithML(weatherData, pollutantData) {
     if (wind >= 18) {
         active.push({
             id: 'wind_ventilation',
-            label: 'Strong Atmospheric Wind Ventilation',
+            label: 'Good Wind — Clearing the Air',
             icon: 'fa-fan',
             category: 'meteorological',
             color: '#00e676',
-            description: `Active horizontal advection at ${wind} km/h is actively dispersing suspended particulates and improving AQI.`,
+            description: `Wind at ${wind} km/h is sweeping away pollutants and helping to clean the air. This is reducing the AQI.`,
             aqiMultiplier: 0.72,
             severity: 45
         });
@@ -420,11 +420,11 @@ function detectActiveFactorsWithML(weatherData, pollutantData) {
     if (hum >= 85) {
         active.push({
             id: 'wet_deposition',
-            label: 'Atmospheric Wet Scavenging / High Moisture',
+            label: 'Rain or High Moisture — Washing the Air',
             icon: 'fa-cloud-rain',
             category: 'meteorological',
             color: '#42a5f5',
-            description: `Elevated moisture (${hum}%) and precipitation aiding particulate washout from the ambient column.`,
+            description: `Humidity is very high (${hum}%) — rain or moisture is washing dust and particles out of the air. This is helping improve air quality.`,
             aqiMultiplier: 0.65,
             severity: 50
         });

@@ -2228,15 +2228,6 @@ body {
     border: 1px solid currentColor;
     letter-spacing: 0.04em;
 }
-.risk-grade {
-    font-size: 12px;
-    font-weight: 900;
-    background: currentColor;
-    color: #000;
-    padding: 0 4px;
-    border-radius: 4px;
-    margin-left: 2px;
-}
 
 .risk-bar-track {
     height: 6px;
