@@ -65,7 +65,7 @@ flowchart TD
         C --> D["Background Data Processor"]
         D --> M1["Current AQI Predictor"]
         D --> M2["24-Hour Future Forecast"]
-        D --> M3["Wind & Neighbor Smog Tracker"]
+        D --> M3["Wind & Neighbor Tracker"]
         D --> M4["Pollution Root-Cause Finder"]
     end
 
