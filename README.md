@@ -72,8 +72,8 @@ flowchart TD
     %% Step 3: Health Engine
     subgraph Step3 ["3. Personalized Health Check"]
         M1 & M2 & M3 & M4 --> H1["Health Risk Analyzer"]
-        UserHealth["User Health Conditions<br/>(Disease, Heart, Age, etc.)"] --> H1
-        H1 --> H2["Personalized Health Safety Precautions"]
+        UserHealth["User Health Conditions<br/>(Diseases, Heart, Age, etc.)"] --> H1
+        H1 --> H2["Personalized Health Score<br/>& Safety Precautions"]
     end
 
     %% Step 4: Dashboard & Storage

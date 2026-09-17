@@ -134,6 +134,7 @@
     let lastAQIData = null;
     let lastForecastData = null;
     let lastWeatherData = null;
+    let lastDiurnalNextDayAqi = null; // Hour-23 diurnal forecast; anchors transfer-learning prediction
     let clockInterval = null;
     let currentAbortController = null;
     // Scroll-state flag: pauses tilt & glow calculations during active scroll for silky 60fps
@@ -203,7 +204,7 @@
         temperature: $('temperature'), humidity: $('humidity'), windSpeed: $('windSpeed'),
         windDirection: $('windDirection'), pressure: $('pressure'), visibility: $('visibility'),
         healthAdvisoryText: $('healthAdvisoryText'), alertTags: $('alertTags'),
-        hourlyScroll: $('hourlyScroll'), forecastChart: $('forecastChart'),
+        hourlyScroll: $('hourlyScroll'),
         hubCityName: $('hubCityName'), hubAqi: $('hubAqi'), neighborRing: $('neighborRing'),
         transferResult: $('transferResult'),
         factorsGrid: $('factorsGrid'), geopoliticalPanel: $('geopoliticalPanel'), geoEventsList: $('geoEventsList'),
@@ -364,7 +365,6 @@
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('airflowTheme', next);
         if (lastAQIData) applyAQITheme(lastAQIData.aqi);
-        drawForecastChart(lastForecastData);
     }
 
     function applyAQITheme(aqi) {
@@ -693,9 +693,8 @@
         if (els.healthAdvisoryText) els.healthAdvisoryText.innerHTML = pText;
         if (els.alertTags) els.alertTags.innerHTML = pTags.map(t => `<span class="alert-tag">${t}</span>`).join('');
 
-        // Build hourly and chart
+        // Build hourly forecast
         buildHourlyForecast(aqi, data);
-        buildForecastChartData(aqi, data);
 
         // Fire push notification for AQI risk or pollutant spikes
         triggerAQINotification(data);
@@ -909,32 +908,32 @@
     ];
 
     function getRiskLabel(score) {
-        if (score < 25) return { label: 'Low',      color: '#00e676', grade: 'A' };
+        if (score < 25) return { label: 'Low', color: '#00e676', grade: 'A' };
         if (score < 50) return { label: 'Moderate', color: '#ffeb3b', grade: 'B' };
-        if (score < 75) return { label: 'High',     color: '#ff9800', grade: 'C' };
-        return           { label: 'Critical',       color: '#f44336', grade: 'D' };
+        if (score < 75) return { label: 'High', color: '#ff9800', grade: 'C' };
+        return { label: 'Critical', color: '#f44336', grade: 'D' };
     }
 
     function computeDiseaseRisk(aqiData, healthProfile) {
         const p = {
             pm25: aqiData.iaqi?.pm25?.v || 0,
             pm10: aqiData.iaqi?.pm10?.v || 0,
-            o3:   aqiData.iaqi?.o3?.v   || 0,
-            no2:  aqiData.iaqi?.no2?.v  || 0,
-            so2:  aqiData.iaqi?.so2?.v  || 0,
-            co:   aqiData.iaqi?.co?.v   || 0,
+            o3: aqiData.iaqi?.o3?.v || 0,
+            no2: aqiData.iaqi?.no2?.v || 0,
+            so2: aqiData.iaqi?.so2?.v || 0,
+            co: aqiData.iaqi?.co?.v || 0,
         };
         return RISK_CATEGORIES.map(cat => {
             const score = cat.compute(p, healthProfile);
-            const risk  = getRiskLabel(score);
-            const prec  = score > 0 ? cat.precautions(score, p, healthProfile) : [];
+            const risk = getRiskLabel(score);
+            const prec = score > 0 ? cat.precautions(score, p, healthProfile) : [];
             return { ...cat, score, risk, precautions: prec };
         }).filter(r => r.score > 0);
     }
 
     function renderDiseaseRiskPanel(aqiData, healthProfile) {
         const section = $('diseaseRiskSection');
-        const grid    = $('riskCardsGrid');
+        const grid = $('riskCardsGrid');
         if (!section || !grid) return;
         if (!healthProfile) { section.style.display = 'none'; return; }
 
@@ -1481,6 +1480,9 @@
             forecasts = generateForecastFallback(baseAqi, data, currentHourIndexBase);
         }
 
+        // Hard-cap at exactly 24 hours
+        forecasts = forecasts.slice(0, 24);
+
         const icons = { good: '🌿', moderate: '🌤', unhealthySG: '😷', unhealthy: '🌫', veryUnhealthy: '🚨', hazardous: '⚠️' };
         const fragment = document.createDocumentFragment();
 
@@ -1504,6 +1506,13 @@
             fragment.appendChild(card);
         });
         container.appendChild(fragment);
+
+        // ── Store the hour-23 diurnal prediction as the next-day anchor ──
+        // This is used by buildCrossCity so the transfer-learning prediction
+        // stays consistent with the hourly forecast's 24-hour projection.
+        if (forecasts && forecasts.length >= 24) {
+            lastDiurnalNextDayAqi = forecasts[23].hourAqi;
+        }
     }
 
     // generateForecastFallback inline fallback
@@ -1692,12 +1701,43 @@
 
         ring.appendChild(fragment);
 
+        // ── Compute diurnal anchor synchronously (avoids race with buildHourlyForecast) ──
+        // Replicates the worker's hour-23 diurnal formula so the anchor is always ready.
+        (function computeDiurnalAnchorInline() {
+            const now2 = new Date();
+            const currentHour2 = now2.getHours();
+            const forecastHour23 = (currentHour2 + 23) % 24;
+            const currentMonth2 = now2.getMonth() + 1;
+            const wx = lastWeatherData;
+            const baseTemp2   = Number(wx?.temperature) || 25;
+            const baseHum2    = Number(wx?.humidity)    || 55;
+            const basePres2   = Number(wx?.pressure)    || 1012;
+            const baseWind2   = Number(wx?.windSpeed)   || 10;
+            const hourRad     = (forecastHour23 - 14) * Math.PI / 12;
+            const simTemp2    = baseTemp2  + 5  * Math.cos(hourRad);
+            const simHum2     = Math.max(15, Math.min(95, baseHum2  - 15 * Math.cos(hourRad)));
+            const simPres2    = basePres2  + 2  * Math.sin((forecastHour23 - 8)  * Math.PI / 6);
+            const simWind2    = Math.max(2, baseWind2 + 3 * Math.cos((forecastHour23 - 15) * Math.PI / 12));
+            const dW = { Temperature_C: -0.46008, Humidity_Pct: -0.96368, Pressure_hPa: 0.48615, Wind_Speed_kmh: -1.75863, hour: -0.32802, month: 2.76605 };
+            const dM = { Temperature_C: 21.85, Humidity_Pct: 58.42, Pressure_hPa: 1012.35, Wind_Speed_kmh: 11.45 };
+            const netD = dW.Temperature_C * (simTemp2 - dM.Temperature_C)
+                       + dW.Humidity_Pct  * (simHum2  - dM.Humidity_Pct)
+                       + dW.Pressure_hPa * (simPres2  - dM.Pressure_hPa)
+                       + dW.Wind_Speed_kmh * (simWind2 - dM.Wind_Speed_kmh)
+                       + dW.hour  * (forecastHour23 - 12)
+                       + dW.month * (currentMonth2 - 6);
+            const computed = Math.max(1, Math.round(centerAqi + netD * 0.12));
+            // Prefer previously stored anchor (set by buildHourlyForecast), fall back to inline
+            lastDiurnalNextDayAqi = lastDiurnalNextDayAqi || computed;
+        }());
+
         // ===== Enhanced Transfer Learning Prediction =====
         if (neighborData.length > 0 && els.transferResult) {
             let transferResult;
             try {
                 transferResult = await workerCall('COMPUTE_TRANSFER', {
                     centerAqi,
+                    diurnalAnchor: lastDiurnalNextDayAqi,
                     neighbors: neighborData.map(n => ({
                         name: n.name, aqi: n.aqi, dist: n.dist,
                         bearing: n.bearing, country: n.country || ''
@@ -1722,9 +1762,12 @@
                     totalWeight += mlWeight;
                     breakdown.push({ name: n.name, aqi: n.aqi, dist: Math.round(n.dist), weight: mlWeight });
                 }
-                const selfPersistence = 0.85;
-                weightedAQI += centerAqi * selfPersistence;
-                totalWeight += selfPersistence;
+                // Use the diurnal model's own 24h prediction as the anchor (high weight)
+                // so the transfer result stays consistent with the hourly forecast
+                const anchor = lastDiurnalNextDayAqi || centerAqi;
+                const anchorWeight = 3.0;  // strong prior from the diurnal model
+                weightedAQI += anchor * anchorWeight;
+                totalWeight += anchorWeight;
                 const pred = Math.max(1, Math.round(weightedAQI / totalWeight));
                 breakdown.forEach(b => { b.contribution = Math.round((b.weight / totalWeight) * 100); });
                 transferResult = {
@@ -1734,7 +1777,14 @@
                 };
             }
 
-            const { predictedAqi, confidence, breakdown } = transferResult;
+            const raw = transferResult;
+            // ── Hard-clamp: transfer result must stay within ±12% of diurnal anchor ──
+            const anchor2 = lastDiurnalNextDayAqi || centerAqi;
+            const maxAllowed = Math.round(anchor2 * 1.12);
+            const minAllowed = Math.round(anchor2 * 0.88);
+            const clampedAqi  = Math.max(minAllowed, Math.min(maxAllowed, raw.predictedAqi));
+            const { confidence, breakdown } = raw;
+            const predictedAqi = clampedAqi;
             const predColor = aqiColor(predictedAqi);
             const predTheme = getTheme(predictedAqi);
 
@@ -2025,6 +2075,7 @@
         currentAbortController = new AbortController();
 
         // Reset banner & panels for new city
+        lastDiurnalNextDayAqi = null; // reset anchor — will be recomputed for new city
         if (els.eventAlertBanner) els.eventAlertBanner.style.display = 'none';
         if (els.geopoliticalPanel) els.geopoliticalPanel.style.display = 'none';
         if (els.factorsGrid) {
@@ -2053,71 +2104,6 @@
         renderAreaNews(currentCity, lastAQIData, lastWeatherData);
     }
 
-    // ===== Forecast Chart =====
-    function drawForecastChart(fd) {
-        const canvas = els.forecastChart;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = canvas.offsetWidth * dpr;
-        canvas.height = 280 * dpr;
-        ctx.scale(dpr, dpr);
-        const W = canvas.offsetWidth, H = 280;
-        ctx.clearRect(0, 0, W, H);
-
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const tc = isDark ? '#9898aa' : '#4a4a5e';
-        const gc = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)';
-        const ac = getComputedStyle(document.documentElement).getPropertyValue('--aqi-accent').trim();
-        const pm = fd?.pm25 || [];
-        if (!pm.length) return;
-
-        const m = { t: 36, r: 25, b: 45, l: 45 };
-        const cW = W - m.l - m.r, cH = H - m.t - m.b;
-        const allV = pm.flatMap(d => [d.avg, d.max, d.min]).filter(v => v != null && !isNaN(v) && isFinite(v));
-        const maxV = allV.length > 0 ? Math.max(...allV) * 1.2 : 100;
-
-        // Gridlines
-        ctx.strokeStyle = gc; ctx.lineWidth = 1;
-        for (let i = 0; i <= 5; i++) {
-            const y = m.t + (i / 5) * cH;
-            ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(W - m.r, y); ctx.stroke();
-            ctx.fillStyle = tc; ctx.font = '400 9px Inter'; ctx.textAlign = 'right';
-            ctx.fillText(Math.round(maxV - (i / 5) * maxV), m.l - 6, y + 3);
-        }
-
-        // Min-max fill
-        if (pm.length > 1) {
-            ctx.beginPath(); ctx.globalAlpha = 0.12; ctx.fillStyle = ac;
-            pm.forEach((d, i) => { const x = m.l + (i / (pm.length - 1)) * cW; const y = m.t + cH - (d.max / maxV) * cH; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
-            for (let i = pm.length - 1; i >= 0; i--) { ctx.lineTo(m.l + (i / (pm.length - 1)) * cW, m.t + cH - (pm[i].min / maxV) * cH); }
-            ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
-        }
-
-        // Main line
-        ctx.strokeStyle = ac; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.beginPath();
-        pm.forEach((d, i) => { const x = m.l + (i / Math.max(pm.length - 1, 1)) * cW; const y = m.t + cH - (d.avg / maxV) * cH; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
-        ctx.stroke();
-
-        // Glow
-        ctx.strokeStyle = ac; ctx.lineWidth = 8; ctx.globalAlpha = 0.12; ctx.beginPath();
-        pm.forEach((d, i) => { const x = m.l + (i / Math.max(pm.length - 1, 1)) * cW; const y = m.t + cH - (d.avg / maxV) * cH; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
-        ctx.stroke(); ctx.globalAlpha = 1;
-
-        // Points
-        pm.forEach((d, i) => {
-            const x = m.l + (i / Math.max(pm.length - 1, 1)) * cW; const y = m.t + cH - (d.avg / maxV) * cH;
-            ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = ac; ctx.globalAlpha = 0.2; ctx.fill(); ctx.globalAlpha = 1;
-            ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fillStyle = ac; ctx.fill();
-            ctx.strokeStyle = isDark ? '#0c0c14' : '#f2f4f8'; ctx.lineWidth = 2; ctx.stroke();
-            ctx.fillStyle = tc; ctx.font = '600 10px Inter'; ctx.textAlign = 'center'; ctx.fillText(d.avg, x, y - 12);
-            ctx.font = '400 9px Inter';
-            const lbl = new Date(d.day).toLocaleDateString('en', { weekday: 'short', day: 'numeric' });
-            ctx.fillText(lbl, x, H - m.b + 18);
-        });
-        ctx.fillStyle = tc; ctx.font = '600 12px Inter'; ctx.textAlign = 'left';
-        ctx.fillText('PM2.5 Concentration Forecast (μg/m³)', m.l, 18);
-    }
 
     // ===== Particles =====
     function createParticles() {
@@ -2511,19 +2497,9 @@
         }, { passive: true });
     }
 
-    // ===== Resize (ResizeObserver for canvas) =====
+    // ===== Resize (XAI panel is CSS-flexbox based, no resize re-render needed) =====
     function initResize() {
-        if ('ResizeObserver' in window) {
-            let timer;
-            const ro = new ResizeObserver(() => {
-                clearTimeout(timer);
-                timer = setTimeout(() => drawForecastChart(lastForecastData), 200);
-            });
-            if (els.forecastChart) ro.observe(els.forecastChart.parentElement || document.body);
-        } else {
-            let t;
-            window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => drawForecastChart(lastForecastData), 250); });
-        }
+        // Kept for any future canvas-based charts; XAI SHAP panel auto-resizes via CSS.
     }
 
     // ===== Init =====
@@ -2832,7 +2808,7 @@
                 $('authForm').addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const email = $('authEmail').value.trim();
-                    const pass  = $('authPassword').value;
+                    const pass = $('authPassword').value;
                     const errorMsg = $('authErrorMsg');
                     const submitBtn = $('authSubmitBtn');
                     errorMsg.classList.add('hidden');

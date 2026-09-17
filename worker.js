@@ -263,9 +263,9 @@ async function generateHourlyForecastWithML(baseAqi, hourlyData, hourlyTimes, cu
 }
 
 // ===== 3. Machine Learning Spatial Transfer Learning Engine =====
-function computeTransferPredictionWithML(centerAqi, neighbors, windSpeed, windDir) {
+function computeTransferPredictionWithML(centerAqi, neighbors, windSpeed, windDir, diurnalAnchor) {
     if (!neighbors || neighbors.length === 0) {
-        return { predictedAqi: centerAqi, confidence: 50, breakdown: [] };
+        return { predictedAqi: diurnalAnchor || centerAqi, confidence: 50, breakdown: [] };
     }
 
     let totalMLWeight = 0;
@@ -306,10 +306,13 @@ function computeTransferPredictionWithML(centerAqi, neighbors, windSpeed, windDi
         });
     }
 
-    // Self-persistence weight (trained at 0.85)
-    const selfPersistence = 0.85;
-    weightedAQISum += centerAqi * selfPersistence;
-    totalMLWeight += selfPersistence;
+    // Diurnal anchor: the 24-hour ahead prediction from the diurnal ML model.
+    // Given a high weight (3.0) so the transfer result stays consistent with the
+    // hourly forecast's last hour instead of being dominated by neighbor city AQIs.
+    const anchor = (diurnalAnchor != null && diurnalAnchor > 0) ? diurnalAnchor : centerAqi;
+    const anchorWeight = 3.0;
+    weightedAQISum += anchor * anchorWeight;
+    totalMLWeight += anchorWeight;
 
     const predictedAqi = Math.max(1, Math.round(weightedAQISum / totalMLWeight));
 
@@ -493,7 +496,8 @@ self.onmessage = async function(e) {
                     payload.centerAqi,
                     payload.neighbors,
                     payload.windSpeed,
-                    payload.windDir
+                    payload.windDir,
+                    payload.diurnalAnchor
                 );
                 self.postMessage({ type: 'TRANSFER_RESULT', id, data: result });
                 break;

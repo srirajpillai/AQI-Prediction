@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,20 +11,22 @@
     <meta name="apple-mobile-web-app-title" content="AirFlow AI">
     <link rel="manifest" href="manifest.json">
     <title>AirFlow AI — Real-Time AQI Prediction & Air Quality Intelligence</title>
-    <meta name="description" content="AirFlow AI provides real-time Air Quality Index predictions with cross-city transfer learning. Monitor PM2.5, PM10, O3, NO2, SO2, CO with hourly forecasts.">
+    <meta name="description"
+        content="AirFlow AI provides real-time Air Quality Index predictions with cross-city transfer learning. Monitor PM2.5, PM10, O3, NO2, SO2, CO with hourly forecasts.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=20">
+    <link rel="stylesheet" href="styles.css?v=21">
     <script>
         const savedTheme = localStorage.getItem('airflowTheme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
-    
+
     <!-- Supabase JS SDK (Auth + Database) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
+
 <body>
     <div class="mouse-glow" id="mouseGlow"></div>
     <!-- 3D Animated Background -->
@@ -82,9 +85,10 @@
                 <button class="nav-btn" id="locationBtn" title="Use My Location">
                     <i class="fas fa-location-crosshairs"></i>
                 </button>
-                
+
                 <!-- Notification Bell -->
-                <button class="nav-btn notif-bell-btn" id="notifBell" title="AQI Notifications" aria-label="Toggle AQI notifications">
+                <button class="nav-btn notif-bell-btn" id="notifBell" title="AQI Notifications"
+                    aria-label="Toggle AQI notifications">
                     <i class="fas fa-bell"></i>
                     <span class="notif-badge" id="notifBadge" style="display:none;"></span>
                 </button>
@@ -110,10 +114,12 @@
     </nav>
 
     <!-- Notification Permission Banner -->
-    <div class="notif-permission-banner" id="notifPermissionBanner" style="display:none;" role="alert" aria-live="polite">
+    <div class="notif-permission-banner" id="notifPermissionBanner" style="display:none;" role="alert"
+        aria-live="polite">
         <div class="notif-perm-inner">
             <i class="fas fa-bell-slash notif-perm-icon"></i>
-            <span class="notif-perm-text"><strong>Enable AQI Alerts</strong> — Get real-time push notifications when air quality changes or pollutants spike.</span>
+            <span class="notif-perm-text"><strong>Enable AQI Alerts</strong> — Get real-time push notifications when air
+                quality changes or pollutants spike.</span>
             <div class="notif-perm-actions">
                 <button class="notif-perm-allow" id="notifPermAllow"><i class="fas fa-check"></i> Allow</button>
                 <button class="notif-perm-dismiss" id="notifPermDismiss"><i class="fas fa-xmark"></i></button>
@@ -130,7 +136,8 @@
             <div class="corner-notif-title" id="eventAlertTitle">AQI Anomaly Detected</div>
             <button class="corner-notif-close" id="eventAlertClose"><i class="fas fa-xmark"></i></button>
         </div>
-        <div class="corner-notif-desc" id="eventAlertDesc">Unusual pollutant levels detected — potential external event influence.</div>
+        <div class="corner-notif-desc" id="eventAlertDesc">Unusual pollutant levels detected — potential external event
+            influence.</div>
         <div class="corner-notif-pulse"></div>
     </div>
 
@@ -148,7 +155,7 @@
                     <span id="regionName" class="region-tag"></span>
                 </div>
             </div>
-            
+
             <div class="side-time-display" id="localTimeDisplay">
                 <i class="fas fa-clock"></i>
                 <span id="localTime">--:--</span>
@@ -162,12 +169,16 @@
                             <svg class="aqi-ring-svg" viewBox="0 0 220 220">
                                 <defs>
                                     <filter id="glow">
-                                        <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                                        <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                                        <feMerge>
+                                            <feMergeNode in="coloredBlur" />
+                                            <feMergeNode in="SourceGraphic" />
+                                        </feMerge>
                                     </filter>
                                 </defs>
                                 <circle class="ring-bg" cx="110" cy="110" r="95" />
-                                <circle class="ring-progress" cx="110" cy="110" r="95" id="aqiRing" filter="url(#glow)" />
+                                <circle class="ring-progress" cx="110" cy="110" r="95" id="aqiRing"
+                                    filter="url(#glow)" />
                                 <circle class="ring-inner-glow" cx="110" cy="110" r="75" />
                             </svg>
                             <div class="aqi-center">
@@ -199,12 +210,36 @@
                         <span class="live-dot">● LIVE</span>
                     </div>
                     <div class="weather-grid">
-                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-temperature-half"></i></div><div class="wx-data"><span class="wx-val" id="temperature">--°C</span><span class="wx-lbl">Temperature</span></div></div>
-                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-droplet"></i></div><div class="wx-data"><span class="wx-val" id="humidity">--%</span><span class="wx-lbl">Humidity</span></div></div>
-                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-wind"></i></div><div class="wx-data"><span class="wx-val" id="windSpeed">-- km/h</span><span class="wx-lbl">Wind Speed</span></div></div>
-                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-compass"></i></div><div class="wx-data"><span class="wx-val" id="windDirection">--°</span><span class="wx-lbl">Wind Dir</span></div></div>
-                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-gauge-high"></i></div><div class="wx-data"><span class="wx-val" id="pressure">-- hPa</span><span class="wx-lbl">Pressure</span></div></div>
-                        <div class="wx-item"><div class="wx-icon"><i class="fas fa-eye"></i></div><div class="wx-data"><span class="wx-val" id="visibility">-- km</span><span class="wx-lbl">Visibility</span></div></div>
+                        <div class="wx-item">
+                            <div class="wx-icon"><i class="fas fa-temperature-half"></i></div>
+                            <div class="wx-data"><span class="wx-val" id="temperature">--°C</span><span
+                                    class="wx-lbl">Temperature</span></div>
+                        </div>
+                        <div class="wx-item">
+                            <div class="wx-icon"><i class="fas fa-droplet"></i></div>
+                            <div class="wx-data"><span class="wx-val" id="humidity">--%</span><span
+                                    class="wx-lbl">Humidity</span></div>
+                        </div>
+                        <div class="wx-item">
+                            <div class="wx-icon"><i class="fas fa-wind"></i></div>
+                            <div class="wx-data"><span class="wx-val" id="windSpeed">-- km/h</span><span
+                                    class="wx-lbl">Wind Speed</span></div>
+                        </div>
+                        <div class="wx-item">
+                            <div class="wx-icon"><i class="fas fa-compass"></i></div>
+                            <div class="wx-data"><span class="wx-val" id="windDirection">--°</span><span
+                                    class="wx-lbl">Wind Dir</span></div>
+                        </div>
+                        <div class="wx-item">
+                            <div class="wx-icon"><i class="fas fa-gauge-high"></i></div>
+                            <div class="wx-data"><span class="wx-val" id="pressure">-- hPa</span><span
+                                    class="wx-lbl">Pressure</span></div>
+                        </div>
+                        <div class="wx-item">
+                            <div class="wx-icon"><i class="fas fa-eye"></i></div>
+                            <div class="wx-data"><span class="wx-val" id="visibility">-- km</span><span
+                                    class="wx-lbl">Visibility</span></div>
+                        </div>
                     </div>
                 </div>
 
@@ -227,7 +262,9 @@
                 </div>
                 <div class="scale-track">
                     <div class="scale-fill" id="scaleFill"></div>
-                    <div class="scale-pointer" id="scalePointer"><div class="pointer-label" id="pointerLabel">0</div></div>
+                    <div class="scale-pointer" id="scalePointer">
+                        <div class="pointer-label" id="pointerLabel">0</div>
+                    </div>
                 </div>
                 <div class="scale-labels">
                     <span style="color:#00e676;">Good<br><small>0-50</small></span>
@@ -242,13 +279,20 @@
 
         <!-- ===== Sign-In Prompt (shown only to guests) ===== -->
         <section class="section-block" id="guestAuthPrompt" style="display:none;">
-            <div style="background: linear-gradient(135deg, rgba(0,100,255,0.08), rgba(0,230,118,0.06)); border: 1px solid rgba(0,230,118,0.2); border-radius: 20px; padding: 32px 28px; text-align: center;">
-                <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#0064ff22,#00e67622); border:2px solid rgba(0,230,118,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+            <div
+                style="background: linear-gradient(135deg, rgba(0,100,255,0.08), rgba(0,230,118,0.06)); border: 1px solid rgba(0,230,118,0.2); border-radius: 20px; padding: 32px 28px; text-align: center;">
+                <div
+                    style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#0064ff22,#00e67622); border:2px solid rgba(0,230,118,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
                     <i class="fas fa-user-shield" style="font-size:26px; color:#00e676;"></i>
                 </div>
-                <h3 style="font-size:20px; font-weight:700; margin:0 0 8px; color:var(--text);">Personalized Health Dashboard</h3>
-                <p style="color:rgba(255,255,255,0.55); font-size:14px; max-width:420px; margin:0 auto 20px; line-height:1.6;">Sign in to unlock AI-powered disease risk assessment, travel safety analysis, and smart AQI alerts tailored to your health profile.</p>
-                <button class="btn-primary" onclick="document.getElementById('signInBtn').click()" style="padding:12px 28px; font-size:15px; border-radius:50px;">
+                <h3 style="font-size:20px; font-weight:700; margin:0 0 8px; color:var(--text);">Personalized Health
+                    Dashboard</h3>
+                <p
+                    style="color:rgba(255,255,255,0.55); font-size:14px; max-width:420px; margin:0 auto 20px; line-height:1.6;">
+                    Sign in to unlock AI-powered disease risk assessment, travel safety analysis, and smart AQI alerts
+                    tailored to your health profile.</p>
+                <button class="btn-primary" onclick="document.getElementById('signInBtn').click()"
+                    style="padding:12px 28px; font-size:15px; border-radius:50px;">
                     <i class="fas fa-right-to-bracket"></i> Sign In to Unlock
                 </button>
             </div>
@@ -257,12 +301,14 @@
         <!-- ===== Disease Risk & Travel Safety Panel ===== -->
         <section class="section-block" id="diseaseRiskSection" style="display:none;">
             <div class="section-head">
-                <div class="head-icon" style="background:rgba(244,67,54,0.15);border-color:rgba(244,67,54,0.3);"><i class="fas fa-shield-heart" style="color:#f44336;"></i></div>
+                <div class="head-icon" style="background:rgba(244,67,54,0.15);border-color:rgba(244,67,54,0.3);"><i
+                        class="fas fa-shield-heart" style="color:#f44336;"></i></div>
                 <div>
                     <h2>Personal Disease Risk Assessment</h2>
                     <p>AI-powered risk analysis based on your health profile and current air quality data.</p>
                 </div>
-                <button class="nav-btn" id="updateProfileBtn" title="Update Health Profile" style="margin-left:auto;"><i class="fas fa-pen"></i></button>
+                <button class="nav-btn" id="updateProfileBtn" title="Update Health Profile" style="margin-left:auto;"><i
+                        class="fas fa-pen"></i></button>
             </div>
 
             <!-- Risk Cards Grid -->
@@ -282,7 +328,8 @@
                 <div class="travel-form-row">
                     <div class="travel-search-box">
                         <i class="fas fa-map-marker-alt"></i>
-                        <input type="text" id="travelDestInput" placeholder="Enter destination city..." autocomplete="off">
+                        <input type="text" id="travelDestInput" placeholder="Enter destination city..."
+                            autocomplete="off">
                         <div class="travel-search-dropdown" id="travelSearchDropdown"></div>
                     </div>
                     <select id="travelDuration">
@@ -298,7 +345,8 @@
                         <option value="exercise">Outdoor Exercise</option>
                         <option value="medical">Medical Trip</option>
                     </select>
-                    <button class="btn-primary" id="checkTravelBtn"><i class="fas fa-search-location"></i> Check</button>
+                    <button class="btn-primary" id="checkTravelBtn"><i class="fas fa-search-location"></i>
+                        Check</button>
                 </div>
                 <div class="travel-result" id="travelResult" style="display:none;"></div>
             </div>
@@ -316,9 +364,6 @@
             <div class="hourly-scroll-container glass-card hover-3d">
                 <div class="hourly-scroll" id="hourlyScroll"></div>
             </div>
-            <div class="forecast-chart-wrap glass-card hover-3d">
-                <canvas id="forecastChart"></canvas>
-            </div>
         </section>
 
         <!-- Pollutants Section -->
@@ -332,40 +377,82 @@
             </div>
             <div class="pollutant-grid" id="pollutantGrid">
                 <div class="poll-card glass-card hover-3d" data-pollutant="pm25">
-                    <div class="poll-top"><div class="poll-icon" style="--pc:#e53935;"><i class="fas fa-smog"></i></div><h4>PM<sub>2.5</sub></h4><div class="poll-badge" id="pm25Badge">--</div></div>
-                    <div class="poll-bar-track"><div class="poll-bar-fill" id="pm25Bar"></div></div>
+                    <div class="poll-top">
+                        <div class="poll-icon" style="--pc:#e53935;"><i class="fas fa-smog"></i></div>
+                        <h4>PM<sub>2.5</sub></h4>
+                        <div class="poll-badge" id="pm25Badge">--</div>
+                    </div>
+                    <div class="poll-bar-track">
+                        <div class="poll-bar-fill" id="pm25Bar"></div>
+                    </div>
                     <div class="poll-val"><span id="pm25Value">--</span> <small>μg/m³</small></div>
-                    <p class="poll-health"><i class="fas fa-lungs"></i> Penetrates deep into lungs and bloodstream. Major cause of respiratory/cardiovascular diseases.</p>
+                    <p class="poll-health"><i class="fas fa-lungs"></i> Penetrates deep into lungs and bloodstream.
+                        Major cause of respiratory/cardiovascular diseases.</p>
                 </div>
                 <div class="poll-card glass-card hover-3d" data-pollutant="pm10">
-                    <div class="poll-top"><div class="poll-icon" style="--pc:#ff8f00;"><i class="fas fa-cloud"></i></div><h4>PM<sub>10</sub></h4><div class="poll-badge" id="pm10Badge">--</div></div>
-                    <div class="poll-bar-track"><div class="poll-bar-fill" id="pm10Bar"></div></div>
+                    <div class="poll-top">
+                        <div class="poll-icon" style="--pc:#ff8f00;"><i class="fas fa-cloud"></i></div>
+                        <h4>PM<sub>10</sub></h4>
+                        <div class="poll-badge" id="pm10Badge">--</div>
+                    </div>
+                    <div class="poll-bar-track">
+                        <div class="poll-bar-fill" id="pm10Bar"></div>
+                    </div>
                     <div class="poll-val"><span id="pm10Value">--</span> <small>μg/m³</small></div>
-                    <p class="poll-health"><i class="fas fa-head-side-cough"></i> Irritates airways, worsens asthma/bronchitis. Dust, pollen, mold spores cause coughing.</p>
+                    <p class="poll-health"><i class="fas fa-head-side-cough"></i> Irritates airways, worsens
+                        asthma/bronchitis. Dust, pollen, mold spores cause coughing.</p>
                 </div>
                 <div class="poll-card glass-card hover-3d" data-pollutant="o3">
-                    <div class="poll-top"><div class="poll-icon" style="--pc:#42a5f5;"><i class="fas fa-sun"></i></div><h4>O<sub>3</sub></h4><div class="poll-badge" id="o3Badge">--</div></div>
-                    <div class="poll-bar-track"><div class="poll-bar-fill" id="o3Bar"></div></div>
+                    <div class="poll-top">
+                        <div class="poll-icon" style="--pc:#42a5f5;"><i class="fas fa-sun"></i></div>
+                        <h4>O<sub>3</sub></h4>
+                        <div class="poll-badge" id="o3Badge">--</div>
+                    </div>
+                    <div class="poll-bar-track">
+                        <div class="poll-bar-fill" id="o3Bar"></div>
+                    </div>
                     <div class="poll-val"><span id="o3Value">--</span> <small>ppb</small></div>
-                    <p class="poll-health"><i class="fas fa-lungs-virus"></i> Triggers chest pain, coughing, throat irritation. Damages lung tissue even during outdoor activity.</p>
+                    <p class="poll-health"><i class="fas fa-lungs-virus"></i> Triggers chest pain, coughing, throat
+                        irritation. Damages lung tissue even during outdoor activity.</p>
                 </div>
                 <div class="poll-card glass-card hover-3d" data-pollutant="no2">
-                    <div class="poll-top"><div class="poll-icon" style="--pc:#7e57c2;"><i class="fas fa-car-burst"></i></div><h4>NO<sub>2</sub></h4><div class="poll-badge" id="no2Badge">--</div></div>
-                    <div class="poll-bar-track"><div class="poll-bar-fill" id="no2Bar"></div></div>
+                    <div class="poll-top">
+                        <div class="poll-icon" style="--pc:#7e57c2;"><i class="fas fa-car-burst"></i></div>
+                        <h4>NO<sub>2</sub></h4>
+                        <div class="poll-badge" id="no2Badge">--</div>
+                    </div>
+                    <div class="poll-bar-track">
+                        <div class="poll-bar-fill" id="no2Bar"></div>
+                    </div>
                     <div class="poll-val"><span id="no2Value">--</span> <small>ppb</small></div>
-                    <p class="poll-health"><i class="fas fa-truck"></i> From vehicle exhaust. Inflames airways, increases respiratory infection susceptibility.</p>
+                    <p class="poll-health"><i class="fas fa-truck"></i> From vehicle exhaust. Inflames airways,
+                        increases respiratory infection susceptibility.</p>
                 </div>
                 <div class="poll-card glass-card hover-3d" data-pollutant="so2">
-                    <div class="poll-top"><div class="poll-icon" style="--pc:#66bb6a;"><i class="fas fa-industry"></i></div><h4>SO<sub>2</sub></h4><div class="poll-badge" id="so2Badge">--</div></div>
-                    <div class="poll-bar-track"><div class="poll-bar-fill" id="so2Bar"></div></div>
+                    <div class="poll-top">
+                        <div class="poll-icon" style="--pc:#66bb6a;"><i class="fas fa-industry"></i></div>
+                        <h4>SO<sub>2</sub></h4>
+                        <div class="poll-badge" id="so2Badge">--</div>
+                    </div>
+                    <div class="poll-bar-track">
+                        <div class="poll-bar-fill" id="so2Bar"></div>
+                    </div>
                     <div class="poll-val"><span id="so2Value">--</span> <small>ppb</small></div>
-                    <p class="poll-health"><i class="fas fa-hospital"></i> Constricts airways, triggers asthma attacks. Short-term causes wheezing.</p>
+                    <p class="poll-health"><i class="fas fa-hospital"></i> Constricts airways, triggers asthma attacks.
+                        Short-term causes wheezing.</p>
                 </div>
                 <div class="poll-card glass-card hover-3d" data-pollutant="co">
-                    <div class="poll-top"><div class="poll-icon" style="--pc:#ef5350;"><i class="fas fa-fire"></i></div><h4>CO</h4><div class="poll-badge" id="coBadge">--</div></div>
-                    <div class="poll-bar-track"><div class="poll-bar-fill" id="coBar"></div></div>
+                    <div class="poll-top">
+                        <div class="poll-icon" style="--pc:#ef5350;"><i class="fas fa-fire"></i></div>
+                        <h4>CO</h4>
+                        <div class="poll-badge" id="coBadge">--</div>
+                    </div>
+                    <div class="poll-bar-track">
+                        <div class="poll-bar-fill" id="coBar"></div>
+                    </div>
                     <div class="poll-val"><span id="coValue">--</span> <small>ppm</small></div>
-                    <p class="poll-health"><i class="fas fa-heart-crack"></i> Reduces oxygen delivery to organs. Causes headaches, dizziness, nausea.</p>
+                    <p class="poll-health"><i class="fas fa-heart-crack"></i> Reduces oxygen delivery to organs. Causes
+                        headaches, dizziness, nausea.</p>
                 </div>
             </div>
         </section>
@@ -376,7 +463,8 @@
                 <div class="head-icon"><i class="fas fa-layer-group"></i></div>
                 <div>
                     <h2>Real-Time AQI Impact Factors</h2>
-                    <p>Detected environmental, geopolitical &amp; meteorological forces currently influencing air quality</p>
+                    <p>Detected environmental, geopolitical &amp; meteorological forces currently influencing air
+                        quality</p>
                 </div>
             </div>
             <!-- Factors Grid -->
@@ -452,7 +540,8 @@
                         </div>
                     </div>
                     <div class="news-footer">
-                        <button class="news-refresh-btn" id="newsRefreshBtn"><i class="fas fa-rotate"></i> Refresh</button>
+                        <button class="news-refresh-btn" id="newsRefreshBtn"><i class="fas fa-rotate"></i>
+                            Refresh</button>
                         <span class="news-update-time" id="newsUpdateTime">--</span>
                     </div>
                 </div>
@@ -463,16 +552,31 @@
         <footer class="footer glass-heavy">
             <div class="footer-inner">
                 <div class="footer-brand">
-                    <div class="brand-logo small" style="background:none; box-shadow:none; border:none; color:var(--aqi-accent); font-size:32px; animation: none;"><i class="fas fa-wind"></i></div>
-                    <div><span class="brand-name">AirFlow<span class="ai-badge">AI</span></span><p>Real-Time AQI Prediction with Cross-City Transfer Learning</p></div>
+                    <div class="brand-logo small"
+                        style="background:none; box-shadow:none; border:none; color:var(--aqi-accent); font-size:32px; animation: none;">
+                        <i class="fas fa-wind"></i></div>
+                    <div><span class="brand-name">AirFlow<span class="ai-badge">AI</span></span>
+                        <p>Real-Time AQI Prediction with Cross-City Transfer Learning</p>
+                    </div>
                 </div>
                 <div class="footer-cols">
-                    <div class="f-col"><h5>Data Sources</h5><a href="https://aqicn.org" target="_blank"><i class="fas fa-external-link-alt"></i> WAQI / AQICN</a><a href="https://open-meteo.com" target="_blank"><i class="fas fa-external-link-alt"></i> Open-Meteo</a><a href="https://cpcb.nic.in" target="_blank"><i class="fas fa-external-link-alt"></i> CPCB India</a></div>
-                    <div class="f-col"><h5>Navigation</h5><a href="index.html"><i class="fas fa-gauge-high"></i> Dashboard</a><a href="know-how.html"><i class="fas fa-book-open"></i> Know How It Works</a><a href="about.html"><i class="fas fa-info-circle"></i> About</a></div>
+                    <div class="f-col">
+                        <h5>Data Sources</h5><a href="https://aqicn.org" target="_blank"><i
+                                class="fas fa-external-link-alt"></i> WAQI / AQICN</a><a href="https://open-meteo.com"
+                            target="_blank"><i class="fas fa-external-link-alt"></i> Open-Meteo</a><a
+                            href="https://cpcb.nic.in" target="_blank"><i class="fas fa-external-link-alt"></i> CPCB
+                            India</a>
+                    </div>
+                    <div class="f-col">
+                        <h5>Navigation</h5><a href="index.html"><i class="fas fa-gauge-high"></i> Dashboard</a><a
+                            href="know-how.html"><i class="fas fa-book-open"></i> Know How It Works</a><a
+                            href="about.html"><i class="fas fa-info-circle"></i> About</a>
+                    </div>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 AirFlow AI. All rights reserved. Real-time predictive intelligence for healthier breathing.</p>
+                <p>&copy; 2026 AirFlow AI. All rights reserved. Real-time predictive intelligence for healthier
+                    breathing.</p>
             </div>
         </footer>
     </main>
@@ -487,25 +591,34 @@
             <div class="modal-body">
 
                 <!-- User Name Banner (shown at top, locked after first save) -->
-                <div id="profileNameBanner" style="display:none; background: linear-gradient(135deg, rgba(0,230,118,0.12), rgba(0,100,255,0.10)); border: 1px solid rgba(0,230,118,0.25); border-radius: 16px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
-                    <div style="width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#00e676,#0064ff); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <div id="profileNameBanner"
+                    style="display:none; background: linear-gradient(135deg, rgba(0,230,118,0.12), rgba(0,100,255,0.10)); border: 1px solid rgba(0,230,118,0.25); border-radius: 16px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+                    <div
+                        style="width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#00e676,#0064ff); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                         <i class="fas fa-user" style="color:white; font-size:18px;"></i>
                     </div>
                     <div>
-                        <div id="profileNameDisplay" style="font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.3px;">—</div>
-                        <div style="font-size:12px; color:rgba(255,255,255,0.45); margin-top:2px;"><i class="fas fa-lock" style="font-size:10px; margin-right:4px;"></i>Name locked · cannot be changed</div>
+                        <div id="profileNameDisplay"
+                            style="font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.3px;">—</div>
+                        <div style="font-size:12px; color:rgba(255,255,255,0.45); margin-top:2px;"><i
+                                class="fas fa-lock" style="font-size:10px; margin-right:4px;"></i>Name locked · cannot
+                            be changed</div>
                     </div>
                 </div>
 
                 <!-- Name input shown only if no name saved yet -->
                 <div id="profileNameInputWrap" style="display:none; margin-bottom:16px;">
-                    <div class="profile-section-label" style="margin-bottom:8px;"><i class="fas fa-id-badge"></i> Your Name <span style="font-size:11px; color:#ff9800; font-weight:400; margin-left:6px;">⚠ Set once — cannot be changed after saving</span></div>
+                    <div class="profile-section-label" style="margin-bottom:8px;"><i class="fas fa-id-badge"></i> Your
+                        Name <span style="font-size:11px; color:#ff9800; font-weight:400; margin-left:6px;">⚠ Set once —
+                            cannot be changed after saving</span></div>
                     <div class="form-group" style="margin:0;">
-                        <input type="text" id="profileName" placeholder="Enter your full name..." style="font-size:15px;">
+                        <input type="text" id="profileName" placeholder="Enter your full name..."
+                            style="font-size:15px;">
                     </div>
                 </div>
 
-                <p class="modal-desc" style="margin-top:0;">Complete your health profile for personalised disease risk predictions, travel safety analysis and smart AQI push notifications.</p>
+                <p class="modal-desc" style="margin-top:0;">Complete your health profile for personalised disease risk
+                    predictions, travel safety analysis and smart AQI push notifications.</p>
 
                 <form id="healthProfileForm">
 
@@ -538,36 +651,52 @@
                     </div>
                     <div class="form-group bmi-display" id="bmiDisplay" style="display:none;">
                         <label>BMI <span class="label-hint">(auto-calculated)</span></label>
-                        <div class="bmi-bar-wrap"><div class="bmi-bar-fill" id="bmiBarFill"></div></div>
+                        <div class="bmi-bar-wrap">
+                            <div class="bmi-bar-fill" id="bmiBarFill"></div>
+                        </div>
                         <div class="bmi-text" id="bmiText">--</div>
                     </div>
 
                     <!-- Section: Respiratory -->
                     <div class="profile-section-label"><i class="fas fa-lungs"></i> Respiratory Conditions</div>
                     <div class="conditions-grid">
-                        <button type="button" class="pill-toggle" id="condAsthma" data-cond="asthma"><i class="fas fa-lungs"></i> Asthma</button>
-                        <button type="button" class="pill-toggle" id="condCopd" data-cond="copd"><i class="fas fa-head-side-cough"></i> COPD</button>
-                        <button type="button" class="pill-toggle" id="condBronchitis" data-cond="bronchitis"><i class="fas fa-virus"></i> Bronchitis</button>
-                        <button type="button" class="pill-toggle" id="condRhinitis" data-cond="rhinitis"><i class="fas fa-wind"></i> Allergic Rhinitis</button>
-                        <button type="button" class="pill-toggle" id="condApnea" data-cond="apnea"><i class="fas fa-bed"></i> Sleep Apnea</button>
+                        <button type="button" class="pill-toggle" id="condAsthma" data-cond="asthma"><i
+                                class="fas fa-lungs"></i> Asthma</button>
+                        <button type="button" class="pill-toggle" id="condCopd" data-cond="copd"><i
+                                class="fas fa-head-side-cough"></i> COPD</button>
+                        <button type="button" class="pill-toggle" id="condBronchitis" data-cond="bronchitis"><i
+                                class="fas fa-virus"></i> Bronchitis</button>
+                        <button type="button" class="pill-toggle" id="condRhinitis" data-cond="rhinitis"><i
+                                class="fas fa-wind"></i> Allergic Rhinitis</button>
+                        <button type="button" class="pill-toggle" id="condApnea" data-cond="apnea"><i
+                                class="fas fa-bed"></i> Sleep Apnea</button>
                     </div>
 
                     <!-- Section: Cardiovascular -->
-                    <div class="profile-section-label"><i class="fas fa-heart-pulse"></i> Cardiovascular &amp; Metabolic</div>
+                    <div class="profile-section-label"><i class="fas fa-heart-pulse"></i> Cardiovascular &amp; Metabolic
+                    </div>
                     <div class="conditions-grid">
-                        <button type="button" class="pill-toggle" id="condHeart" data-cond="heart"><i class="fas fa-heart-pulse"></i> Heart Disease</button>
-                        <button type="button" class="pill-toggle" id="condHyper" data-cond="hypertension"><i class="fas fa-arrow-up"></i> Hypertension</button>
-                        <button type="button" class="pill-toggle" id="condDiabetes" data-cond="diabetes"><i class="fas fa-syringe"></i> Diabetes</button>
-                        <button type="button" class="pill-toggle" id="condStroke" data-cond="stroke"><i class="fas fa-brain"></i> Stroke History</button>
+                        <button type="button" class="pill-toggle" id="condHeart" data-cond="heart"><i
+                                class="fas fa-heart-pulse"></i> Heart Disease</button>
+                        <button type="button" class="pill-toggle" id="condHyper" data-cond="hypertension"><i
+                                class="fas fa-arrow-up"></i> Hypertension</button>
+                        <button type="button" class="pill-toggle" id="condDiabetes" data-cond="diabetes"><i
+                                class="fas fa-syringe"></i> Diabetes</button>
+                        <button type="button" class="pill-toggle" id="condStroke" data-cond="stroke"><i
+                                class="fas fa-brain"></i> Stroke History</button>
                     </div>
 
                     <!-- Section: Special Groups -->
                     <div class="profile-section-label"><i class="fas fa-users"></i> Special Health Groups</div>
                     <div class="conditions-grid">
-                        <button type="button" class="pill-toggle" id="condElderly" data-cond="elderly"><i class="fas fa-person-cane"></i> Elderly / Frail</button>
-                        <button type="button" class="pill-toggle" id="condPregnant" data-cond="pregnant"><i class="fas fa-baby"></i> Pregnant</button>
-                        <button type="button" class="pill-toggle" id="condImmuno" data-cond="immuno"><i class="fas fa-shield-virus"></i> Immunocompromised</button>
-                        <button type="button" class="pill-toggle" id="condChild" data-cond="child"><i class="fas fa-child"></i> Child (&lt;12 yrs)</button>
+                        <button type="button" class="pill-toggle" id="condElderly" data-cond="elderly"><i
+                                class="fas fa-person-cane"></i> Elderly / Frail</button>
+                        <button type="button" class="pill-toggle" id="condPregnant" data-cond="pregnant"><i
+                                class="fas fa-baby"></i> Pregnant</button>
+                        <button type="button" class="pill-toggle" id="condImmuno" data-cond="immuno"><i
+                                class="fas fa-shield-virus"></i> Immunocompromised</button>
+                        <button type="button" class="pill-toggle" id="condChild" data-cond="child"><i
+                                class="fas fa-child"></i> Child (&lt;12 yrs)</button>
                     </div>
 
                     <!-- Section: Lifestyle -->
@@ -601,8 +730,10 @@
                     </div>
 
                     <div class="modal-actions">
-                        <button type="button" class="btn-secondary" id="signOutBtn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
-                        <button type="submit" class="btn-primary" id="saveProfileBtn"><i class="fas fa-check"></i> Save &amp; Analyse</button>
+                        <button type="button" class="btn-secondary" id="signOutBtn"><i class="fas fa-sign-out-alt"></i>
+                            Sign Out</button>
+                        <button type="submit" class="btn-primary" id="saveProfileBtn"><i class="fas fa-check"></i> Save
+                            &amp; Analyse</button>
                     </div>
                 </form>
             </div>
@@ -633,12 +764,15 @@
                         <label>Password</label>
                         <input type="password" id="authPassword" placeholder="Enter password" required>
                     </div>
-                    <div class="modal-actions" style="margin-top: 24px; flex-direction: column; gap: 12px; border: none; padding-top: 0;">
-                        <button type="submit" class="btn-primary" id="authSubmitBtn" style="width: 100%; justify-content: center;">
+                    <div class="modal-actions"
+                        style="margin-top: 24px; flex-direction: column; gap: 12px; border: none; padding-top: 0;">
+                        <button type="submit" class="btn-primary" id="authSubmitBtn"
+                            style="width: 100%; justify-content: center;">
                             <i class="fas fa-envelope"></i> Continue with Email
                         </button>
                         <div style="font-size: 12px; color: var(--text3); text-align: center; width: 100%;">— OR —</div>
-                        <button type="button" class="btn-secondary" id="googleSignInBtn" style="width: 100%; justify-content: center;">
+                        <button type="button" class="btn-secondary" id="googleSignInBtn"
+                            style="width: 100%; justify-content: center;">
                             <i class="fab fa-google"></i> Continue with Google
                         </button>
                     </div>
@@ -657,4 +791,5 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="app.js?v=19"></script>
 </body>
+
 </html>
