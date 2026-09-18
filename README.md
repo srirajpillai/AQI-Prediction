@@ -10,7 +10,7 @@
 [![Architecture](https://img.shields.io/badge/Architecture-100%25%20Client--Side-orange.svg)](#-system-architecture)
 [![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20PWA-purple.svg)](https://github.com/srirajpillai/AQI-Prediction)
 
-**AirFlow AI** is a next-generation, client-side environmental intelligence platform. It moves beyond static single-number air quality displays by combining **real-time atmospheric sensor ingestion**, **24-hour predictive trajectory forecasting**, **cross-city spatial wind advection**, **Explainable AI (SHAP factor attribution)**, and a **personalized clinical disease risk engine**.
+**AirFlow AI** is a next-generation, client-side environmental intelligence platform. It moves beyond static single-number air quality displays by combining **real-time atmospheric sensor ingestion**, **24-hour predictive trajectory forecasting**, **cross-city spatial wind advection**, and a **personalized clinical disease risk engine**.
 
 The application runs **100% client-side** using Vanilla HTML5, CSS3, ES6+ JavaScript, and a multi-threaded browser **Web Worker (`worker.js`)** for zero-latency machine learning inference without requiring a Python backend server at runtime.
 
@@ -30,9 +30,6 @@ The application runs **100% client-side** using Vanilla HTML5, CSS3, ES6+ JavaSc
 - Calculates distances to neighboring monitoring hubs using the **Haversine great-circle formula**:
   $$d = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta \phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta \lambda}{2}\right)}\right)$$
 - Projects wind direction vectors ($\cos \theta$) and wind speed transport to alert users when upwind smog within 100 km is blowing into their location.
-
-### 4. 🔍 Explainable AI (SHAP Factor Attribution)
-- Decomposes the final AQI into exact positive (polluting) and negative (cleaning) point contributions (e.g., vehicular $\text{NO}_2$ plumes, biomass $\text{PM}_{2.5}$, rain scavenging, wind ventilation) for full transparency.
 
 ### 5. 🩺 Personalized Clinical Disease Risk Engine
 - Evaluates individual sensitivity across **6 clinical disease categories**:
@@ -88,7 +85,7 @@ flowchart TD
 | Step | What It Does (Simple Explanation) |
 | :--- | :--- |
 | **1. Live Data Ingestion** | The user selects a city or uses GPS. The system fetches live weather and air quality measurements (dust, smoke, gases, temperature, and wind) from open environmental services. |
-| **2. Smart Prediction Engine** | All AI calculations run directly inside the browser so the app stays fast and smooth. It calculates the current air quality level, predicts the next 24 hours hour-by-hour, checks if wind is blowing smog from neighboring cities, and highlights the primary cause of pollution. |
+| **2. Smart Prediction Engine** | All AI calculations run directly inside the browser so the app stays fast and smooth. It calculates the current air quality level, predicts the next 24 hours (exactly) hour-by-hour, checks if wind is blowing smog from neighboring cities, and highlights the primary cause of pollution. |
 | **3. Personalized Health Engine** | Different people have different health needs. The engine checks the pollution levels against the user's health profile (such as asthma, heart conditions, elderly status, or pregnancy) to give a personalized risk score (0 to 100) and practical safety precautions. |
 | **4. User Dashboard & Storage** | Results are displayed on a clean visual dashboard with an animated gauge, 24-hour forecast curve, and clear advice. Settings and profiles are saved securely in the cloud and stored locally for instant offline loading. |
 
@@ -102,10 +99,10 @@ version1/
 ├── 🌐 FRONTEND APPLICATION
 │   ├── index.html                   # Main dashboard (AQI gauge, 24-hr forecast, pollutant cards, modals)
 │   ├── app.js                       # Main controller: API fetchers, health engine, DOM updater, auth
-│   ├── worker.js                    # Background Web Worker: ML inference, diurnal trajectories, spatial wind, SHAP
+│   ├── worker.js                    # Background Web Worker: ML inference, diurnal trajectories, spatial wind
 │   ├── styles.css                   # Glassmorphic design system, light/dark themes, responsive layouts
-│   ├── know-how.html                # Educational page explaining SHAP AI math & medical risks
-│   ├── know-how.js                  # Interactive SHAP visualizer & clinical tabs for Know-How page
+│   ├── know-how.html                # Educational page explaining AI math & medical risks
+│   ├── know-how.js                  # Interactive clinical tabs for Know-How page
 │   ├── about.html                   # Project methodology, architecture documentation, team credits
 │   ├── about.js                     # Interactive navigation, 3D tilt, and theme sync for About page
 │   └── manifest.json                # Progressive Web App (PWA) manifest configuration

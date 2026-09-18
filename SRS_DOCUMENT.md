@@ -29,7 +29,6 @@ Ambient air pollution is a leading cause of global respiratory, cardiovascular, 
 * **Multi-API Weighted Consensus:** Concurrently query Open-Meteo, WAQI, and OpenAQ feeds ($\text{AQI} = 0.60 \times \text{Open-Meteo} + 0.40 \times \text{WAQI}$).
 * **Ultra-High Precision ML:** Ensemble trained on **1,245,122 records** achieving **99.68% accuracy**, **$R^2 = 99.99\%$**, and **$\text{MAE} = 0.31$ AQI points**.
 * **Zero-Latency In-Browser Engine:** Sub-2 ms client-side inference via background Web Workers (`worker.js`).
-* **Explainable AI (SHAP):** Decomposes AQI into positive and negative point drivers.
 * **Personalized Clinical Engine:** Multiplier-driven disease sensitivity across 6 medical categories.
 * **Triple-Layer Data Layer:** Resilient sync across localStorage, IndexedDB (`airflowDB`), and Google Cloud Firestore with optimistic UI updates.
 
@@ -51,7 +50,7 @@ Ambient air pollution is a leading cause of global respiratory, cardiovascular, 
 │  │   • index.html (Dashboard)  │         │   • In-Browser ML Inference (ml_model.json v4.0.0)        │  │
 │  │   • styles.css (Glassmorphism)│        │   • Spatial Haversine Wind Advection Model               │  │
 │  │   • app.js (Event Controller)│        │   • 24-Hour Diurnal Forecast Generator                   │  │
-│  │   • know-how.html & about.html│       │   • SHAP Factor Attribution Matrix                       │  │
+│  │   • know-how.html & about.html│       │                                                          │  │
 │  │   • DATASETS_CATALOG.md     │         │   • CPCB Breakpoint Engine (PM2.5, PM10, NO2, SO2, CO,O3)│  │
 │  └──────────────┬──────────────┘         │   • Thermal Throttling via Page Visibility API           │  │
 │                 │                        └──────────────────────────────────────────────────────────┘  │
@@ -95,9 +94,6 @@ Ambient air pollution is a leading cause of global respiratory, cardiovascular, 
 
 ### Module 4: 24-Hour Diurnal AI Forecasting
 * Simulates planetary boundary layer expansion, morning thermal trapping ($+1.8\%/\text{hr}$), solar convective dilution ($-2.2\%/\text{hr}$), and evening rush-hour accumulation ($+2.5\%/\text{hr}$).
-
-### Module 5: Explainable AI (SHAP Factor Attribution)
-* Decomposes predicted AQI into individual positive (polluting) and negative (cleaning) point contributions for all criteria pollutants and weather variables.
 
 ### Module 6: Personalized Clinical Disease Risk Engine
 * Evaluates individual medical vulnerability across **6 clinical disease categories**:

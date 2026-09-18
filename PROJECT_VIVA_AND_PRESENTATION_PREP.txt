@@ -401,16 +401,6 @@ Answer:
 5. Meteorological features (`Wind_Speed`, `Temperature`, `Pressure`) govern diurnal 
    dispersion and hourly trajectory adjustments."
 
-Q4: What is SHAP and how did you implement it?
-Answer:
-"SHAP stands for Shapley Additive exPlanations, derived from cooperative game theory. 
-It calculates the marginal contribution of each input feature toward shifting the 
-model's prediction away from the baseline average. In AirFlow AI, SHAP decomposes 
-the AQI prediction into positive contributors (pollutants like PM2.5 or traffic NO2 
-adding toxicity points) and negative contributors (strong winds or rainfall washing 
-out pollutants and subtracting toxicity points). This eliminates the 'black-box' 
-nature of machine learning and provides clear explanations to the user."
-
 Q5: What is the difference between your Classifier and your Regressor?
 Answer:
 "The XGBoost Multi-Class Classifier predicts the discrete categorical health risk tier 

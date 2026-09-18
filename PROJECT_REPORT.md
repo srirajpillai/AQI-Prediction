@@ -85,11 +85,11 @@ To overcome these deficiencies, this project presents **AirFlow AI**, a next-gen
 2. **Ultra-High Precision ML Ensemble:** Trained on a harmonized master corpus of **1,245,122 records** spanning 2015–2026 across 6 global monitoring archives (CPCB India, Copernicus CAMS/ERA5, Beijing Multi-Site, Delhi DPCC, UCI Sensor Array, and WHO/OpenAQ). An **XGBoost Classifier and Regressor Ensemble** achieves **99.68% risk category classification accuracy**, an **$R^2$ score of 99.99%**, and a **Mean Absolute Error (MAE) of 0.31 AQI points**.
 3. **24-Hour Diurnal Trajectory Modeler:** Simulates planetary boundary layer physics, morning rush-hour thermal inversions ($+1.8\%/\text{hr}$ accumulation), midday convective dilution ($-2.2\%/\text{hr}$), and evening stagnation ($+2.5\%/\text{hr}$).
 4. **Spatial Haversine Wind Advection Engine:** Leverages spherical trigonometry and wind vector cosine projections ($\cos \theta$) to track upwind pollutant plumes across neighboring cities within a 100 km radius.
-5. **Personalized Clinical Disease Risk Engine & Explainable AI (SHAP):** Decomposes AQI into exact point contributions and computes individualized clinical risk scores ($0–100$) across **6 medical categories** (Respiratory, Cardiovascular, Eye/Skin, Neurological, Maternal/Fetal, and Cancer Risk).
+5. **Personalized Clinical Disease Risk Engine:** Decomposes AQI into exact point contributions and computes individualized clinical risk scores ($0–100$) across **6 medical categories** (Respiratory, Cardiovascular, Eye/Skin, Neurological, Maternal/Fetal, and Cancer Risk).
 
 The complete inference engine executes **100% client-side** using a multi-threaded browser **Web Worker (`worker.js`)**, achieving sub-2 millisecond inference latency without server dependency. The web platform features a modern glassmorphic interface, triple-layer persistence (localStorage, IndexedDB `airflowDB`, and Supabase PostgreSQL), PWA offline support, and high-availability Vercel cloud deployment.
 
-**Keywords:** *Air Quality Index (AQI), Machine Learning, XGBoost, Explainable AI (SHAP), Diurnal Forecasting, Spatial Advection, Haversine Formula, Clinical Health Risk, Web Worker, Client-Side Inference, Progressive Web App (PWA).*
+**Keywords:** *Air Quality Index (AQI), Machine Learning, XGBoost, Diurnal Forecasting, Spatial Advection, Haversine Formula, Clinical Health Risk, Web Worker, Client-Side Inference, Progressive Web App (PWA).*
 
 ---
 
@@ -145,7 +145,6 @@ The complete inference engine executes **100% client-side** using a multi-thread
 * 6.1 XGBoost Classification and Regression Ensemble
 * 6.2 24-Hour Diurnal Trajectory Modeler Formulation
 * 6.3 Spatial Haversine Cross-City Wind Dispersion Formulation
-* 6.4 Explainable AI (SHAP Factor Attribution Formulation)
 * 6.5 Personalized Clinical Disease Multiplier Formulations
 
 ### **Chapter 7: System Implementation & Module Details**
@@ -159,7 +158,6 @@ The complete inference engine executes **100% client-side** using a multi-thread
 ### **Chapter 8: Results, Benchmarks & Performance Evaluation**
 * 8.1 Machine Learning Model Evaluation & Metrics
 * 8.2 Confusion Matrix & Class-Wise Performance
-* 8.3 Feature Importance & SHAP Attribution Rankings
 * 8.4 Computational Latency & Execution Profiling
 * 8.5 Real-World Case Studies & Validation Scenarios
 
@@ -197,11 +195,9 @@ The complete inference engine executes **100% client-side** using a multi-thread
 * **Figure 5.1:** Master Dataset Compilation & Harmonization Pipeline
 * **Figure 6.1:** Planetary Boundary Layer Diurnal Dynamics Simulation Curve
 * **Figure 6.2:** Spherical Haversine Distance & Wind Vector Alignment Geometry
-* **Figure 6.3:** Explainable AI (SHAP) Factor Attribution Waterfall Breakdown
 * **Figure 7.1:** AirFlow AI Glassmorphic UI Dashboard Layout
 * **Figure 8.1:** XGBoost Training Loss, Accuracy & $R^2$ Convergence Curves
 * **Figure 8.2:** Confusion Matrix for 6-Class CPCB AQI Risk Classification
-* **Figure 8.3:** Global SHAP Feature Importance Ranking for Criteria Pollutants
 
 ---
 
@@ -253,7 +249,6 @@ The complete inference engine executes **100% client-side** using a multi-thread
 | **PWA** | Progressive Web Application |
 | **$R^2$** | Coefficient of Determination |
 | **RMSE** | Root Mean Square Error |
-| **SHAP** | SHapley Additive exPlanations |
 | **SO2** | Sulphur Dioxide |
 | **SRS** | Software Requirements Specification |
 | **TTL** | Time To Live |
@@ -287,13 +282,13 @@ The objective of this project is to conceptualize, train, and deploy **AirFlow A
 * Harmonizing real-time telemetry from multiple independent global air quality APIs using weighted consensus.
 * Performing zero-server machine learning inference in browser memory via multi-threaded Web Workers.
 * Forecasting 24-hour diurnal pollutant trajectories and cross-city spatial wind dispersion.
-* Providing Explainable AI (SHAP) factor attributions and personalized clinical disease risk calculations across 6 medical categories.
+* Providing personalized clinical disease risk calculations across 6 medical categories.
 
 ## 1.4 Project Objectives
 1. **Multi-Source Data Compilation:** Build and clean a master training corpus of over **1.2 million rows** integrating CPCB India, Copernicus CAMS/ERA5, Beijing Multi-Site, Delhi DPCC, UCI Sensor Array, and WHO/OpenAQ datasets.
 2. **Machine Learning Pipeline:** Train an **XGBoost Regressor and Multi-Class Classifier Ensemble** reaching $>99.5\%$ classification accuracy and $>99.9\% R^2$ score, serializing the weights into a lightweight `ml_model.json` format.
 3. **Multi-API Consensus Engine:** Implement a multi-source data ingestion engine combining Open-Meteo, WAQI, and OpenAQ feeds with in-memory TTL caching.
-4. **Client-Side Multithreading:** Implement a browser Web Worker (`worker.js`) to execute ML inference, Haversine spatial advection, and SHAP calculations off the UI main thread.
+4. **Client-Side Multithreading:** Implement a browser Web Worker (`worker.js`) to execute ML inference, Haversine spatial advection off the UI main thread.
 5. **Personalized Clinical Engine:** Implement an individualized medical risk assessment matrix covering Respiratory, Cardiovascular, Dermatological/Ocular, Neurological, Maternal/Fetal, and Long-Term Cancer categories.
 6. **Triple-Layer Data Layer:** Integrate localStorage, IndexedDB (`airflowDB`), and Supabase PostgreSQL (`health_profiles` table) with optimistic UI state synchronization.
 7. **Production Deployment:** Package the system as an offline-capable Progressive Web Application (PWA) hosted on Vercel.
@@ -306,7 +301,7 @@ AirFlow AI provides global coverage for any geocoded latitude and longitude, fea
 * **Chapter 3** establishes the formal Software Requirements Specification (SRS).
 * **Chapter 4** presents the end-to-end system architecture, DFDs, UML diagrams, and persistence mechanisms.
 * **Chapter 5** details the multi-dataset compilation, preprocessing, and CPCB sub-index formulations.
-* **Chapter 6** defines the mathematical models (XGBoost, Diurnal physics, Haversine dispersion, SHAP, Clinical multipliers).
+* **Chapter 6** defines the mathematical models (XGBoost, Diurnal physics, Haversine dispersion, Clinical multipliers).
 * **Chapter 7** describes the frontend, Web Worker, and cloud implementation.
 * **Chapter 8** analyzes experimental results, benchmarks, and real-world scenario validations.
 * **Chapter 9** covers software testing, security, and quality assurance.
@@ -352,7 +347,6 @@ Current systems exhibit several key gaps:
 | **Multi-API Consensus** | Single CPCB Source | Proprietary Sensor | Single Feed | Single Feed | **Multi-API Weighted Consensus** |
 | **Diurnal 24-Hr Trajectory** | Static / No Curve | 24-Hr Forecast | 12-Hr Forecast | 24-Hr Forecast | **24-Hr Diurnal Physics Curve** |
 | **Cross-City Wind Transfer** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Haversine Vector Advection** |
-| **Explainable AI (SHAP)** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ SHAP Factor Attribution** |
 | **Personalized Health Risk** | ❌ Generic | ❌ Generic | ❌ Generic | ⚠️ Basic | **✅ 6 Clinical Disease Engines** |
 | **Offline PWA Support** | ❌ No | ⚠️ App Only | ❌ No | ⚠️ App Only | **✅ Full PWA + IndexedDB Cache** |
 | **Cloud Sync & Optimistic UI**| ❌ No | ⚠️ Account Req. | ❌ No | ⚠️ Account Req. | **✅ Supabase PostgreSQL + Optimistic** |
@@ -381,7 +375,7 @@ Current systems exhibit several key gaps:
 | :--- | :--- | :--- |
 | **Frontend Presentation** | HTML5, CSS3, ES6+ Vanilla JS | High performance, zero framework overhead, instant load. |
 | **UI Design System** | Custom Glassmorphic CSS | Modern, responsive liquid-dark and crisp-light themes. |
-| **Background Threading** | Browser Web Worker API (`worker.js`)| Non-blocking multithreading for ML, Haversine, and SHAP. |
+| **Background Threading** | Browser Web Worker API (`worker.js`)| Non-blocking multithreading for ML, Haversine. |
 | **Data Visualization** | Chart.js 4.4 + Dynamic 2D Canvas | Interactive 24-hr trajectory curves and animated AQI gauges. |
 | **Machine Learning** | Python 3.10+, Scikit-Learn, XGBoost | Master dataset compilation, gradient boosted tree training. |
 | **Model Serialization** | Joblib (`.pkl`) & JSON (`ml_model.json`) | Dual export for backend verification and browser execution. |
@@ -397,7 +391,6 @@ Current systems exhibit several key gaps:
 * **FR-01: Real-Time Air Quality Ingestion:** The system shall ingest live criteria pollutants ($\text{PM}_{2.5}, \text{PM}_{10}, \text{NO}_2, \text{SO}_2, \text{CO}, \text{O}_3, \text{NH}_3$) and weather covariates via Open-Meteo, WAQI, and OpenAQ v3.
 * **FR-02: Multi-API Consensus Scoring:** The system shall compute a weighted consensus AQI to prevent single-station failure modes.
 * **FR-03: Client-Side Machine Learning Inference:** The Web Worker shall execute tree-based XGBoost regression and classification in under 5 ms.
-* **FR-04: Explainable AI Breakdown:** The system shall display exact positive and negative SHAP factor contributions for every feature.
 * **FR-05: 24-Hour Diurnal Trajectory:** The system shall project a 24-hour continuous diurnal trajectory modeling solar convection, nocturnal boundary layer trapping, and rush-hour emissions.
 * **FR-06: Spatial Vector Advection:** The system shall compute downwind pollution transfer between neighboring geographic nodes using Haversine formulas.
 * **FR-07: Personalized Clinical Risk:** The system shall evaluate individual health profiles to compute adjusted clinical risk scores across 6 medical categories.
@@ -407,7 +400,7 @@ Current systems exhibit several key gaps:
 
 ## 3.4 Non-Functional Requirements
 
-* **NFR-01: Low Latency:** Complete client-side prediction, spatial transfer, and SHAP calculation shall execute in under **5 milliseconds** inside the Web Worker.
+* **NFR-01: Low Latency:** Complete client-side prediction, spatial transfer shall execute in under **5 milliseconds** inside the Web Worker.
 * **NFR-02: High Availability & Offline Resilience:** The web app shall remain operational offline via PWA caching and local IndexedDB profile storage.
 * **NFR-03: Cross-Browser Compatibility:** The application shall function without discrepancies across Google Chrome, Mozilla Firefox, Apple Safari, Microsoft Edge, and mobile browsers.
 * **NFR-04: Security & Data Privacy:** User medical profiles shall be isolated using Supabase Row-Level Security (RLS) policies (`auth.uid() = uid`) on PostgreSQL and protected against Cross-Site Scripting (XSS) via HTML entity escaping.
@@ -436,7 +429,7 @@ AirFlow AI is built on a **Decoupled Client-Side Web Architecture** supported by
 │  │   • index.html (Dashboard)  │         │   • In-Browser ML Inference (XGBoost / ml_model.json)    │  │
 │  │   • styles.css (Glassmorphism)│        │   • Spatial Haversine Wind Advection Model               │  │
 │  │   • app.js (Main Controller)│         │   • 24-Hour Diurnal Trajectory Generator                 │  │
-│  │   • know-how.html & about.html│       │   • SHAP Factor Attribution Engine                       │  │
+│  │   • know-how.html & about.html│       │                                                          │  │
 │  └──────────────┬──────────────┘         │   • CPCB Breakpoint Sub-Index Engine                     │  │
 │                 │                        └──────────────────────────────────────────────────────────┘  │
 │                 │                                                                                      │
@@ -481,7 +474,6 @@ AirFlow AI is built on a **Decoupled Client-Side Web Architecture** supported by
 * **Process 4.2:** Evaluate XGBoost decision trees and polynomial regression coefficients.
 * **Process 4.3:** Compute solar elevation curve for 24-hour diurnal trajectory.
 * **Process 4.4:** Calculate Haversine spherical distance and cosine wind projection for upwind neighbor hubs.
-* **Process 4.5:** Calculate SHAP point contributions for all active environmental drivers.
 
 ## 4.3 UML Component & Sequence Diagrams
 
@@ -502,12 +494,11 @@ sequenceDiagram
     Worker->>Worker: Compute CPCB Sub-Indices & XGBoost ML Inference
     Worker->>Worker: Model 24-Hr Diurnal Trajectory Curves
     Worker->>Worker: Compute Haversine Spatial Wind Vector Transfer
-    Worker->>Worker: Compute SHAP Factor Attributions
     Worker-->>Main: postMessage({ type: 'predictionResults', data })
     Main->>DB: Load User Health Profile (Asthma, Heart, Age)
     DB-->>Main: Return Profile Data
     Main->>Main: Apply Clinical Multipliers & Format Medical Warnings
-    Main->>User: Render Animated Gauge, 24-Hr Chart, SHAP & Health Cards
+    Main->>User: Render Animated Gauge, 24-Hr Chart & Health Cards
 ```
 
 ## 4.4 Multi-API Weighted Consensus Engine Architecture
@@ -638,16 +629,6 @@ $$W_i = \exp\left(-\frac{d_i}{100}\right) \times \text{Alignment}_i \times \min\
 
 $$\text{Predicted Next-Day AQI} = \frac{\sum_{i=1}^N (AQI_i \times W_i) + (AQI_{\text{local}} \times 0.90)}{\sum_{i=1}^N W_i + 0.90}$$
 
-## 6.4 Explainable AI (SHAP Factor Attribution Formulation)
-To prevent the model from operating as an opaque black box, AirFlow AI implements **Shapley Additive exPlanations (SHAP)**:
-
-$$\text{AQI}(x) = \phi_0 + \sum_{j=1}^M \phi_j(x)$$
-
-Where $\phi_0 = \mathbb{E}[\text{AQI}]$ is the baseline expected air quality, and $\phi_j(x)$ represents the exact positive or negative point contribution of feature $j$:
-$$\phi_j(x) = \sum_{S \subseteq F \setminus \{j\}} \frac{|S|!(|F| - |S| - 1)!}{|F|!} \left[ f(S \cup \{j\}) - f(S) \right]$$
-
-Features that increase pollution (e.g., vehicular $\text{NO}_2$, high $\text{PM}_{2.5}$, nocturnal inversion) receive positive point attributions ($+\Delta\text{AQI}$), while cleansing mechanisms (e.g., precipitation wet scavenging, strong ventilating winds) receive negative point attributions ($-\Delta\text{AQI}$).
-
 ## 6.5 Personalized Clinical Disease Multiplier Formulations
 Standard AQI scales reflect exposure for healthy young adults. AirFlow AI computes **Individualized Clinical Risk Scores ($0–100$)** across 6 medical categories:
 
@@ -671,7 +652,6 @@ The frontend is constructed using pure HTML5, CSS3, and JavaScript without exter
 Key UI components include:
 * **Interactive 3D Circular AQI Gauge:** Custom HTML5 canvas rendering dynamic color-coded arcs, needle rotation, and pulsing glow rings.
 * **24-Hour Diurnal Chart:** Interactive Line/Area chart rendered via Chart.js displaying historical and forecasted AQI curves.
-* **SHAP Waterfall Card:** Color-coded horizontal bar graphs indicating exact positive (polluting) and negative (cleansing) point drivers.
 * **Clinical Health Modal:** Interactive toggle pills allowing users to configure pre-existing conditions, age brackets, pregnancy status, and outdoor activity levels.
 
 ## 7.2 Main Event Controller & API Telemetry Aggregator (`app.js`)
@@ -687,7 +667,6 @@ The Web Worker operates entirely in the background, isolating computationally he
 * Traverses XGBoost decision trees to output risk classifications and continuous AQI values.
 * Calculates solar elevation cosine curves for 24-hour diurnal trajectory modeling.
 * Computes Haversine great-circle distances and wind vector cosine alignments for neighboring city clusters.
-* Decomposes environmental drivers into SHAP factor attributions.
 
 ## 7.4 Unified Master Python Pipeline (`unified_master_pipeline.py`)
 The end-to-end Python pipeline encapsulates data ingestion, cleaning, feature engineering, model training, and export in a single script:
@@ -737,15 +716,6 @@ The trained XGBoost Ensemble was evaluated on an independent $20\%$ holdout test
 | **Severe (401–500+)** | 0 | 0 | 0 | 0 | 18 | **8,010** | **99.78%** |
 | **Precision** | **99.91%** | **99.83%** | **99.87%** | **99.72%** | **99.65%** | **99.73%** | — |
 
-## 8.3 Feature Importance & SHAP Attribution Rankings
-Analysis of the feature attribution weights serialized in `ml_model.json` reveals the primary drivers of air toxicity:
-1. `max_sub_index` ($67.08\%$ relative importance): Governs the piecewise peak index.
-2. `sub_pm25` ($16.19\%$ relative importance): Fine particulate matter concentration.
-3. `PM2.5` concentration ($3.75\%$ relative importance).
-4. `O3` ground-level ozone ($2.61\%$ relative importance).
-5. `oxidant_sum` ($2.34\%$ relative importance).
-6. `sub_no2` & `NO2` ($2.06\%$ relative importance): Vehicular rush-hour markers.
-
 ## 8.4 Computational Latency & Execution Profiling
 Benchmarking across 1,000 continuous simulation cycles demonstrated substantial performance gains over traditional server architectures:
 
@@ -755,7 +725,6 @@ Benchmarking across 1,000 continuous simulation cycles demonstrated substantial 
 | **Feature Extraction & Sub-Index** | $12\text{ ms}$ | **$0.45\text{ ms}$** | **$26.6\times$ Faster** |
 | **ML Inference (XGBoost)** | $25\text{ ms}$ | **$0.85\text{ ms}$** | **$29.4\times$ Faster** |
 | **Haversine Spatial Dispersion** | $18\text{ ms}$ | **$0.32\text{ ms}$** | **$56.2\times$ Faster** |
-| **SHAP Factor Decomposition** | $30\text{ ms}$ | **$0.38\text{ ms}$** | **$78.9\times$ Faster** |
 | **Total Response Time** | **$335–585\text{ ms}$** | **$2.00\text{ ms}$** | **$>150\times$ Faster** |
 
 ## 8.5 Real-World Case Studies & Validation Scenarios
@@ -766,7 +735,6 @@ Benchmarking across 1,000 continuous simulation cycles demonstrated substantial 
 
 ### Scenario 2: Coastal Wind Ventilation in Mumbai
 * **Observed Data:** $\text{PM}_{10} = 120\,\mu\text{g/m}^3, \text{Wind Speed} = 22\text{ km/h}$ from Arabian Sea ($240^\circ$).
-* **System Response:** Correctly applied negative SHAP attribution for maritime advection ventilation ($-32\text{ AQI points}$), forecasting rapid afternoon dispersal.
 
 ---
 
@@ -776,7 +744,6 @@ Benchmarking across 1,000 continuous simulation cycles demonstrated substantial 
 Unit test suites verified:
 * Correctness of CPCB piecewise linear sub-index calculations across all boundary values ($0, 30, 60, 90, 120, 250, 500$).
 * Precision of Haversine spherical distance functions against known geographical baselines (e.g., Delhi to Noida = $18.4\text{ km} \pm 0.1\text{ km}$).
-* Non-negativity constraints in SHAP point decomposition.
 
 ## 9.2 Integration & API Fallback Testing
 Simulated network failures across individual APIs verified that if Open-Meteo or WAQI returns HTTP 500 or times out, the geocoding cascade and consensus normalizer seamlessly fall back to secondary providers (Nominatim / Photon / OpenAQ) without disrupting dashboard rendering.
@@ -805,14 +772,13 @@ Google Lighthouse audits on production Vercel builds achieved:
 This project successfully designed, implemented, and evaluated **AirFlow AI**, a novel, zero-latency, client-side environmental intelligence platform. Key achievements include:
 * Compilation and harmonization of a **1.245M+ row global air quality corpus**.
 * Training an **XGBoost ensemble reaching 99.68% classification accuracy and 99.99% $R^2$ score**.
-* Implementation of a **multi-threaded Web Worker** executing ML inference, Haversine spatial wind advection, and SHAP factor attribution in $<2\text{ ms}$ directly inside the browser.
+* Implementation of a **multi-threaded Web Worker** executing ML inference, Haversine spatial wind advection in $<2\text{ ms}$ directly inside the browser.
 * Introduction of a **Personalized Clinical Disease Risk Engine** calculating adjusted health vulnerabilities across 6 medical categories.
 * Packaging and deploying an accessible, PWA-enabled web platform on Vercel.
 
 ## 10.2 Key Learnings & Engineering Takeaways
 1. **Client-Side ML Viability:** Complex gradient boosted ensembles can be serialized and executed natively in JavaScript via Web Workers, eliminating expensive cloud hosting costs and network latency.
 2. **Value of Multi-Source Consensus:** Combining independent telemetry streams (Open-Meteo, WAQI, OpenAQ) effectively eliminates single-sensor dropouts.
-3. **Crucial Role of Explainability:** Explainable AI (SHAP) is essential in environmental and healthcare systems to build user trust and clarify causal factors.
 
 ## 10.3 Limitations of Current System
 * Satellite Aerosol Optical Depth (AOD) data from NASA MODIS/VIIRS is not yet integrated in real-time.
